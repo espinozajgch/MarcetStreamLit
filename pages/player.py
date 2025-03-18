@@ -36,7 +36,7 @@ else:
     df_joined = util.getJoinedDataFrame(conn)
     
     df_datos_filtrado = util.generateFilters(df_datos)
-
+    
     #st.dataframe(df_datos_filtrado)
 
     #st.button("📄 Generar PDF")
@@ -54,7 +54,8 @@ else:
         jugador_id = df_datos_filtrado["ID"].dropna().astype(str).str.strip().unique().tolist()        
         df_jugador = df_datos[df_datos["ID"]==jugador_id[0]]
         df_joined_filtrado=df_joined[df_joined["ID"]==jugador_id[0]]
-
+        #datatest= util.getDataTest(conn)
+        
         response = util.get_photo(df_jugador['URL'].iloc[0])
 
         nombre = df_jugador['JUGADOR'].iloc[0]
@@ -101,29 +102,30 @@ else:
                 
                 #st.markdown("### :blue[ANTROPOMETRÍA]")
                 st.markdown("📆 **Ultímas Mediciones**")
-                
+                #st.dataframe(df_anthropometrics)    
+               
                 col1, col2, col3, col4, col5 = st.columns(5)
                 with col1:
                     act = df_anthropometrics['ALTURA'].iloc[0]
-                    ant = df_anthropometrics['ALTURA'].iloc[1]
-                    variacion = act - ant
+                    ant = df_anthropometrics['ALTURA'].iloc[1] if len(df_anthropometrics) > 1 else 0
+                    variacion = float(act) - float(ant)
                     st.metric(f"Altura (cm)",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col2:
                     act = df_anthropometrics['PESO'].iloc[0]
-                    ant = df_anthropometrics['PESO'].iloc[1]
+                    ant = df_anthropometrics['PESO'].iloc[1] if len(df_anthropometrics) > 1 else 0
                     variacion = act - ant
                     st.metric(f"Peso (Kg)",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col3:
                     act = df_anthropometrics['MG [KG]'].iloc[0]
-                    ant = df_anthropometrics['MG [KG]'].iloc[1]
+                    ant = df_anthropometrics['MG [KG]'].iloc[1] if len(df_anthropometrics) > 1 else 0
                     variacion = act - ant
                     st.metric(f"MG (Kg)",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col4:
                     act = df_anthropometrics['GRASA (%)'].iloc[0]
-                    ant = df_anthropometrics['GRASA (%)'].iloc[1]
+                    ant = df_anthropometrics['GRASA (%)'].iloc[1] if len(df_anthropometrics) > 1 else 0
                     variacion = act - ant
                     st.metric(f"Grasa (%)",f'{act:,.2f}', f'{variacion:,.2f}')
                 
@@ -137,13 +139,20 @@ else:
                 c1, c2 = st.columns([2,1.5])     
                 with c1:
                     # Cálculo del IMC
-                    df_anthropometrics["IMC"] = df_anthropometrics["PESO"] / ((df_anthropometrics["ALTURA"] / 100) ** 2)
-                    df_anthropometrics["Categoría IMC"] = df_anthropometrics["IMC"].apply(util.categorizar_imc)
-                    
-                    # Índice de grasa corporal
-                    df_anthropometrics["Índice de grasa"] = (df_anthropometrics["GRASA (%)"] * df_anthropometrics["PESO"]) / 100
-                    df_anthropometrics["Categoría Grasa"] = df_anthropometrics["GRASA (%)"].apply(util.categorizar_grasa)
+                    # Verificar si PESO o ALTURA son 0 o nulos (OR entre condiciones)
+                    mask = (df_anthropometrics["PESO"] == 0) | (df_anthropometrics["ALTURA"] == 0) | df_anthropometrics["PESO"].isnull() | df_anthropometrics["ALTURA"].isnull()
 
+                    # Aplicar el cálculo del IMC y la categorización solo cuando la condición no se cumpla
+                    df_anthropometrics["IMC"] = np.where(mask, np.nan, df_anthropometrics["PESO"] / ((df_anthropometrics["ALTURA"] / 100) ** 2))
+
+                    # Asegurarse de que la columna "IMC" no contenga "N/A" como string
+                    df_anthropometrics["Categoría IMC"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", df_anthropometrics["IMC"].apply(util.categorizar_imc))
+
+                    # Índice de grasa corporal
+                    df_anthropometrics["Índice de grasa"] = np.where(mask, np.nan, (df_anthropometrics["GRASA (%)"] * df_anthropometrics["PESO"]) / 100)
+                    df_anthropometrics["Categoría Grasa"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", df_anthropometrics["GRASA (%)"].apply(util.categorizar_grasa))
+
+                    #df_anthropometrics = util.calcular_imc_indice_grasa(df_anthropometrics)
                     df_anthropometrics[["ALTURA", "PESO", "IMC", "Índice de grasa"]] = df_anthropometrics[["ALTURA", "PESO", "IMC", "Índice de grasa"]].round(2)
 
                     st.markdown("📊 **Análisis de IMC y Porcentaje de Grasa Corporal**")
@@ -177,18 +186,18 @@ else:
 
                 with col1:
                     act = df_agilty['505-DOM [SEG]'].iloc[0]
-                    ant = df_agilty['505-DOM [SEG]'].iloc[1]
+                    ant = df_agilty['505-DOM [SEG]'].iloc[1] if len(df_agilty) > 1 else 0
                     variacion = act - ant
                     st.metric(f"505-DOM [SEG]",f'{act:,.2f}', f'{variacion:,.2f}')
                     
                 with col2:
                     act = df_agilty['505-ND [SEG]'].iloc[0]
-                    ant = df_agilty['505-ND [SEG]'].iloc[1]
+                    ant = df_agilty['505-ND [SEG]'].iloc[1] if len(df_agilty) > 1 else 0
                     variacion = act - ant
                     st.metric(f"505-ND [SEG]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col3:
-                    act = df_agilty['FECHA REGISTRO'].iloc[0]
+                    act = df_agilty['FECHA REGISTRO'].iloc[0] if len(df_agilty) > 1 else 0
                     st.metric(f"Último Registro",act)
 
                 graphics.get_agilty_graph(df_agilty)
@@ -214,43 +223,43 @@ else:
 
                 with col1:
                     act = df_sprint['TOTAL 40M [SEG]'].iloc[0]
-                    ant = df_sprint['TOTAL 40M [SEG]'].iloc[1]
+                    ant = df_sprint['TOTAL 40M [SEG]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"TOTAL 40M [SEG]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col2:
                     act = df_sprint['TIEMPO 0-5M [SEG]'].iloc[0]
-                    ant = df_sprint['TIEMPO 0-5M [SEG]'].iloc[1]
+                    ant = df_sprint['TIEMPO 0-5M [SEG]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"TIEMPO 0-5M [SEG]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col3:
                     act = df_sprint['VEL 0-5M [M/S]'].iloc[0]
-                    ant = df_sprint['VEL 0-5M [M/S]'].iloc[1]
+                    ant = df_sprint['VEL 0-5M [M/S]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"VEL 0-5M [M/S]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col4:
                     act = df_sprint['TIEMPO 5-20M [SEG]'].iloc[0]
-                    ant = df_sprint['TIEMPO 5-20M [SEG]'].iloc[1]
+                    ant = df_sprint['TIEMPO 5-20M [SEG]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"TIEMPO 5-20M [SEG]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col5:
                     act = df_sprint['VEL 5-20M [M/S]'].iloc[0]
-                    ant = df_sprint['VEL 5-20M [M/S]'].iloc[1]
+                    ant = df_sprint['VEL 5-20M [M/S]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"VEL 5-20M [M/S]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col6:
                     act = df_sprint['TIEMPO 20-40M [SEG]'].iloc[0]
-                    ant = df_sprint['TIEMPO 20-40M [SEG]'].iloc[1]
+                    ant = df_sprint['TIEMPO 20-40M [SEG]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"TIEMPO 20-40M [SEG]",f'{act:,.2f}', f'{variacion:,.2f}')
 
                 with col7:
                     act = df_sprint['VEL 20-40M [M/S]'].iloc[0]
-                    ant = df_sprint['VEL 20-40M [M/S]'].iloc[1]
+                    ant = df_sprint['VEL 20-40M [M/S]'].iloc[1] if len(df_sprint) > 1 else 0
                     variacion = act - ant
                     st.metric(f"VEL 20-40M [M/S]",f'{act:,.2f}', f'{variacion:,.2f}')
 
@@ -273,13 +282,13 @@ else:
 
                 with col1:
                     act = df_cmj['CMJ [cm]'].iloc[0]
-                    ant = df_cmj['CMJ [cm]'].iloc[1]
+                    ant = df_cmj['CMJ [cm]'].iloc[1] if len(df_cmj) > 1 else 0
                     variacion = act - ant
                     st.metric(f"CMJ [cm]",f'{act:,.1f}', f'{variacion:,.1f}')
 
                 with col2:
                     act = df_cmj['CMJ [W]'].iloc[0]
-                    ant = df_cmj['CMJ [W]'].iloc[1]
+                    ant = df_cmj['CMJ [W]'].iloc[1] if len(df_cmj) > 1 else 0
                     variacion = act - ant
                     st.metric(f"CMJ [W]",f'{act:,.1f}', f'{variacion:,.1f}')
 
@@ -308,13 +317,13 @@ else:
 
                 with col1:
                     act = df_yoyo['SPEED [km/h]'].iloc[0]
-                    ant = df_yoyo['SPEED [km/h]'].iloc[1]
+                    ant = df_yoyo['SPEED [km/h]'].iloc[1] if len(df_yoyo) > 1 else 0
                     variacion = 1
                     st.metric(f"505-ND [SEG]",f'{act:,.1f}', f'{variacion:,.1f}')
 
                 with col2:
                     act = df_yoyo['ACCUMULATED SHUTTLE DISTANCE [m]'].iloc[0]
-                    ant = df_yoyo['ACCUMULATED SHUTTLE DISTANCE [m]'].iloc[1]
+                    ant = df_yoyo['ACCUMULATED SHUTTLE DISTANCE [m]'].iloc[1] if len(df_yoyo) > 1 else 0
                     variacion = 1
                     st.metric(f"505-ND [SEG]",f'{act:,.1f}', f'{variacion:,.1f}')
                 
@@ -347,13 +356,13 @@ else:
 
                 with col1:
                     act = df_rsa['MEDIDA EN TIEMPO (SEG)'].iloc[0]
-                    ant = df_rsa['MEDIDA EN TIEMPO (SEG)'].iloc[1]
+                    ant = df_rsa['MEDIDA EN TIEMPO (SEG)'].iloc[1] if len(df_rsa) > 1 else 0
                     variacion = act - ant
                     st.metric(f"MEDIDA EN TIEMPO (SEG)",f'{act:,.1f}', f'{variacion:,.1f}')
 
                 with col2:
                     act = df_rsa['VELOCIDAD (M*SEG)'].iloc[0]
-                    ant = df_rsa['VELOCIDAD (M*SEG)'].iloc[1]
+                    ant = df_rsa['VELOCIDAD (M*SEG)'].iloc[1] if len(df_rsa) > 1 else 0
                     variacion = act - ant
                     st.metric(f"VELOCIDAD (M*SEG)",f'{act:,.1f}', f'{variacion:,.1f}')
 

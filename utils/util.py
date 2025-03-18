@@ -36,6 +36,7 @@ def getDataTest(conn):
     df.columns = df.iloc[0]  # Usa la primera fila como nombres de columna
     df = df[1:]  # Elimina la fila de encabezado original
     df = df.reset_index(drop=True)  # Reinicia los índices
+    df = df.fillna(0).replace("None", 0)
     return df
 
 def getJoinedDataFrame(conn):
@@ -74,11 +75,22 @@ def getJoinedDataFrame(conn):
     # Convertir la fecha a string en formato dd/mm/yyyy
     df_unido["FECHA REGISTRO"] = df_unido["FECHA REGISTRO"].dt.strftime('%d/%m/%Y').astype(str)
 
+    # Lista de columnas a convertir
+    columnas_a_convertir = [
+        "ALTURA", "PESO", "MG [KG]", "GRASA (%)", "505-DOM [SEG]", "505-ND [SEG]", 
+        "TOTAL 40M [SEG]", "TIEMPO 0-5M [SEG]", "VEL 0-5M [M/S]", "TIEMPO 5-20M [SEG]", 
+        "VEL 5-20M [M/S]", "TIEMPO 20-40M [SEG]", "VEL 20-40M [M/S]", "CMJ [cm]", 
+        "CMJ [W]", "SPEED [km/h]", "ACCUMULATED SHUTTLE DISTANCE [m]", 
+        "MEDIDA EN TIEMPO (SEG)", "VELOCIDAD (M*SEG)"
+    ]
+
+    # Aplicar transformación solo a esas columnas
+    df_unido[columnas_a_convertir] = df_unido[columnas_a_convertir].apply(lambda col: col.astype(str).str.replace(",", ".").astype(float))
     # Reemplazar valores nulos o 'None' por 0
-    df_unido = df_unido.fillna(0).replace("None", 0)
+    #df_unido = df_unido.fillna(0).replace("None", 0)
 
     # Eliminar filas donde todos los valores son 0
-    df_unido = df_unido.loc[:, (df_unido != 0).any(axis=0)]
+    #df_unido = df_unido.loc[:, (df_unido != 0).any(axis=0)]
 
     return df_unido
 
@@ -301,8 +313,6 @@ def contar_jugadores_por_categoria(df):
 
     return resultado
     
-import pandas as pd
-
 def resumen_sesiones(df, total_jugadores):
     """
     Calcula la cantidad de sesiones en los dos últimos meses, la asistencia promedio en cada mes,
@@ -368,10 +378,6 @@ def resumen_sesiones(df, total_jugadores):
 
     return resumen_df
 
-
-
-import pandas as pd
-
 def sesiones_por_test(df):
     """
     Cuenta la cantidad de sesiones por jugador y por tipo de test.
@@ -427,7 +433,9 @@ def sesiones_por_test(df):
             columnas_validas = [col for col in columnas if col in df.columns]
 
             if columnas_validas:
-                sesiones_dict[test].append(datos.dropna(subset=columnas_validas)["FECHA REGISTRO"].nunique())
+                # Verificar si alguna de las columnas tiene un valor distinto de 0
+                sesiones_validas = datos[columnas_validas].apply(lambda x: (x != 0).any(), axis=1)
+                sesiones_dict[test].append(sesiones_validas.sum())  # Contar cuántas sesiones tienen al menos un valor distinto de 0
             else:
                 sesiones_dict[test].append(0)  # Si no hay columnas válidas, asignar 0
 
@@ -435,7 +443,6 @@ def sesiones_por_test(df):
     sesiones_df = pd.DataFrame(sesiones_dict)
 
     return sesiones_df
-
 
 def obtener_bandera(pais):
     # Diccionario de códigos de país ISO 3166-1 alfa-2

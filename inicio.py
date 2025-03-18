@@ -31,13 +31,13 @@ else:
 
     df_datos = util.getDatos(conn)
     df_joined = util.getJoinedDataFrame(conn)
-
+    #datatest= util.getDataTest(conn)
     total_jugadores = len(df_datos)
     df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
     #########################################################
 
     ##st.header("Bienvenido")
-    #st.dataframe(df_sesiones)
+    #st.dataframe(datatest)
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:

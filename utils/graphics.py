@@ -7,8 +7,8 @@ import plotly.graph_objects as go
 def get_anthropometrics_graph(df_anthropometrics):
     # Crear DataFrame y convertir la fecha
     df = pd.DataFrame(df_anthropometrics)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
-    df = df.sort_values(by="FECHA REGISTRO")  # Ordenar cronológicamente
+    #df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
+    #df = df.sort_values(by="FECHA REGISTRO")  # Ordenar cronológicamente
 
     # Crear gráfico interactivo
     fig = px.line(df, x="FECHA REGISTRO", y=df.columns[1:], 
@@ -72,7 +72,7 @@ def get_cmj_graph(df_cmj):
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
 
     # Ordenar las fechas en orden ascendente
-    df = df.sort_values("FECHA REGISTRO")
+    #df = df.sort_values("FECHA REGISTRO")
 
     # Convertir el DataFrame a formato largo para Plotly
     df_melted = df.melt(id_vars=["FECHA REGISTRO"], var_name="MÉTRICA", value_name="VALOR")
@@ -103,7 +103,7 @@ def get_cmj_graph(df_cmj):
 def get_rsa_graph(df_rsa):
 
     df = pd.DataFrame(df_rsa)
-    df['FECHA REGISTRO'] = pd.to_datetime(df['FECHA REGISTRO'])
+    #df['FECHA REGISTRO'] = pd.to_datetime(df['FECHA REGISTRO'])
 
     # Crear el gráfico de líneas con dos ejes Y
     fig = go.Figure()
@@ -155,7 +155,7 @@ def get_yoyo_graph(df_yoyo):
 
     # Convertir FECHA REGISTRO a tipo fecha
     df = pd.DataFrame(df_yoyo)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
+    #df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
 
     # Transformar el DataFrame a formato largo para graficar ambas métricas
     df_melted = df.melt(id_vars=["FECHA REGISTRO", "TEST"], var_name="MÉTRICA", value_name="VALOR")
