@@ -27,7 +27,7 @@ def getDatos(conn):
     df['EDAD'] = df['EDAD'].fillna(0).astype(int).astype(str)
     df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
     df.drop_duplicates(subset=["ID"], keep="first")
-    #df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
     return df
 
 def getDataTest(conn):
