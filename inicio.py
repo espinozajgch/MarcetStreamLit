@@ -6,14 +6,15 @@ import seaborn as sns
 from utils import util
 import numpy as np
 import login as login
+import warnings
+warnings.filterwarnings("ignore", message="When grouping with a length-1 list-like")
 
 st.set_page_config(
     page_title="Dashboard Cargas Fisicas",
-    page_icon="📊",
+    page_icon=":material/home:",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 
 login.generarLogin()
 
@@ -24,20 +25,24 @@ if 'usuario' not in st.session_state:
 else:
     st.header('Bienvenido a :orange[Marcet]')
     #util.generateMenu()
-
+    
     # Create a connection object.
     conn = st.connection("gsheets", type=GSheetsConnection)
     #########################################################
 
-    df_datos = util.getDatos(conn)
+    df_datos, df_data_test = util.getData(conn)
     df_joined = util.getJoinedDataFrame(conn)
-    #datatest= util.getDataTest(conn)
+
+    test = util.get_test(conn)
+    test_cat = util.construir_diccionario_test_categorias(test)
+    #st.dataframe(test_cat)
+
     total_jugadores = len(df_datos)
     df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
     #########################################################
 
     ##st.header("Bienvenido")
-    #st.dataframe(datatest)
+    
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
@@ -81,7 +86,7 @@ else:
     #st.dataframe(df_sesiones)
     if not df_joined.empty: 
         st.markdown("📆 **Cantidad de Sesiones por jugador**")
-        st.dataframe(util.sesiones_por_test(df_joined))
+        st.dataframe(util.sesiones_por_test(df_joined, test_cat))
 
 
     #st.bar_chart(np.random.randn(50,3))
