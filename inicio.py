@@ -24,7 +24,6 @@ if 'usuario' not in st.session_state:
     st.stop()  # 🔹 Detiene la ejecución del código si no hay sesión activa
 else:
     st.header('Bienvenido a :orange[Marcet]')
-    #util.generateMenu()
     
     # Create a connection object.
     conn = st.connection("gsheets", type=GSheetsConnection)
