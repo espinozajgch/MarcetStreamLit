@@ -176,6 +176,4 @@ cython_debug/
 # Ignorar imágenes
 assets/images/pitch/*.png
 assets/images/pitch/*.jpg
-assets/images/test/*.png
-assets/images/test/*.jpg
 
