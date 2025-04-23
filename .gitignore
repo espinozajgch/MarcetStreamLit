@@ -173,4 +173,7 @@ cython_debug/
 .DS_Store
 *.json
 .streamlit/secrets.toml
-assets/images/*
+# Ignorar imágenes
+assets/images/**/*.png
+assets/images/**/*.jpg
+
