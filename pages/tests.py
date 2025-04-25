@@ -4,9 +4,10 @@ from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import login as login
 from datetime import date
+import time
 
 st.set_page_config(
-    page_title="Test Fisicos",
+    page_title="Test Físicos",
     page_icon=":material/directions_run:",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -18,7 +19,6 @@ if "usuario" not in st.session_state:
     st.stop()
 
 st.header(":blue[Tests Físicos] :material/directions_run:", divider=True)
-#st.subheader("Métricas Grupales y alertas")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -26,7 +26,6 @@ fecha_actual = date.today()
 
 col1, col2 = st.columns([1,3])
 with col1:
-	# Mostrar el filtro con date_input
 	fecha_seleccionada = st.date_input(
 		"FECHA:",
 		value=fecha_actual,
@@ -50,35 +49,30 @@ df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usada
 st.divider()
 
 edited_df = util.get_data_editor(df_nuevo)
-# 💾 Diálogo para guardar cambios
+
+# 💾 Diálogo para guardar cambios (manual o auto)
 @st.dialog("💾 Guardando datos en Google Sheets...", width="small")
 def guardar_datos():
-	with st.status("⌛ Actualizando datos en Google Sheets...", expanded=True) as status:
-		try:
-			# Eliminamos solo el nombre completo (ya está separado en columnas relevantes)
-			edited_df.drop(columns=columnas_usadas[1], inplace=True)
+    with st.status("⌛ Actualizando datos en Google Sheets...", expanded=True) as status:
+        try:
+            edited_df.drop(columns=columnas_usadas[1], inplace=True)
 
-			# Eliminar registros con campos clave vacíos
-			columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
-			columnas_a_verificar = [col for col in edited_df.columns if col not in columnas_excluidas]
+            columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
+            columnas_a_verificar = [col for col in edited_df.columns if col not in columnas_excluidas]
 
-			df_edited = edited_df.dropna(subset=columnas_a_verificar, how="all")
+            df_edited = edited_df.dropna(subset=columnas_a_verificar, how="all")
 
-			# 2. Concatenar y eliminar duplicados por clave compuesta (FECHA + ID)
-			df_combinado = pd.concat([test_data, df_edited], ignore_index=True)
+            df_combinado = pd.concat([test_data, df_edited], ignore_index=True)
+            df_actualizado = df_combinado.drop_duplicates(subset=["FECHA REGISTRO", "ID"], keep="last")
 
-			# 3. Eliminar duplicados → mantener SOLO la última aparición
-			df_actualizado = df_combinado.drop_duplicates(subset=["FECHA REGISTRO", "ID"], keep="last")
+            conn.update(worksheet="DATATEST", data=df_actualizado)
+            status.update(label="✅ Datos actualizados correctamente.", state="complete", expanded=False)
 
-			conn.update(worksheet="DATATEST", data=df_actualizado)
-			st.session_state["reload_data"] = True  # Activar recarga manual
-			status.update(label="✅ Datos actualizados correctamente.", state="complete", expanded=False)
+            st.rerun()
 
-			#st.cache_data.clear()
-			#st.rerun()
-		except Exception as e:
-			status.update(label=f"❌ Error al actualizar: {e}", state="error", expanded=True)
+        except Exception as e:
+            status.update(label=f"❌ Error al actualizar: {e}", state="error", expanded=True)
 
-# 🔘 Botón que activa el diálogo
+# 🔘 Botón que activa el diálogo manual
 if st.button("💾 Guardar Cambios"):
     guardar_datos()

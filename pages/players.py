@@ -60,7 +60,7 @@ def guardar_datos():
             conn.update(worksheet="DATOS", data=df_combinado)
             st.session_state["reload_data"] = True  # Activar recarga manual
             status.update(label="✅ Datos actualizados correctamente.", state="complete", expanded=False)
-            #st.rerun()
+            st.rerun()
 
         except Exception as e:
             status.update(label="❌ Error al guardar los datos.", state="error", expanded=True)
