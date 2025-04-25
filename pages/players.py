@@ -36,7 +36,7 @@ df_filtrado = util.get_filters(df_jugadores)
 
 # ✏️ Editor de datos filtrados
 st.divider()
-df_editado = util.get_data_editor(df_filtrado)
+df_editado = util.get_data_editor(df_filtrado, num_rows_user="dynamic")
 
 # 💾 Diálogo para guardar cambios
 @st.dialog("💾 Guardando datos en Google Sheets...", width="small")

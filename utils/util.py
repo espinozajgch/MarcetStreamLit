@@ -200,7 +200,7 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
 
     return df_nuevo
 
-def get_data_editor(df_nuevo, key=None):
+def get_data_editor(df_nuevo, key=None, num_rows_user="fixed"):
     edited_df = st.data_editor(df_nuevo, key=key, column_config={
             "TEST": st.column_config.SelectboxColumn(
                 label="TEST",
@@ -208,7 +208,7 @@ def get_data_editor(df_nuevo, key=None):
                 required=True,
                 width="medium"
             )
-        },num_rows="dynamic") # 👈 An editable dataframe
+        },num_rows=num_rows_user) # 👈 An editable dataframe
     return edited_df
 
 def generateMenu():
