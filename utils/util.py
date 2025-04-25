@@ -208,7 +208,7 @@ def get_data_editor(df_nuevo, key=None):
                 required=True,
                 width="medium"
             )
-        }) # 👈 An editable dataframe
+        },num_rows="dynamic") # 👈 An editable dataframe
     return edited_df
 
 def generateMenu():
