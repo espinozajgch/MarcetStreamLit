@@ -46,9 +46,23 @@ datatest_columns = util.get_dataframe_columns(test_data)
 
 df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas, fecha_formateada)
 
+on = st.toggle("Solo Jugadores con Datos")
+
 st.divider()
 
-edited_df = util.get_data_editor(df_nuevo)
+# Lista de columnas que quieres excluir de la validación
+columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
+
+if on:
+	# Lista de columnas que sí quieres validar
+	columnas_a_validar = [col for col in datatest_columns if col not in columnas_excluidas]
+
+	# 2. Elimina las filas donde TODAS las columnas a validar son NaN o None
+	df_nuevo = df_nuevo.dropna(subset=columnas_a_validar, how="all")
+     
+	edited_df = util.get_data_editor(df_nuevo)
+else:
+    edited_df = util.get_data_editor(df_nuevo)
 
 # 💾 Diálogo para guardar cambios (manual o auto)
 @st.dialog("💾 Guardando datos en Google Sheets...", width="small")
@@ -57,18 +71,18 @@ def guardar_datos():
         try:
             edited_df.drop(columns=columnas_usadas[1], inplace=True)
 
-            columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
             columnas_a_verificar = [col for col in edited_df.columns if col not in columnas_excluidas]
 
             df_edited = edited_df.dropna(subset=columnas_a_verificar, how="all")
 
             df_combinado = pd.concat([test_data, df_edited], ignore_index=True)
             df_actualizado = df_combinado.drop_duplicates(subset=["FECHA REGISTRO", "ID"], keep="last")
-
+			
+			#st.dataframe(df_actualizado)
             conn.update(worksheet="DATATEST", data=df_actualizado)
             status.update(label="✅ Datos actualizados correctamente.", state="complete", expanded=False)
 
-            st.rerun()
+            #st.rerun()
 
         except Exception as e:
             status.update(label=f"❌ Error al actualizar: {e}", state="error", expanded=True)

@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore", message="When grouping with a length-1 list-like")
 
 st.set_page_config(
-    page_title="Dashboard Cargas Fisicas",
+    page_title="Marcet - Cargas Fisicas",
     page_icon=":material/home:",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -36,8 +36,23 @@ else:
     test_cat = util.construir_diccionario_test_categorias(test)
     #st.dataframe(test_cat)
 
+    # 1. Lista de columnas que quieres excluir de la validación
+    columnas_excluidas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO','anio','mes']
+
+    # 2. Lista de columnas que sí quieres validar
+    columnas_a_validar = [col for col in df_joined.columns if col not in columnas_excluidas]
+
+    # 3. Eliminar filas donde todas las columnas a validar son NaN o None
+    df_joined = df_joined.dropna(subset=columnas_a_validar, how="all")
+
+    # 4. Eliminar filas donde todas las columnas a validar son 0
+    mask = (df_joined[columnas_a_validar] == 0).all(axis=1)
+    df_joined = df_joined[np.logical_not(mask)]
+
+
     total_jugadores = len(df_datos)
     df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
+    #st.dataframe(df_joined)
     #########################################################
 
     ##st.header("Bienvenido")
