@@ -115,15 +115,13 @@ else:
                 ## ANTROPOMETRIA
                 df_anthropometrics = df_joined_filtrado[["FECHA REGISTRO", "ALTURA (CM)", "PESO (KG)", "GRASA (%)"]]
                 df_anthropometrics = df_anthropometrics.reset_index(drop=True)
-                
+    
                 columnas_estructura = util.get_dataframe_columns(df_anthropometrics)
-
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+                #todos_ceros = (df_anthropometrics[columnas_filtradas] == 0).all().all()
 
-                todos_ceros = (df_anthropometrics[columnas_filtradas] == 0).all().all()
-
-                if not todos_ceros:
+                if not util.columnas_sin_datos_utiles(df_anthropometrics, columnas_excluidas):
                     df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columnas_estructura] == 0).any(axis=1)]
                     percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
                     

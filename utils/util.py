@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 from utils.pdf import PDF
 from scipy.stats import percentileofscore
+from functools import reduce
 
 def get_ttl():
     if st.session_state.get("reload_data", False):
@@ -23,7 +24,7 @@ def get_test(conn):
 def get_player_data(conn):
     #st.cache_data.clear()
     df = conn.read(worksheet="DATOS", ttl=get_ttl())
-
+    #st.dataframe(df)
     hoy = datetime.today()
 
     # Convertir a tipo datetime (asegura formato día/mes/año)
@@ -43,12 +44,52 @@ def get_player_data(conn):
 
 def getData(conn):
     df_datos = get_player_data(conn)
-    df_data_test = get_test_data(conn)
+
+    df_an = get_test_data(conn,'ANTROPOMETRIA')
+    df_ag = get_test_data(conn,'AGILIDAD')
+    df_sp = get_test_data(conn,'SPRINT')
+    df_cmj = get_test_data(conn,'CMJ')
+    df_yoyo = get_test_data(conn,'YO-YO')
+    df_rsa = get_test_data(conn,'RSA')
+
+    columnas_comunes = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
+    df_data_test = unir_dataframes([df_an, df_ag, df_sp,df_cmj,df_yoyo,df_rsa], columnas_comunes)
 
     return df_datos, df_data_test
 
-def get_test_data(conn):
-    df = conn.read(worksheet="DATATEST", ttl=get_ttl())
+def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
+    """
+    Une una lista de DataFrames basándose en columnas comunes.
+
+    Args:
+        dfs (list): Lista de DataFrames a unir.
+        columnas_comunes (list): Columnas comunes para hacer el merge.
+        metodo (str): Tipo de unión ('outer' para no perder datos, 'inner' para intersección).
+
+    Returns:
+        DataFrame: Un DataFrame combinado con columnas comunes al inicio.
+    """
+    if not dfs:
+        raise ValueError("La lista de DataFrames está vacía.")
+    
+    # Verifica que todos los DataFrames contengan las columnas comunes
+    for df in dfs:
+        for col in columnas_comunes:
+            if col not in df.columns:
+                raise ValueError(f"La columna '{col}' no existe en uno de los DataFrames.")
+    
+    # Merge secuencial de todos los DataFrames
+    df_final = reduce(lambda left, right: pd.merge(left, right, on=columnas_comunes, how=metodo), dfs)
+    
+    # Reordenar columnas: comunes primero
+    columnas_ordenadas = columnas_comunes + [col for col in df_final.columns if col not in columnas_comunes]
+    df_final = df_final[columnas_ordenadas]
+    
+    return df_final
+
+
+def get_test_data(conn, hoja):
+    df = conn.read(worksheet=hoja, ttl=get_ttl())
     df = df.reset_index(drop=True)  # Reinicia los índices
     # Asegúrate de que todas las columnas tienen tipos compatibles con Arrow
     df = df.astype({ "ID": str })  # o ajusta a tus columnas específicas
@@ -138,6 +179,77 @@ def getJoinedDataFrame(conn):
 
     return df_data_test
 
+def columnas_sin_datos_utiles(df, columnas_excluidas=None, mostrar_alerta=False, mensaje="❗ No hay datos útiles en las columnas seleccionadas."):
+    """
+    Verifica si todas las celdas (excepto columnas excluidas) son NaN, None o 0.
+
+    Args:
+        df (pd.DataFrame): DataFrame a validar.
+        columnas_excluidas (list): Lista de columnas a ignorar.
+        mostrar_alerta (bool): Si True, muestra advertencia en Streamlit.
+        mensaje (str): Texto de advertencia a mostrar.
+
+    Returns:
+        bool: True si todas las celdas útiles son NaN, None o 0. False en caso contrario.
+    """
+    if df.empty:
+        return True
+
+    columnas_estructura = get_dataframe_columns(df)
+
+    # Si no se pasa una lista, usar lista vacía
+    columnas_excluidas = columnas_excluidas or []
+
+    # Eliminar columnas excluidas
+    columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+    if not columnas_filtradas:
+        return True  # Nada que validar
+
+    try:
+        todos_vacios_o_ceros = (
+            df[columnas_filtradas]
+            .map(lambda x: pd.isna(x) or x == 0)
+            .all()
+            .all()
+        )
+
+        if todos_vacios_o_ceros and mostrar_alerta:
+            st.warning(mensaje)
+
+        return todos_vacios_o_ceros
+
+    except KeyError as e:
+        st.error(f"❌ Columnas no encontradas: {e}")
+        return True
+
+def get_metricas_por_test(df_estructura, tests_seleccionados):
+    """
+    Devuelve una lista única de métricas asociadas a los tests seleccionados,
+    según la estructura del DataFrame.
+
+    Args:
+        df_estructura (pd.DataFrame): DataFrame con columnas como tipos de test,
+                                      y filas como métricas asociadas.
+        tests_seleccionados (list): Lista de nombres de tests seleccionados (columnas del DataFrame).
+
+    Returns:
+        list: Lista única de métricas (valores no nulos) asociadas a los tests.
+    """
+    if not tests_seleccionados:
+        return []
+
+    metricas = []
+
+    for test in tests_seleccionados:
+        if test in df_estructura.columns:
+            metricas.extend(df_estructura[test].dropna().tolist())
+
+    # 🔥 Eliminar duplicados respetando el orden de aparición
+    metricas_unicas = list(dict.fromkeys(metricas))
+
+    return metricas_unicas
+
 def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
     """
     Genera un nuevo DataFrame con la estructura de 'df_existente',
@@ -185,13 +297,21 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
         df_nuevo["FECHA REGISTRO"] = fecha
 
     # Forzar tipos seguros
-    df_nuevo["ID"] = df_nuevo["ID"].astype(str)
+    if "ID" in df_nuevo.columns:
+        df_nuevo["ID"] = df_nuevo["ID"].astype(str)
     df_nuevo.columns = df_nuevo.columns.astype(str)
 
-    # Unir datos existentes con los nuevos si aplica
-    if not df_existente.empty:
-        df_nuevo = pd.concat([df_existente, df_nuevo], ignore_index=True)
+    dfs_a_unir = [
+        df for df in [df_existente, df_nuevo]
+        if not df.empty and not df.isna().all().all()
+    ]
 
+    if dfs_a_unir:
+        df_nuevo = pd.concat(dfs_a_unir, ignore_index=True)
+    else:
+        df_nuevo = df_nuevo.copy()
+
+    # Ordenar por columnas específicas si existen
     columnas_orden = ["CATEGORIA", "EQUIPO"]
     columnas_presentes = [col for col in columnas_orden if col in df_nuevo.columns]
 
@@ -199,6 +319,7 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
         df_nuevo = df_nuevo.sort_values(by=columnas_presentes).reset_index(drop=True)
 
     return df_nuevo
+
 
 def get_data_editor(df_nuevo, key=None, num_rows_user="fixed"):
     edited_df = st.data_editor(df_nuevo, key=key, column_config={
@@ -210,6 +331,52 @@ def get_data_editor(df_nuevo, key=None, num_rows_user="fixed"):
             )
         },num_rows=num_rows_user) # 👈 An editable dataframe
     return edited_df
+
+def separar_dataframe_por_estructura(df_general, df_estructura, columnas_usadas):
+    """
+    Separa automáticamente un DataFrame grande en múltiples DataFrames,
+    añadiendo siempre columnas clave al inicio y eliminando registros
+    donde todas las métricas específicas sean NaN, None o 0.
+
+    Args:
+        df_general (DataFrame): El DataFrame con todas las métricas.
+        df_estructura (DataFrame): El DataFrame que define cómo separar.
+        columnas_usadas (list): Columnas clave que siempre deben incluirse.
+
+    Returns:
+        dict: {nombre_hoja: DataFrame filtrado con columnas específicas}
+    """
+    hojas_separadas = {}
+
+    for hoja in df_estructura.columns:
+        # 1. Obtener métricas asociadas a esta hoja
+        columnas_metrica = df_estructura[hoja].dropna().tolist()
+
+        # 2. Validar columnas existentes en df_general
+        columnas_existentes = [col for col in columnas_metrica if col in df_general.columns]
+
+        # 3. Combinar con columnas clave
+        columnas_finales = columnas_usadas + columnas_existentes
+
+        # 4. Respetar el orden original de df_general
+        columnas_finales = [col for col in df_general.columns if col in columnas_finales]
+
+        if columnas_existentes:
+            df_hoja = df_general[columnas_finales].copy()
+
+            # 5. Filtrar registros donde todas las métricas son NaN/None o 0
+            metricas_validas = df_hoja[columnas_existentes].applymap(lambda x: pd.isna(x) or x == 0)
+            filas_a_mantener = ~metricas_validas.all(axis=1)
+
+            df_hoja_filtrado = df_hoja[filas_a_mantener].copy()
+
+            hojas_separadas[hoja] = df_hoja_filtrado
+        else:
+            hojas_separadas[hoja] = pd.DataFrame()
+
+    return hojas_separadas
+
+
 
 def generateMenu():
     with st.sidebar:
