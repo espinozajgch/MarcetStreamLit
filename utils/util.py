@@ -1023,6 +1023,7 @@ def get_demarcaciones():
     MAPA_DEMARCACIONES = {
         "PORTERO": "POR",
         "DEFENSA CENTRAL": "DFC",
+        "CENTRAL": "DFC",
         "LATERAL DERECHO": "LD",
         "LATERAL IZQUIERDO": "LI",
         "MEDIOCENTRO DEFENSIVO": "MC",

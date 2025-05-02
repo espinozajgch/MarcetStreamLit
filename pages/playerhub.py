@@ -130,7 +130,7 @@ else:
         figyoyo = None
         figrsat = None
         figrsav = None
-        
+
         with antropometria:
             if len(df_joined_filtrado) > 0:
 
@@ -200,17 +200,17 @@ else:
                         df_anthropometrics["Categoría IMC"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", df_anthropometrics["IMC"].apply(util.categorizar_imc))
 
                         # Índice de grasa corporal
-                        df_anthropometrics["Índice de grasa"] = np.where(mask, np.nan, (df_anthropometrics["GRASA (%)"] * df_anthropometrics["PESO (KG)"]) / 100)
-                        df_anthropometrics["Categoría Grasa"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", df_anthropometrics["GRASA (%)"].apply(util.categorizar_grasa))
+                        #df_anthropometrics["Índice de grasa"] = np.where(mask, np.nan, (df_anthropometrics["GRASA (%)"] * df_anthropometrics["PESO (KG)"]) / 100)
+                        #df_anthropometrics["Categoría Grasa"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", df_anthropometrics["GRASA (%)"].apply(util.categorizar_grasa))
 
                         #df_anthropometrics = util.calcular_imc_indice_grasa(df_anthropometrics)
-                        df_anthropometrics[["ALTURA (CM)", "PESO (KG)", "IMC", "Índice de grasa"]] = df_anthropometrics[["ALTURA (CM)", "PESO (KG)", "IMC", "Índice de grasa"]].round(2)
-
+                        #df_anthropometrics[["ALTURA (CM)", "PESO (KG)", "IMC", "Índice de grasa"]] = df_anthropometrics[["ALTURA (CM)", "PESO (KG)", "IMC", "Índice de grasa"]].round(2)
+                        #st.dataframe(df_anthropometrics)
                         st.markdown("📊 **Análisis de IMC y Porcentaje de Grasa Corporal**")
-                        st.dataframe(df_anthropometrics[["FECHA REGISTRO", "ALTURA (CM)", "PESO (KG)", "IMC", "Categoría IMC", "Índice de grasa", "Categoría Grasa"]]
-                        .style
-                        .format({"ALTURA (CM)": "{:.2f}", "PESO (KG)": "{:.2f}", "IMC": "{:.2f}", "Índice de grasa": "{:.2f}"})  # Aplica el formato de 2 decimales
-                        .map(util.color_categorias, subset=["Categoría IMC", "Categoría Grasa"]))
+                        st.dataframe(df_anthropometrics
+                            .style
+                            .format({"ALTURA (CM)": "{:.2f}", "PESO (KG)": "{:.2f}", "IMC": "{:.2f}", "Índice de grasa": "{:.2f}"})  # Aplica el formato de 2 decimales
+                            .map(util.color_categorias, subset=["Categoría IMC"]))
                     with c2:
                         # Cálculo de estadísticas
                         stats = {
