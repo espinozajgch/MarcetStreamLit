@@ -41,7 +41,18 @@ df_joined = util.getJoinedDataFrame(conn)
 
 df_datos_filtrado = util.get_filters(df_datos)
 
-#st.dataframe(df_datos_filtrado)
+columnas_excluidas_promedio = ['FECHA REGISTRO', 'ID', "CATEGORIA", "EQUIPO" ,'TEST']
+
+datatest_columns = util.get_dataframe_columns(df_data_test)
+columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
+
+# Agrupar por CATEGORIA y EQUIPO, calcular promedio
+df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
+
+# Redondear si lo deseas
+df_promedios = df_promedios.round(2)
+
+#st.dataframe(df_promedios)
 
 st.divider()
 ###################################################
@@ -72,12 +83,14 @@ else:
 
         response = util.get_photo(df_jugador['FOTO PERFIL'].iloc[0])
 
+        id = df_jugador['ID'].iloc[0]
         nombre = df_jugador['JUGADOR'].iloc[0]
         nacionalidad = df_jugador['NACIONALIDAD'].iloc[0]
         bandera = util.obtener_bandera(nacionalidad.replace(",", "."))
 
-        st.markdown(f"## {nombre}")
-        st.markdown(f"##### **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera}")
+
+        st.markdown(f"## {nombre} ")
+        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera}")
 
         col1, col2, col3 = st.columns([1, 2, 2])
 
@@ -98,7 +111,7 @@ else:
             edad = df_jugador['EDAD'].iloc[0]
             demarcacion = df_jugador['DEMARCACION'].iloc[0]
             st.metric(label="Posición", value=f"{demarcacion.capitalize()}", border=True)
-            st.metric(label="Edad", value=f"{edad} años", border=True)
+            st.metric(label="Edad", value=f"{edad:,.0f} años", border=True)
     else:
         st.warning("⚠️ No se encontró ningún ID válido en los datos filtrados.")
 
@@ -106,7 +119,8 @@ else:
 
     if not df_datos_filtrado.empty:
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
-        antropometria,agilidad,sprint,cmj,yoyo,rsa,reporte = st.tabs(["ANTROPOMETRIA", "AGILIDAD" ,"SPRINT LINEAL", "CMJ", "YO-YO", "RSA", "REPORTE"])
+        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
+        
         with antropometria:
             if len(df_joined_filtrado) > 0:
 
@@ -152,15 +166,17 @@ else:
                         act = df_anthropometrics['GRASA (%)'].iloc[0]
                         ant = df_anthropometrics['GRASA (%)'].iloc[1] if len(df_anthropometrics) > 1 else 0
                         variacion = act - ant
-                        st.metric(f"Grasa (%)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+                        st.metric(f"Grasa (%)",f'{float(act):,.2f}')
                     
                     with col4:
                         act = df_anthropometrics['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
                     #st.dataframe(df_anthropometrics)
-                    graphics.get_anthropometrics_graph(df_anthropometrics)
+                    #df_ang = df_anthropometrics[["FECHA REGISTRO", "PESO (KG)", "GRASA (%)"]]
+                    figan = graphics.get_anthropometrics_graph(df_anthropometrics, df_promedios, categoria, equipo)
                     
+                    st.divider()
                     c1, c2 = st.columns([2,1.5])     
                     with c1:
                         # Cálculo del IMC
@@ -198,154 +214,16 @@ else:
                         st.markdown("📊 **Valores máximos, mínimos y promedio**")
                         st.dataframe(stats_df.round(1))
 
-                    st.divider()
-                    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                    graphics.mostrar_percentiles_coloreados(df_anthropometrics.iloc[0], percentiles_an)
+                    #st.divider()
+                    #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    #graphics.mostrar_percentiles_coloreados(df_anthropometrics.iloc[0], percentiles_an)
                 else:
                     st.text(mensaje_no_data)
                     percentiles_an = None
             else:
                 st.text(mensaje_no_data)
                 percentiles_an = None
-
-        with agilidad:
-            #st.dataframe(df_joined_filtrado)
-            if len(df_joined_filtrado) > 0: 
-                df_agilty = df_joined_filtrado[["FECHA REGISTRO", "505-DOM (SEG)", "505-ND (SEG)"]]
-                df_agilty = df_agilty.reset_index(drop=True)
-
-                #columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
-                columnas_estructura = util.get_dataframe_columns(df_agilty)
-
-                # Eliminar columnas excluidas
-                columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
-
-                todos_ceros = (df_agilty[columnas_filtradas] == 0).all().all()
-
-                if not todos_ceros:
-                    
-                    df_agilty = df_agilty[~(df_agilty[columnas_estructura] == 0).any(axis=1)]
-                    percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
-                    
-                    st.markdown("📆 **Ultímas Mediciones**")
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        act = df_agilty['505-DOM (SEG)'].iloc[0]
-                        ant = df_agilty['505-DOM (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"505-DOM (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-                        
-                    with col2:
-                        act = df_agilty['505-ND (SEG)'].iloc[0]
-                        ant = df_agilty['505-ND (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"505-ND (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col3:
-                        act = df_agilty['FECHA REGISTRO'].iloc[0] if len(df_agilty) > 0 else 0
-                        st.metric(f"Último Registro",act)
-
-                    graphics.get_agilty_graph(df_agilty)
-                    st.divider()
-                    cola, colb = st.columns([1.5,2])
-
-                    with cola:
-                        st.markdown("📊 **Históricos**")
-                        styled_df = util.aplicar_semaforo(df_agilty)
-                        st.dataframe(styled_df)
-                    with colb:
-                        st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                        graphics.mostrar_percentiles_coloreados(df_agilty.iloc[0], percentiles_ag)
-                else:
-                    st.text(mensaje_no_data)
-                    percentiles_ag = None
-            else:
-                st.text(mensaje_no_data)
-                percentiles_ag = None
-            
-        with sprint:
-            if len(df_joined_filtrado) > 0:
-                df_sprint = df_joined_filtrado[["FECHA REGISTRO", "TOTAL 40M (SEG)", "TIEMPO 0-5M (SEG)", "VEL 0-5M (M/S)", 
-                                                "TIEMPO 5-20M (SEG)", "VEL 5-20M (M/S)", "TIEMPO 20-40M (SEG)",
-                                                "VEL 20-40M (M/S)"]]
-                
-                df_sprint = df_sprint.reset_index(drop=True)
-
-                #columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
-                columnas_estructura = util.get_dataframe_columns(df_sprint)
-
-                # Eliminar columnas excluidas
-                columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
-
-                todos_ceros = (df_sprint[columnas_filtradas] == 0).all().all()
-
-                if not todos_ceros:
-                    df_sprint = df_sprint[~(df_sprint[columnas_estructura] == 0).all(axis=1)]
-                    percentiles_sp = util.calcular_percentiles(df_sprint.iloc[0], referencia_test, columnas_filtradas)
-                    
-                    st.markdown("📆 **Ultímas Mediciones**")
-
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-
-                    with col1:
-                        act = df_sprint['TOTAL 40M (SEG)'].iloc[0]
-                        ant = df_sprint['TOTAL 40M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"TOTAL 40M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col2:
-                        act = df_sprint['TIEMPO 0-5M (SEG)'].iloc[0]
-                        ant = df_sprint['TIEMPO 0-5M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"TIEMPO 0-5M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col3:
-                        act = df_sprint['VEL 0-5M (M/S)'].iloc[0]
-                        ant = df_sprint['VEL 0-5M (M/S)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"VEL 0-5M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col4:
-                        act = df_sprint['TIEMPO 5-20M (SEG)'].iloc[0]
-                        ant = df_sprint['TIEMPO 5-20M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"TIEMPO 5-20M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col5:
-                        act = df_sprint['VEL 5-20M (M/S)'].iloc[0]
-                        ant = df_sprint['VEL 5-20M (M/S)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"VEL 5-20M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col6:
-                        act = df_sprint['TIEMPO 20-40M (SEG)'].iloc[0]
-                        ant = df_sprint['TIEMPO 20-40M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"TIEMPO 20-40M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-                    with col7:
-                        act = df_sprint['VEL 20-40M (M/S)'].iloc[0]
-                        ant = df_sprint['VEL 20-40M (M/S)'].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"VEL 20-40M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
-
-
-                    # Mostrar el DataFrame estilizado en Streamlit
-                    st.markdown("📊 **Históricos**")
-                    styled_df = util.aplicar_semaforo(df_sprint)
-                    st.dataframe(styled_df)
-
-                    st.divider()
-                    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                    graphics.mostrar_percentiles_coloreados(df_sprint.iloc[0], percentiles_sp) 
-                else:
-                    st.text(mensaje_no_data)  
-                    percentiles_sp = None 
-            else:
-                st.text(mensaje_no_data)
-                percentiles_sp = None
-                
+        
         with cmj:
             if len(df_joined_filtrado) > 0:
                 df_cmj = df_joined_filtrado[["FECHA REGISTRO", "CMJ (CM)", "CMJ (W)"]]
@@ -381,28 +259,134 @@ else:
                         st.metric(f"CMJ (W)",f'{act:,.1f}', f'{variacion:,.1f}')
 
                     with col3:
-                        act = df_agilty['FECHA REGISTRO'].iloc[0]
+                        act = df_cmj['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
-                    graphics.get_cmj_graph(df_cmj)
+                    #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
-                    st.divider()
-                    cola, colb = st.columns([1.5,2])
+                    #st.divider()
+                    cola, colb = st.columns([2.5,1])
 
                     with cola:
+                        figcmj = graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
+
+                    with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
                         st.dataframe(styled_df)
                         #st.dataframe(df_cmj)
-                    with colb:
-                        st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                        graphics.mostrar_percentiles_coloreados(df_cmj.iloc[0], percentiles_cmj)  
+                    #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    #    graphics.mostrar_percentiles_coloreados(df_cmj.iloc[0], percentiles_cmj)  
                 else:
                     st.text(mensaje_no_data) 
                     percentiles_cmj = None      
             else:
                 st.text(mensaje_no_data)
                 percentiles_cmj = None
+          
+        with sprint:
+            if len(df_joined_filtrado) > 0:
+                df_sprint = df_joined_filtrado[["FECHA REGISTRO", "TOTAL 40M (SEG)", "TIEMPO 0-5M (SEG)", "VEL 0-5M (M/S)", 
+                                                "TIEMPO 5-20M (SEG)", "VEL 5-20M (M/S)", "TIEMPO 20-40M (SEG)",
+                                                "VEL 20-40M (M/S)"]]
+                
+                df_sprint = df_sprint.reset_index(drop=True)
+
+                #columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
+                columnas_estructura = util.get_dataframe_columns(df_sprint)
+
+                # Eliminar columnas excluidas
+                columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+                todos_ceros = (df_sprint[columnas_filtradas] == 0).all().all()
+                
+                #st.dataframe(df_sprint)
+                if not todos_ceros:
+                    df_sprint = df_sprint[~(df_sprint[columnas_estructura] == 0).all(axis=1)]
+                    percentiles_sp = util.calcular_percentiles(df_sprint.iloc[0], referencia_test, columnas_filtradas)
+                    
+                    st.markdown("📆 **Ultímas Mediciones**")
+
+                    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+
+                    with col1:
+                        act = df_sprint['TOTAL 40M (SEG)'].iloc[0]
+                        ant = df_sprint['TOTAL 40M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"TOTAL 40M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+
+                    with col2:
+                        act = df_sprint['TIEMPO 0-5M (SEG)'].iloc[0]
+                        ant = df_sprint['TIEMPO 0-5M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"TIEMPO 0-5M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+
+                    with col3:
+                        act = df_sprint['VEL 0-5M (M/S)'].iloc[0]
+                        ant = df_sprint['VEL 0-5M (M/S)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"VEL 0-5M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+
+                    with col4:
+                        act = df_sprint['TIEMPO 5-20M (SEG)'].iloc[0]
+                        ant = df_sprint['TIEMPO 5-20M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"TIEMPO 5-20M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+
+                    with col5:
+                        act = df_sprint['VEL 5-20M (M/S)'].iloc[0]
+                        ant = df_sprint['VEL 5-20M (M/S)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"VEL 5-20M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+
+                    with col6:
+                        act = df_sprint['TIEMPO 20-40M (SEG)'].iloc[0]
+                        ant = df_sprint['TIEMPO 20-40M (SEG)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"TIEMPO 20-40M (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+
+                    with col7:
+                        act = df_sprint['VEL 20-40M (M/S)'].iloc[0]
+                        ant = df_sprint['VEL 20-40M (M/S)'].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"VEL 20-40M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+
+                    df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
+                    st.divider()
+                    cola ,colb = st.columns([2,1])
+                    with cola:
+                        figspt = graphics.get_sprint_time_graph(df_sprint, df_promedios, categoria, equipo)
+                    with colb:
+                        # Mostrar el DataFrame estilizado en Streamlit
+                        st.markdown("📊 **Históricos**")
+                        styled_df = util.aplicar_semaforo(df_sprint[["FECHA REGISTRO", "TIEMPO 0-5M (SEG)", "TIEMPO 20-40M (SEG)"]], invertir=True)
+                        st.dataframe(styled_df)   
+
+                    st.divider()
+                    colc ,cold = st.columns([2,1])
+                    with colc:
+                        figspv = graphics.get_sprint_velocity_graph(df_sprint, df_promedios, categoria, equipo)
+                    with cold:
+                        # Mostrar el DataFrame estilizado en Streamlit
+                        st.markdown("📊 **Históricos**")
+                        styled_df = util.aplicar_semaforo(df_sprint[["FECHA REGISTRO", "VEL 0-5M (KM/H)", "VEL 20-40M (KM/H)"]])
+                        st.dataframe(styled_df)
+
+
+                    #st.divider()
+                    #st.markdown("📊 **Históricos Generales**")
+                    #styled_df = util.aplicar_semaforo(df_sprint)
+                    #st.dataframe(df_sprint)   
+
+                    #st.divider()
+                    #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    #graphics.mostrar_percentiles_coloreados(df_sprint.iloc[0], percentiles_sp) 
+                else:
+                    st.text(mensaje_no_data)  
+                    percentiles_sp = None 
+            else:
+                st.text(mensaje_no_data)
+                percentiles_sp = None
                 
         with yoyo:
 
@@ -442,32 +426,102 @@ else:
                         st.metric(f"TEST",act)
 
                     with col4:
-                        act = df_agilty['FECHA REGISTRO'].iloc[0]
+                        act = df_yoyo['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
                     st.divider()
                     #df_yoyo = df_yoyo.fillna(0).replace("None", 0)
                     #st.dataframe(df_yoyo) 
-                    graphics.get_yoyo_graph(df_yoyo)
+                    
 
-                    st.divider()
-                    cola, colb = st.columns([1.5,2])
+                    #st.divider()
+                    cola, colb = st.columns([2.5,1.5])
 
                     with cola:
-                        st.markdown("📊 **Históricos**")
-                        styled_df = util.aplicar_semaforo(df_yoyo)
-                        st.dataframe(styled_df)
+                        figyoyo = graphics.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo)
                         #st.dataframe(df_yoyo)    
-                    with colb:       
-                        st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                        graphics.mostrar_percentiles_coloreados(df_yoyo.iloc[0], percentiles_yoyo)  
+                    with colb:   
+                        st.markdown("📊 **Históricos**")
+                        df_yoyo = df_yoyo.rename(columns={"ACCUMULATED SHUTTLE DISTANCE (M)": "DISTANCE (M)"})
+
+                        styled_df = util.aplicar_semaforo(df_yoyo)
+                        st.dataframe(styled_df)    
+                    #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    #    graphics.mostrar_percentiles_coloreados(df_yoyo.iloc[0], percentiles_yoyo)  
                 else:
                     st.text(mensaje_no_data)
                     percentiles_yoyo = None
             else:
                 st.text(mensaje_no_data)
                 percentiles_yoyo = None
-                
+
+        with agilidad:
+            #st.dataframe(df_joined_filtrado)
+            if len(df_joined_filtrado) > 0: 
+                df_agilty = df_joined_filtrado[["FECHA REGISTRO", "505-DOM (SEG)", "505-ND (SEG)"]]
+                df_agilty = df_agilty.reset_index(drop=True)
+
+                #columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
+                columnas_estructura = util.get_dataframe_columns(df_agilty)
+
+                # Eliminar columnas excluidas
+                columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+                todos_ceros = (df_agilty[columnas_filtradas] == 0).all().all()
+
+                if not todos_ceros:
+                    
+                    df_agilty = df_agilty[~(df_agilty[columnas_estructura] == 0).any(axis=1)]
+                    percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
+                    
+                    st.markdown("📆 **Ultímas Mediciones**")
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        act = df_agilty['505-DOM (SEG)'].iloc[0]
+                        ant = df_agilty['505-DOM (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"505-DOM (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        
+                    with col2:
+                        act = df_agilty['505-ND (SEG)'].iloc[0]
+                        ant = df_agilty['505-ND (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
+                        variacion = act - ant
+                        st.metric(f"505-ND (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+
+                    with col3:
+                        act = df_agilty['FECHA REGISTRO'].iloc[0] if len(df_agilty) > 0 else 0
+                        st.metric(f"Último Registro",act)
+
+                    #st.divider()
+                    #styled_df = util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]])
+                    cola, colb = st.columns([3,1])
+
+                    with cola:
+                        figagd = graphics.get_agility_graph_dom(df_agilty, df_promedios, categoria, equipo)
+                    with colb:
+                        #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
+                        st.markdown("📊 **Históricos**")
+                        st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]], invertir=True))
+                    #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    #    graphics.mostrar_percentiles_coloreados(df_agilty.iloc[0], percentiles_ag)
+
+                    #styled_df = util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]])
+                    colc, cold = st.columns([3,1])
+
+                    with colc:
+                        figagnd = graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
+                    with cold:
+                        #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
+                        st.markdown("📊 **Históricos**")
+                        st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]], invertir=True))
+                else:
+                    st.text(mensaje_no_data)
+                    percentiles_ag = None
+            else:
+                st.text(mensaje_no_data)
+                percentiles_ag = None
+                            
         with rsa:
             if len(df_joined_filtrado) > 0:
                 df_rsa = df_joined_filtrado[["FECHA REGISTRO", "MEDIDA EN TIEMPO (SEG)","VELOCIDAD (M*SEG)" ]]
@@ -494,7 +548,7 @@ else:
                         act = df_rsa['MEDIDA EN TIEMPO (SEG)'].iloc[0]
                         ant = df_rsa['MEDIDA EN TIEMPO (SEG)'].iloc[1] if len(df_rsa) > 1 else 0
                         variacion = act - ant
-                        st.metric(f"MEDIDA EN TIEMPO (SEG)",f'{act:,.1f}', f'{variacion:,.1f}')
+                        st.metric(f"MEDIDA EN TIEMPO (SEG)",f'{act:,.1f}', f'{variacion:,.1f}', delta_color="inverse")
 
                     with col2:
                         act = df_rsa['VELOCIDAD (M*SEG)'].iloc[0]
@@ -506,19 +560,30 @@ else:
                         act = df_agilty['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
-                    graphics.get_rsa_graph(df_rsa)
-
-                    st.divider()
-                    cola, colb = st.columns([1.5,2])
+                    styled_dfa = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","MEDIDA EN TIEMPO (SEG)"]], invertir=True)
+                    #st.divider()
+                    cola, colb = st.columns([2.5,1])
 
                     with cola:
-                        st.markdown("📊 **Históricos**")
-                        styled_df = util.aplicar_semaforo(df_rsa)
-                        st.dataframe(styled_df)
+                        figrsat = graphics.get_rsa_graph(df_rsa, df_promedios, categoria, equipo)
                         #st.dataframe(df_rsa)
-                    with colb:       
-                        st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                        graphics.mostrar_percentiles_coloreados(df_rsa.iloc[0], percentiles_rsa) 
+                    with colb:    
+                        st.markdown("📊 **Históricos**")
+                        st.dataframe(styled_dfa) 
+
+                    df_rsa = util.convertir_m_s_a_km_h(df_rsa, ["VELOCIDAD (M*SEG)"])
+                    styled_dfb = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","VELOCIDAD (KM/H)"]])
+                    colc, cold = st.columns([2.5,1])
+                    with colc:
+                        figrsav = graphics.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo)
+                        #st.dataframe(df_rsa)
+                    with cold:    
+                        st.markdown("📊 **Históricos**")
+                        st.dataframe(styled_dfb) 
+
+                    #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    #    graphics.mostrar_percentiles_coloreados(df_rsa.iloc[0], percentiles_rsa) 
+
                 else:
                     st.text(mensaje_no_data) 
                     percentiles_rsa = None      
@@ -527,6 +592,29 @@ else:
                 percentiles_rsa = None
                 
         with reporte:
+            # 1. Generar PDF como bytes (puede tardar)
+            pdf_bytes = util.generate_pdf(
+                df_jugador, df_anthropometrics, df_agilty, df_sprint, 
+                df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav, 
+            )
+
+            # 2. Codificar y preparar para mostrar
+            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+            pdf_data = base64.b64decode(b64_pdf)
+
+            # Enlace de descarga con nombre específico
+            st.markdown(f'''
+                <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{nombre}.pdf" target="_blank">
+                📥 Descargar PDF
+                </a>
+            ''', unsafe_allow_html=True)
+
+            # 3. Mostrar PDF en Streamlit
+            html_code = f'''
+                <object data="data:application/pdf;base64,{b64_pdf}" type="application/pdf" width="100%" height="1200px"></object>
+            '''
+            st.write(html_code, unsafe_allow_html=True)
+
             if len(df_joined_filtrado) > 0:
 
                 if st.button("📄 Generar PDF"):
@@ -537,9 +625,7 @@ else:
                         # 1. Generar PDF como bytes (puede tardar)
                         pdf_bytes = util.generate_pdf(
                             df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                            df_cmj, df_yoyo, df_rsa,
-                            percentiles_an, percentiles_ag, percentiles_sp, 
-                            percentiles_cmj, percentiles_yoyo, percentiles_rsa
+                            df_cmj, df_yoyo, df_rsa, figan
                         )
 
                         # 2. Codificar y preparar para mostrar

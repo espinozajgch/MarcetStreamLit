@@ -450,86 +450,7 @@ def get_filters(df):
     # Si no se seleccionó ningún filtro, retornar el original
     return df
 
-# def generateFilters(df):
 
-#     ##anios = df["anio"].dropna().astype(str).str.strip().unique().tolist()
-#     df_filtrado = pd.DataFrame() 
-#     default_option = "Todos";
-
-#     category_col, team_col, position_col, nationality_col, player_col = st.columns(5)
-
-#     with category_col:
-#         category_list = df["CATEGORIA"].dropna().astype(str).str.strip().unique().tolist()
-#         category_list.sort()
-#         category = st.selectbox("CATEGORIA:", options=[default_option]+category_list, index=0)
-
-#     with team_col:
-
-#         if category == default_option:
-#             team_list = df["EQUIPO"]
-#         else:
-#             team_list = df[df['CATEGORIA'] == category]["EQUIPO"]
-    
-#         team_list = team_list.dropna().astype(str).str.strip().unique().tolist()
-#         team_list.sort()
-#         team = st.selectbox("EQUIPO:", options=[default_option]+team_list)
-    
-#     with position_col:
-#         position_list = df
-
-#         if category != default_option:
-#             position_list = position_list[position_list['CATEGORIA'] == category]
-
-#         if team != default_option:
-#             position_list = position_list[position_list['EQUIPO'] == team]
-
-#         position_list = position_list["DEMARCACION"].dropna().astype(str).str.strip().unique().tolist()
-#         position_list.sort()
-#         position = st.selectbox("DEMARCACIÓN", options=[default_option]+position_list, index=0)
-
-#     with nationality_col:
-#         nationality_list = df
-
-#         if category != default_option:
-#             nationality_list = nationality_list[nationality_list['CATEGORIA'] == category]
-
-#         if team != default_option:
-#             nationality_list = nationality_list[nationality_list['EQUIPO'] == team]
-
-#         if position != default_option:
-#             nationality_list = nationality_list[nationality_list['DEMARCACIÓN'] == position]
-
-#         nationality_list = nationality_list["NACIONALIDAD"].dropna().astype(str).str.strip().unique().tolist()
-#         nationality_list.sort()
-#         nationality = st.selectbox("NACIONALIDAD:", options=[default_option]+nationality_list, index=0)
-        
-#     with player_col:
-#         player_list = df
-        
-#         if category != default_option:
-#             player_list = player_list[player_list['CATEGORIA'] == category]
-
-#         if team != default_option:
-#             player_list = player_list[player_list['EQUIPO'] == team]
-
-#         if position != default_option:
-#             player_list = player_list[player_list['DEMARCACIÓN'] == position]
-        
-#         if nationality != default_option:
-#             player_list = player_list[player_list['NACIONALIDAD'] == nationality]
-
-#         player_list = player_list["JUGADOR"].dropna().astype(str).str.strip().unique().tolist()
-#         player_list.sort()
-#         player = st.selectbox("JUGADOR:", options=[default_option]+player_list, index=0)
-
-#     if player != default_option:
-#         df_filtrado=df[df["JUGADOR"]==player]
-
-#     #if anio:
-#     #    df_filtrado=df_filtrado[df_filtrado["anio"]==anio]
-#     #    df_filtrado = df_filtrado.reset_index(drop=True)  # Reinicia los índices
-
-#     return df_filtrado
 
 def generateFilters(df):
     default_option = "Todos"
@@ -644,59 +565,57 @@ def color_categorias(val):
     
     return f'background-color: rgba({r}, {g}, {b}, {opacity})'
 
-def aplicar_semaforo(df, exclude_columns=["FECHA REGISTRO"]):
+def aplicar_semaforo(df, exclude_columns=["FECHA REGISTRO"], invertir=False):
     """
-    Aplica un formato de color semáforo con opacidad a un DataFrame.
+    Aplica un formato de color semáforo a un DataFrame.
 
-    - Rojo (peor valor de la columna).
-    - Verde (mejor valor de la columna).
-    - Amarillo (valores intermedios).
-    - Blanco/transparente para NaN o columnas excluidas.
+    - Verde: mejor valor (según invertir).
+    - Rojo: peor valor.
+    - Amarillo: intermedio.
+    - Blanco para columnas excluidas o valores NaN.
 
     Parámetros:
-    df : pd.DataFrame  ->  DataFrame a estilizar.
-    exclude_columns : list  ->  Lista de columnas a excluir de la pintura.
+    df : pd.DataFrame
+    exclude_columns : list -> columnas a excluir del formato.
+    invertir : bool -> si True, valores bajos son mejores.
 
     Retorna:
-    df.style -> DataFrame estilizado.
+    df.style
     """
 
     def semaforo(val, column):
-        # Excluir columnas no numéricas o especificadas
         if column in exclude_columns or not np.issubdtype(df[column].dtype, np.number):
             return ''
 
-        # Manejar valores NaN
-        if pd.isna(val):  
+        if pd.isna(val):
             return 'background-color: rgba(255, 255, 255, 0)'
 
-        # Obtener mínimo y máximo de la columna
-        column_min = df[column].min()
-        column_max = df[column].max()
+        col_min = df[column].min()
+        col_max = df[column].max()
 
-        # Normalizar el valor entre 0 (mínimo) y 1 (máximo)
-        if column_max != column_min:  
-            normalized = (val - column_min) / (column_max - column_min)
-        else:  
-            normalized = 0.5  # Si todos los valores son iguales, usar amarillo
+        # Normalización
+        if col_max != col_min:
+            normalized = (val - col_min) / (col_max - col_min)
+        else:
+            normalized = 0.5  # todos iguales
 
-        # Interpolar colores (rojo -> amarillo -> verde)
-        r = int(255 * (1 - normalized))  # Rojo se reduce cuando el valor sube
-        g = int(255 * normalized)  # Verde aumenta cuando el valor sube
-        b = 0  # Mantener el azul en 0 para tonos cálidos
-        opacity = 0.4  # Opacidad fija
+        if invertir:
+            normalized = 1 - normalized
+
+        # Interpolar colores
+        r = int(255 * (1 - normalized))
+        g = int(255 * normalized)
+        b = 0
+        opacity = 0.4
 
         return f'background-color: rgba({r}, {g}, {b}, {opacity})'
 
-    # Aplicar la función a todas las columnas excepto las excluidas
-    styled_df =  df.style.apply(lambda x: [semaforo(val, x.name) for val in x], axis=0)
+    styled_df = df.style.apply(lambda x: [semaforo(val, x.name) for val in x], axis=0)
 
-    # Aplicar formato de dos decimales a todas las columnas numéricas no excluidas
     numeric_columns = [col for col in df.select_dtypes(include=[np.number]).columns if col not in exclude_columns]
     styled_df = styled_df.format({col: "{:.2f}" for col in numeric_columns})
 
-    return styled_df            
-
+    return styled_df
 
 def contar_jugadores_por_categoria(df):
     """
@@ -883,8 +802,8 @@ def obtener_bandera(pais):
         return codigo
     else:
         return ""
-
-def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, percentiles_an, percentiles_ag, percentiles_sp, percentiles_cmj, percentiles_yoyo, percentiles_rsa):
+    
+def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav):
     pdf = PDF()
     pdf.add_page()
 
@@ -893,85 +812,145 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     pdf.add_player_block(df_jugador)
     
     # Composición corporal
+
+    altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
+    peso = df_anthropometrics['PESO (KG)'].iloc[0]
+    grasa = df_anthropometrics['GRASA (%)'].iloc[0]
+
     pdf.section_title("COMPOSICIÓN CORPORAL")
+    pdf.add_last_measurements(altura, peso, grasa)
+
+    pdf.add_plotly_figure(figan,"")
     
-    if percentiles_an:
-        pdf.section_subtitle("ANTOPOMETRIA")
-        x_start = 10
-        y_start = pdf.get_y()
+    # if percentiles_an:
+    #     pdf.section_subtitle("ANTOPOMETRIA")
+    #     x_start = 10
+    #     y_start = pdf.get_y()
         
-        footer_text = "Tabla de percentiles: Comparación del jugador con atletas de su misma edad."
-        pdf.add_percentile_semaforo_table(df_anthropometrics.iloc[0], percentiles_an, x=x_start, y=y_start, footer=footer_text)
-        pdf.add_indices_table(df_anthropometrics.iloc[0], x_start + 105, y_start)
-        pdf.ln(10)
+    #     footer_text = "Tabla de percentiles: Comparación del jugador con atletas de su misma edad."
+    #     pdf.add_percentile_semaforo_table(df_anthropometrics.iloc[0], percentiles_an, x=x_start, y=y_start, footer=footer_text)
+    #     pdf.add_indices_table(df_anthropometrics.iloc[0], x_start + 105, y_start)
+    #     pdf.ln(10)
 
-    if percentiles_ag or percentiles_cmj:
+    # if percentiles_ag or percentiles_cmj:
     
-        # Resultados físicos
-        pdf.section_title("RESULTADOS TESTS FÍSICOS")
+    #     # Resultados físicos
+    #     pdf.section_title("RESULTADOS TESTS FÍSICOS")
 
-        if percentiles_ag:
-            pdf.section_subtitle("AGILIDAD 505")
-            x_start = 10
-            y_start = pdf.get_y()
-            footer_text = "El objetivo de este test es medir la capacidad de un atleta para cambiar de dirección."
-            pdf.add_percentile_semaforo_table(df_agilty.iloc[0], percentiles_ag, x=x_start, y=y_start, footer=footer_text)
-            pdf.add_img("assets/images/test/505.jpg",x=130, y=y_start, w=55)
-            pdf.ln(3)
+    #     if percentiles_ag:
+    #         pdf.section_subtitle("AGILIDAD 505")
+    #         x_start = 10
+    #         y_start = pdf.get_y()
+    #         footer_text = "El objetivo de este test es medir la capacidad de un atleta para cambiar de dirección."
+    #         pdf.add_percentile_semaforo_table(df_agilty.iloc[0], percentiles_ag, x=x_start, y=y_start, footer=footer_text)
+    #         pdf.add_img("assets/images/test/505.jpg",x=130, y=y_start, w=55)
+    #         pdf.ln(3)
 
-        if percentiles_cmj:
-            pdf.section_subtitle("CMJ")
-            x_start = 10
-            y_start = pdf.get_y()
-            footer_text = "El objetivo de este test es medir la potencia explosiva del tren inferior."
-            pdf.add_percentile_semaforo_table(df_cmj.iloc[0], percentiles_cmj, x=x_start, y=y_start, footer=footer_text)
-            pdf.add_img("assets/images/test/cmj.jpg",x=130, y=y_start-5, w=65)
-            pdf.ln(3)
+    #     if percentiles_cmj:
+    #         pdf.section_subtitle("CMJ")
+    #         x_start = 10
+    #         y_start = pdf.get_y()
+    #         footer_text = "El objetivo de este test es medir la potencia explosiva del tren inferior."
+    #         pdf.add_percentile_semaforo_table(df_cmj.iloc[0], percentiles_cmj, x=x_start, y=y_start, footer=footer_text)
+    #         pdf.add_img("assets/images/test/cmj.jpg",x=130, y=y_start-5, w=65)
+    #         pdf.ln(3)
 
     page_height = pdf.get_height()
     margen_inferior = 33
     y_final = page_height - margen_inferior
     pdf.draw_gradient_scale(x=10, y=y_final)
 
-    if percentiles_rsa or percentiles_sp or percentiles_yoyo:
+    #if df_cmj:
 
-        pdf.add_page()
-        pdf.ln(20)
-        pdf.section_title("RESULTADOS TESTS FÍSICOS")
-        
-        if percentiles_rsa:
-            pdf.section_subtitle("RSA")
-            x_start = 10
-            y_start = pdf.get_y()
-            footer_text = "El objetivo de este test es medir la resistencia a la fatiga en sprints repetidos."
-            pdf.add_percentile_semaforo_table(df_rsa.iloc[0], percentiles_rsa, x=x_start, y=y_start, wm=50, footer=footer_text)
-            pdf.add_img("assets/images/test/rsa.jpg",x=135, y=y_start-2, w=65)
-            pdf.ln(3)
+    pdf.add_page()
+    pdf.ln(20)
 
-        if percentiles_sp:
-            pdf.section_subtitle("SPRINT LINEAL")
-            x_start = 10
-            y_start = pdf.get_y()
-            footer_text = "El objetivo de este test es medir la capacidad de un atleta para acelerar en línea recta."
-            pdf.add_percentile_semaforo_table(df_sprint.iloc[0], percentiles_sp, x=x_start, y=y_start, wm=50, footer=footer_text)
-            pdf.add_img("assets/images/test/sprint.jpg",x=135, y=y_start+20, w=65)
-            pdf.ln(3)
+    pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
+    pdf.add_plotly_figure(figcmj,"")
 
-        if percentiles_yoyo:
-            pdf.section_subtitle("YO-YO")
-            x_start = 10
-            y_start = pdf.get_y()
-            footer_text = "El objetivo de este test es medir la capacidad de recuperación en esfuerzos intermitentes."
-            pdf.add_percentile_semaforo_table(df_yoyo.iloc[0], percentiles_yoyo, x=x_start, y=y_start, wm=75, footer=footer_text)
+    pdf.section_title("VELOCIDAD EN SPRINT (40M)")
+    pdf.add_plotly_figure(figspv,"")
+
+    page_height = pdf.get_height()
+    margen_inferior = 33
+    y_final = page_height - margen_inferior
+    pdf.draw_gradient_scale(x=10, y=y_final)
+
+    pdf.add_page()
+    pdf.ln(20)
+
+    pdf.section_title("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)")
+    pdf.add_plotly_figure(figyoyo,"")
+    y = pdf.get_altura()
+    pdf.draw_gradient_scale(x=10, y=y+5)
+    pdf.ln(5)
+
+    pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
+    pdf.add_plotly_figure(figagd,"")
+
+    page_height = pdf.get_height()
+    margen_inferior = 33
+    y_final = page_height - margen_inferior
+    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+
+    pdf.add_page()
+    pdf.ln(20)
+
+    pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
+    pdf.add_plotly_figure(figagnd,"")
+
+    pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
+    pdf.add_plotly_figure(figrsat,"")
+
+    page_height = pdf.get_height()
+    margen_inferior = 33
+    y_final = page_height - margen_inferior
+    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+
+    pdf.add_page()
+    pdf.ln(20)
+
+    pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
+    pdf.add_plotly_figure(figrsav,"")
+
+    page_height = pdf.get_height()
+    margen_inferior = 33
+    y_final = page_height - margen_inferior
+    pdf.draw_gradient_scale(x=10, y=y_final)
+
+    #     if percentiles_rsa:
+    #         pdf.section_subtitle("RSA")
+    #         x_start = 10
+    #         y_start = pdf.get_y()
+    #         footer_text = "El objetivo de este test es medir la resistencia a la fatiga en sprints repetidos."
+    #         pdf.add_percentile_semaforo_table(df_rsa.iloc[0], percentiles_rsa, x=x_start, y=y_start, wm=50, footer=footer_text)
+    #         pdf.add_img("assets/images/test/rsa.jpg",x=135, y=y_start-2, w=65)
+    #         pdf.ln(3)
+
+    #     if percentiles_sp:
+    #         pdf.section_subtitle("SPRINT LINEAL")
+    #         x_start = 10
+    #         y_start = pdf.get_y()
+    #         footer_text = "El objetivo de este test es medir la capacidad de un atleta para acelerar en línea recta."
+    #         pdf.add_percentile_semaforo_table(df_sprint.iloc[0], percentiles_sp, x=x_start, y=y_start, wm=50, footer=footer_text)
+    #         pdf.add_img("assets/images/test/sprint.jpg",x=135, y=y_start+20, w=65)
+    #         pdf.ln(3)
+
+    #     if percentiles_yoyo:
+    #         pdf.section_subtitle("YO-YO")
+    #         x_start = 10
+    #         y_start = pdf.get_y()
+    #         footer_text = "El objetivo de este test es medir la capacidad de recuperación en esfuerzos intermitentes."
+    #         pdf.add_percentile_semaforo_table(df_yoyo.iloc[0], percentiles_yoyo, x=x_start, y=y_start, wm=75, footer=footer_text)
             
-            y_start = pdf.get_y()
-            pdf.add_img("assets/images/test/yo-yo.jpg",x=65, y=y_start+5, w=75)
-            pdf.ln(45)
+    #         y_start = pdf.get_y()
+    #         pdf.add_img("assets/images/test/yo-yo.jpg",x=65, y=y_start+5, w=75)
+    #         pdf.ln(45)
 
-        page_height = pdf.get_height()
-        margen_inferior = 35
-        y_final = page_height - margen_inferior
-        pdf.draw_gradient_scale(x=10, y=y_final)
+    #     page_height = pdf.get_height()
+    #     margen_inferior = 35
+    #     y_final = page_height - margen_inferior
+    #     pdf.draw_gradient_scale(x=10, y=y_final)
 
     return pdf.output(dest='S').encode('latin1')
 
@@ -1042,3 +1021,24 @@ def get_demarcaciones():
     }
 
     return MAPA_DEMARCACIONES
+
+def convertir_m_s_a_km_h(df, metricas_m_s):
+    """
+    Añade columnas nuevas transformadas de m/s a km/h para las columnas indicadas.
+
+    Args:
+        df (pd.DataFrame): DataFrame original.
+        metricas_m_s (list): Lista de nombres de columnas en m/s a convertir.
+
+    Returns:
+        pd.DataFrame: DataFrame con columnas nuevas en km/h.
+    """
+    df = df.copy()
+
+    for col in metricas_m_s:
+        if col in df.columns:
+            import re
+            nueva_col = re.sub(r"\s*\(M[/*]?S(EG)?\)", " (KM/H)", col, flags=re.IGNORECASE)
+            df[nueva_col] = df[col] * 3.6
+
+    return df

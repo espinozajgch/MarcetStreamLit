@@ -2,6 +2,10 @@ from fpdf import FPDF
 import requests
 import tempfile
 from utils import util
+from PIL import Image
+from io import BytesIO
+import tempfile
+import plotly.io as pio
 
 class PDF(FPDF):
 
@@ -95,28 +99,46 @@ class PDF(FPDF):
 
         # Datos personales
         self.set_font("Arial", "B", 10)
-        self.set_xy(50, 60)
-        self.cell(35, 8, "NACIONALIDAD:", 0)
+        self.set_xy(50, 55)
+        self.cell(35, 6, "ID:", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 8, data["NACIONALIDAD"], ln=True)
+        self.cell(50, 6, str(data["ID"]), ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 8, "F. DE NACIMIENTO:", 0)
+        self.cell(35, 6, "NACIONALIDAD:", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 8, data["FECHA DE NACIMIENTO"], ln=True)
+        self.cell(50, 6, data["NACIONALIDAD"], ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 8, "EDAD:", 0)
+        self.cell(35, 6, "F. DE NACIMIENTO:", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 8, str(data.get("EDAD", "")), ln=True)
+        self.cell(50, 6, data["FECHA DE NACIMIENTO"], ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 8, "DEMARCACIÓN:", 0)
+        self.cell(35, 6, "EDAD:", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 8, data["DEMARCACION"], ln=True)
+        self.cell(50, 6, str(data.get("EDAD", "")), ln=True)
+
+        self.set_font("Arial", "B", 10)
+        self.set_x(50)
+        self.cell(35, 6, "DEMARCACIÓN:", 0)
+        self.set_font("Arial", "", 10)
+        self.cell(50, 6, data["DEMARCACION"], ln=True)
+
+        self.set_font("Arial", "B", 10)
+        self.set_x(50)
+        self.cell(35, 6, "CATEGORIA:", 0)
+        self.set_font("Arial", "", 10)
+        self.cell(50, 6, data["CATEGORIA"].upper(), ln=True)
+
+        self.set_font("Arial", "B", 10)
+        self.set_x(50)
+        self.cell(35, 6, "EQUIPO:", 0)
+        self.set_font("Arial", "", 10)
+        self.cell(50, 6, data["EQUIPO"].upper(), ln=True)
 
         # Imagen del campo (derecha)
         #self.image("assets/images/test/505.jpg", 130, 50, 70)
@@ -319,7 +341,7 @@ class PDF(FPDF):
         self.set_font("Arial", "I", 8)
         self.multi_cell(0, 5, "Índices calculados a partir de las mediciones antropométricas.")
 
-    def draw_gradient_scale(self, x=10, y=None, width=190, height=6, steps=100):
+    def draw_gradient_scale(self, x=10, y=None, width=190, height=6, steps=100, invertido=False):
         if y is None:
             y = self.get_y()
 
@@ -327,16 +349,19 @@ class PDF(FPDF):
 
         for i in range(steps):
             t = i / (steps - 1)  # Normalizado [0, 1]
-            r = int(255 * (1 - t))     # Rojo decrece
-            g = int(255 * t)           # Verde crece
-            b = 0                      # Azul fijo en 0
+            if invertido:
+                t = 1 - t  # Invertir el gradiente
+
+            r = int(255 * (1 - t))  # Rojo decrece (o crece si invertido)
+            g = int(255 * t)        # Verde crece (o decrece si invertido)
+            b = 0                   # Azul fijo en 0
 
             self.set_fill_color(r, g, b)
             self.rect(x + i * step_width, y, step_width, height, 'F')
 
-        self.set_xy(x-1, y - height - 1.5)
+        self.set_xy(x - 1, y - height - 1.5)
         self.set_font("Arial", "B", 10)
-        self.set_text_color(0, 51, 102)  # Azul oscuro para continuidad visual
+        self.set_text_color(0, 51, 102)
         self.cell(0, 6, "Escala de valoración", ln=True)
         self.set_text_color(0, 0, 0)
         self.ln(1)
@@ -344,12 +369,79 @@ class PDF(FPDF):
         # Etiquetas
         self.set_xy(x, y + height + 1.5)
         self.set_font("Arial", "", 8)
-        self.set_text_color(0, 0, 0)
-        self.cell(30, 5, "Crítico", 0, 0, 'L')
-        self.set_x(x + width/2 - 15)
-        self.cell(30, 5, "Promedio", 0, 0, 'C')
-        self.set_x(x + width - 30)
-        self.cell(30, 5, "Óptimo", 0, 1, 'R')
+
+        if invertido:
+            self.cell(30, 5, "Óptimo", 0, 0, 'L')
+            self.set_x(x + width/2 - 15)
+            self.cell(30, 5, "Promedio", 0, 0, 'C')
+            self.set_x(x + width - 30)
+            self.cell(30, 5, "Crítico", 0, 1, 'R')
+        else:
+            self.cell(30, 5, "Crítico", 0, 0, 'L')
+            self.set_x(x + width/2 - 15)
+            self.cell(30, 5, "Promedio", 0, 0, 'C')
+            self.set_x(x + width - 30)
+            self.cell(30, 5, "Óptimo", 0, 1, 'R')
 
     def get_height(self):
         return self.h
+    
+    def get_altura(self):
+        return self.get_y()
+    
+    def add_plotly_figure(self, fig, title=None, w=180):
+        if title:
+            self.set_font("Arial", "B", 12)
+            self.cell(0, 10, title, ln=True)
+
+        # Convertir la figura a imagen en memoria
+        image_bytes = pio.to_image(fig, format="png", width=900, height=450, scale=2)
+
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+            tmpfile.write(image_bytes)
+            tmpfile.flush()
+            tmpfile_path = tmpfile.name
+
+        # Insertar en PDF
+        self.image(tmpfile_path, x=None, y=None, w=w)
+
+        # Eliminar el archivo temporal manualmente
+        import os
+        os.remove(tmpfile_path)
+
+    def add_last_measurements(self, altura, peso, grasa, icon_path=None):
+        self.set_font("Helvetica", "B", 14)
+        if icon_path:
+            self.image(icon_path, x=self.get_x(), y=self.get_y(), w=6)
+            self.cell(8)
+
+        #self.cell(0, 10, "Últimas Mediciones", ln=1)
+
+        self.ln(2)
+        self.set_font("Helvetica", "", 10)
+
+        # Posiciones base
+        x_start = self.get_x()
+        y_start = self.get_y()
+
+        col_width = 60  # ajustable
+
+        def add_metric(label, value, x):
+            self.set_xy(x, y_start)
+            self.set_font("Helvetica", "", 10)
+            self.cell(col_width, 6, label, align="C")
+            self.set_xy(x, y_start + 6)
+            self.set_font("Helvetica", "B", 18)
+            self.cell(col_width, 10, f"{value:.2f}", align="C")
+
+        x1 = x_start
+        x2 = x1 + col_width + 5
+        x3 = x2 + col_width + 5
+
+        add_metric("Altura (cm)", altura, x1)
+        add_metric("Peso (Kg)", peso, x2)
+        add_metric("Grasa (%)", grasa, x3)
+
+        self.ln(20)  # salto tras bloque
+
