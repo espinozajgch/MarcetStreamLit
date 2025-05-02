@@ -625,7 +625,7 @@ else:
                         # 1. Generar PDF como bytes (puede tardar)
                         pdf_bytes = util.generate_pdf(
                             df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                            df_cmj, df_yoyo, df_rsa, figan
+                            df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav
                         )
 
                         # 2. Codificar y preparar para mostrar
