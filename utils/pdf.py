@@ -152,7 +152,9 @@ class PDF(FPDF):
             try:
                 self.image(img_path, x=140, y=50, w=55)
             except:
-                print(f"Imagen para {codigo} no encontrada")
+                txt = f"Imagen para {codigo} no encontrada"
+                self.cell(0, 6, txt, ln=True)
+                print(txt)
 
         self.ln(15)
 

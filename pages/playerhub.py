@@ -121,6 +121,16 @@ else:
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
         antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
         
+        figan = None
+        figcmj = None
+        figagd = None
+        figagnd = None
+        figspt = None
+        figspv = None
+        figyoyo = None
+        figrsat = None
+        figrsav = None
+        
         with antropometria:
             if len(df_joined_filtrado) > 0:
 

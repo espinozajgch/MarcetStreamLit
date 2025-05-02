@@ -812,17 +812,87 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     pdf.add_player_block(df_jugador)
     
     # Composición corporal
+    if df_anthropometrics is not None and not df_anthropometrics.empty and figan is not None:
+        altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
+        peso = df_anthropometrics['PESO (KG)'].iloc[0]
+        grasa = df_anthropometrics['GRASA (%)'].iloc[0]
 
-    altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
-    peso = df_anthropometrics['PESO (KG)'].iloc[0]
-    grasa = df_anthropometrics['GRASA (%)'].iloc[0]
+        pdf.section_title("COMPOSICIÓN CORPORAL")
+        pdf.add_last_measurements(altura, peso, grasa)
 
-    pdf.section_title("COMPOSICIÓN CORPORAL")
-    pdf.add_last_measurements(altura, peso, grasa)
+        pdf.add_plotly_figure(figan,"")
 
-    pdf.add_plotly_figure(figan,"")
-    
-    # if percentiles_an:
+        page_height = pdf.get_height()
+        margen_inferior = 33
+        y_final = page_height - margen_inferior
+        pdf.draw_gradient_scale(x=10, y=y_final)
+
+    if  figcmj is not None or figspv is not None: 
+        pdf.add_page()
+        pdf.ln(20)
+
+        if df_cmj is not None and not df_cmj.empty and figcmj is not None:
+            pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
+            pdf.add_plotly_figure(figcmj,"")
+
+        if df_sprint is not None and not df_sprint.empty and figspv is not None:
+            pdf.section_title("VELOCIDAD EN SPRINT (40M)")
+            pdf.add_plotly_figure(figspv,"")
+
+        page_height = pdf.get_height()
+        margen_inferior = 33
+        y_final = page_height - margen_inferior
+        pdf.draw_gradient_scale(x=10, y=y_final)
+
+    if figyoyo is not None or figagd is not None: 
+        pdf.add_page()
+        pdf.ln(20)
+
+        if df_yoyo is not None and not df_yoyo.empty and figyoyo is not None:
+            pdf.section_title("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)")
+            pdf.add_plotly_figure(figyoyo,"")
+            y = pdf.get_altura()
+            pdf.draw_gradient_scale(x=10, y=y+5)
+            pdf.ln(5)
+
+        if df_agilty is not None and not df_agilty.empty and figagd is not None:
+            pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
+            pdf.add_plotly_figure(figagd,"")
+
+        page_height = pdf.get_height()
+        margen_inferior = 33
+        y_final = page_height - margen_inferior
+        pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+
+    if figagnd is not None or figrsat is not None: 
+        pdf.add_page()
+        pdf.ln(20)
+
+        if df_agilty is not None and not df_agilty.empty and figagnd is not None:
+            pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
+            pdf.add_plotly_figure(figagnd,"")
+
+        if df_rsa is not None and not df_rsa.empty and figrsat is not None:
+            pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
+            pdf.add_plotly_figure(figrsat,"")
+
+            page_height = pdf.get_height()
+            margen_inferior = 33
+            y_final = page_height - margen_inferior
+            pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+
+            pdf.add_page()
+            pdf.ln(20)
+
+            pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
+            pdf.add_plotly_figure(figrsav,"")
+
+            page_height = pdf.get_height()
+            margen_inferior = 33
+            y_final = page_height - margen_inferior
+            pdf.draw_gradient_scale(x=10, y=y_final)
+
+     # if percentiles_an:
     #     pdf.section_subtitle("ANTOPOMETRIA")
     #     x_start = 10
     #     y_start = pdf.get_y()
@@ -855,68 +925,10 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     #         pdf.add_img("assets/images/test/cmj.jpg",x=130, y=y_start-5, w=65)
     #         pdf.ln(3)
 
-    page_height = pdf.get_height()
-    margen_inferior = 33
-    y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final)
 
-    #if df_cmj:
 
-    pdf.add_page()
-    pdf.ln(20)
+        #if df_cmj:
 
-    pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
-    pdf.add_plotly_figure(figcmj,"")
-
-    pdf.section_title("VELOCIDAD EN SPRINT (40M)")
-    pdf.add_plotly_figure(figspv,"")
-
-    page_height = pdf.get_height()
-    margen_inferior = 33
-    y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final)
-
-    pdf.add_page()
-    pdf.ln(20)
-
-    pdf.section_title("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)")
-    pdf.add_plotly_figure(figyoyo,"")
-    y = pdf.get_altura()
-    pdf.draw_gradient_scale(x=10, y=y+5)
-    pdf.ln(5)
-
-    pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
-    pdf.add_plotly_figure(figagd,"")
-
-    page_height = pdf.get_height()
-    margen_inferior = 33
-    y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
-
-    pdf.add_page()
-    pdf.ln(20)
-
-    pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
-    pdf.add_plotly_figure(figagnd,"")
-
-    pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
-    pdf.add_plotly_figure(figrsat,"")
-
-    page_height = pdf.get_height()
-    margen_inferior = 33
-    y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
-
-    pdf.add_page()
-    pdf.ln(20)
-
-    pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
-    pdf.add_plotly_figure(figrsav,"")
-
-    page_height = pdf.get_height()
-    margen_inferior = 33
-    y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final)
 
     #     if percentiles_rsa:
     #         pdf.section_subtitle("RSA")
