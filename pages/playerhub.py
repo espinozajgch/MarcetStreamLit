@@ -592,28 +592,28 @@ else:
                 percentiles_rsa = None
                 
         with reporte:
-            # 1. Generar PDF como bytes (puede tardar)
-            pdf_bytes = util.generate_pdf(
-                df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav, 
-            )
+            # # 1. Generar PDF como bytes (puede tardar)
+            # pdf_bytes = util.generate_pdf(
+            #     df_jugador, df_anthropometrics, df_agilty, df_sprint, 
+            #     df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav, 
+            # )
 
-            # 2. Codificar y preparar para mostrar
-            b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-            pdf_data = base64.b64decode(b64_pdf)
+            # # 2. Codificar y preparar para mostrar
+            # b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+            # pdf_data = base64.b64decode(b64_pdf)
 
-            # Enlace de descarga con nombre específico
-            st.markdown(f'''
-                <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{nombre}.pdf" target="_blank">
-                📥 Descargar PDF
-                </a>
-            ''', unsafe_allow_html=True)
+            # # Enlace de descarga con nombre específico
+            # st.markdown(f'''
+            #     <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{nombre}.pdf" target="_blank">
+            #     📥 Descargar PDF
+            #     </a>
+            # ''', unsafe_allow_html=True)
 
-            # 3. Mostrar PDF en Streamlit
-            html_code = f'''
-                <object data="data:application/pdf;base64,{b64_pdf}" type="application/pdf" width="100%" height="1200px"></object>
-            '''
-            st.write(html_code, unsafe_allow_html=True)
+            # # 3. Mostrar PDF en Streamlit
+            # html_code = f'''
+            #     <object data="data:application/pdf;base64,{b64_pdf}" type="application/pdf" width="100%" height="1200px"></object>
+            # '''
+            # st.write(html_code, unsafe_allow_html=True)
 
             if len(df_joined_filtrado) > 0:
 
