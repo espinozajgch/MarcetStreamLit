@@ -365,12 +365,13 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
                 font=dict(color="white")
             )
 
+    #st.dataframe(promedios)
     # Promedio
     for metrica, valor_prom in promedios.items():
         fig.add_hline(
             y=valor_prom,
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash"),
-            annotation_text=f"Promedio ({categoria} {equipo}): {valor:.2f} (cm)",
+            annotation_text=f"Promedio ({categoria} {equipo}): {valor_prom:.2f} (cm)",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
         )

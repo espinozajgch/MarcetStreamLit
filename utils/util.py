@@ -53,8 +53,10 @@ def getData(conn):
     df_rsa = get_test_data(conn,'RSA')
 
     columnas_comunes = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
-    df_data_test = unir_dataframes([df_an, df_ag, df_sp,df_cmj,df_yoyo,df_rsa], columnas_comunes)
+    df_data_test = unir_dataframes([df_an, df_ag, df_sp, df_cmj, df_yoyo, df_rsa], columnas_comunes)
 
+    #st.text("Datos de los tests")
+    #st.dataframe(df_data_test)
     return df_datos, df_data_test
 
 def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
@@ -72,6 +74,8 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
     if not dfs:
         raise ValueError("La lista de DataFrames está vacía.")
     
+    dfs = [df.drop_duplicates(subset=columnas_comunes) for df in dfs]
+
     # Verifica que todos los DataFrames contengan las columnas comunes
     for df in dfs:
         for col in columnas_comunes:
@@ -81,6 +85,10 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
     # Merge secuencial de todos los DataFrames
     df_final = reduce(lambda left, right: pd.merge(left, right, on=columnas_comunes, how=metodo), dfs)
     
+    # Eliminar filas donde TODAS las columnas NO comunes son NaN
+    columnas_no_comunes = [col for col in df_final.columns if col not in columnas_comunes]
+    df_final = df_final.dropna(subset=columnas_no_comunes, how='all')
+
     # Reordenar columnas: comunes primero
     columnas_ordenadas = columnas_comunes + [col for col in df_final.columns if col not in columnas_comunes]
     df_final = df_final[columnas_ordenadas]
@@ -104,8 +112,8 @@ def get_dataframe_columns(dataframe):
     dataframe_columns = dataframe.columns.tolist()
     return dataframe_columns
 
-def getJoinedDataFrame(conn):
-    df_datos, df_data_test = getData(conn)
+def getJoinedDataFrame(df_datos, df_data_test):
+    #df_datos, df_data_test = getData(conn)
     ##df_datos = getDatos(conn, default_reload_time)
     ##df_data_test = getDataTest(conn, default_reload_time)
 
@@ -1055,3 +1063,28 @@ def convertir_m_s_a_km_h(df, metricas_m_s):
             df[nueva_col] = df[col] * 3.6
 
     return df
+
+def calcular_promedios_filtrados(df, columnas_a_verificar):
+    """
+    Calcula el promedio por CATEGORIA y EQUIPO, ignorando valores 0 y NaN por columna.
+
+    Args:
+        df (pd.DataFrame): DataFrame con los datos originales.
+        columnas_a_verificar (list): Lista de columnas sobre las que calcular promedios.
+
+    Returns:
+        pd.DataFrame: DataFrame con los promedios filtrados.
+    """
+    filas_promedio = []
+
+    for (categoria, equipo), grupo in df.groupby(["CATEGORIA", "EQUIPO"]):
+        fila = {"CATEGORIA": categoria, "EQUIPO": equipo}
+        for columna in columnas_a_verificar:
+            datos_validos = grupo[columna][(grupo[columna] != 0) & (~grupo[columna].isna())]
+            fila[columna] = datos_validos.mean() if not datos_validos.empty else np.nan
+        filas_promedio.append(fila)
+
+    df_promedios = pd.DataFrame(filas_promedio)
+    df_promedios = df_promedios.round(2)
+
+    return df_promedios

@@ -37,7 +37,7 @@ st.header(" :blue[Player Hub] :material/contacts:", divider=True)
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_datos, df_data_test = util.getData(conn)
-df_joined = util.getJoinedDataFrame(conn)
+df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
 
 df_datos_filtrado = util.get_filters(df_datos)
 
@@ -47,11 +47,10 @@ datatest_columns = util.get_dataframe_columns(df_data_test)
 columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
 
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
-df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
+#df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
+df_promedios =  util.calcular_promedios_filtrados(df_data_test, columnas_a_verificar)
 
 # Redondear si lo deseas
-df_promedios = df_promedios.round(2)
-
 #st.dataframe(df_promedios)
 
 st.divider()
@@ -104,8 +103,16 @@ else:
             equipo = df_jugador['EQUIPO'].iloc[0]
             fnacimiento = df_jugador['FECHA DE NACIMIENTO'].iloc[0]
 
-            st.metric(label="Equipo - Categoria", value=f" {categoria} {equipo}", border=True)
-            st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
+            if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN"):
+                st.metric(label="Categoria", value=f" {categoria}", border=True)
+                st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
+                
+                categoria = "Juvenil"
+                equipo = "A"
+
+            else:
+                st.metric(label="Categoria - Equipo", value=f" {categoria} {equipo}", border=True)
+                st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
 
         with col3:
             edad = df_jugador['EDAD'].iloc[0]
@@ -209,7 +216,7 @@ else:
                         st.markdown("📊 **Análisis de IMC y Porcentaje de Grasa Corporal**")
                         st.dataframe(df_anthropometrics
                             .style
-                            .format({"ALTURA (CM)": "{:.2f}", "PESO (KG)": "{:.2f}", "IMC": "{:.2f}", "Índice de grasa": "{:.2f}"})  # Aplica el formato de 2 decimales
+                            .format({"ALTURA (CM)": "{:.2f}", "PESO (KG)": "{:.2f}", "IMC": "{:.2f}", "GRASA (%)": "{:.2f}"})  # Aplica el formato de 2 decimales
                             .map(util.color_categorias, subset=["Categoría IMC"]))
                     with c2:
                         # Cálculo de estadísticas
@@ -245,11 +252,13 @@ else:
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
 
+                #df_cmj = df_cmj[~(df_cmj[columnas_filtradas] == 0).all(axis=1)]
                 todos_ceros = (df_cmj[columnas_filtradas] == 0).all().all()
 
+                
                 if not todos_ceros:
-                    df_cmj = df_cmj[~(df_cmj[columnas_estructura] == 0).all(axis=1)]
-                    #st.dataframe(columnas_estructura)    
+                    df_cmj = df_cmj[~(df_cmj[columnas_filtradas] == 0).all(axis=1)]
+                    #st.dataframe(df_cmj)  
                     percentiles_cmj = util.calcular_percentiles(df_cmj.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
