@@ -13,14 +13,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+conn = st.connection("gsheets", type=GSheetsConnection)
+
 # 🔐 Verificación de sesión
-login.generarLogin()
+login.generarLogin(conn)
 if "usuario" not in st.session_state:
     st.stop()
 
 st.header(":blue[Tests Físicos] :material/directions_run:", divider=True)
-
-conn = st.connection("gsheets", type=GSheetsConnection)
 
 fecha_actual = date.today()
 

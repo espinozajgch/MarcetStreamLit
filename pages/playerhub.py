@@ -23,8 +23,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 📡 Conexión con Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
+
 # 🔐 Verificación de sesión
-login.generarLogin()
+login.generarLogin(conn)
 if "usuario" not in st.session_state:
     st.stop()
 
@@ -32,9 +35,6 @@ mensaje_no_data = "El Jugador seleccionado no cuenta con datos suficientes para 
 
 st.header(" :blue[Player Hub] :material/contacts:", divider=True)
 #st.subheader("Datos individuales, historicos y alertas")
-
-# Create a connection object.
-conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_datos, df_data_test = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)

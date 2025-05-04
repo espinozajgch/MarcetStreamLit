@@ -12,8 +12,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 📡 Conexión con Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
+
 # 🔐 Verificación de sesión
-login.generarLogin()
+login.generarLogin(conn)
 if "usuario" not in st.session_state:
     st.stop()
 
@@ -23,9 +26,6 @@ if "mostrar_dialogo_guardado" not in st.session_state:
 
 # 📋 Encabezado
 st.header(":blue[Jugadores] :material/account_circle:", divider=True)
-
-# 📡 Conexión con Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
 
 # 📥 Cargar datos y eliminar columna innecesaria
 df_jugadores = util.get_player_data(conn)

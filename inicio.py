@@ -16,7 +16,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-login.generarLogin()
+# Create a connection object.
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+login.generarLogin(conn)
 
 # 🔹 Bloquear contenido si el usuario no está en session_state
 if 'usuario' not in st.session_state:
@@ -26,7 +29,7 @@ else:
     st.header('Bienvenido a :orange[Marcet]')
     
     # Create a connection object.
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    #conn = st.connection("gsheets", type=GSheetsConnection)
     #########################################################
 
     df_datos, df_data_test = util.getData(conn)

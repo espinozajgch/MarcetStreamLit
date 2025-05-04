@@ -17,6 +17,10 @@ def get_ttl():
 
     return default_reload_time
 
+def get_usuarios(conn):
+    df = conn.read(worksheet="USUARIOS", ttl=get_ttl())
+    return df
+
 def get_test(conn):
     df = conn.read(worksheet="TEST", ttl=get_ttl())
     return df
@@ -337,7 +341,8 @@ def get_data_editor(df_nuevo, key=None, num_rows_user="fixed"):
                 required=True,
                 width="medium"
             )
-        },num_rows=num_rows_user) # 👈 An editable dataframe
+        },num_rows=num_rows_user,
+        hide_index=True) # 👈 An editable dataframe
     return edited_df
 
 def separar_dataframe_por_estructura(df_general, df_estructura, columnas_usadas):

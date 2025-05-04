@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+from utils import util
 
 # Validación simple de usuario y clave con un archivo csv
 
-def validarUsuario(usuario,clave):    
+def validarUsuario(usuario,clave, conn):    
     """Permite la validación de usuario y clave
 
     Args:
@@ -13,13 +14,14 @@ def validarUsuario(usuario,clave):
     Returns:
         bool: True usuario valido, False usuario invalido
     """    
-    dfusuarios = pd.read_csv('usuarios.csv')
-    if len(dfusuarios[(dfusuarios['usuario']==usuario) & (dfusuarios['clave']==clave)])>0:
+    dfusuarios = util.get_usuarios(conn)
+    #dfusuarios = pd.read_csv('usuarios.csv')
+    if len(dfusuarios[(dfusuarios['USUARIO']==usuario) & (dfusuarios['CLAVE']==clave)])>0:
         return True
     else:
         return False
 
-def generarMenu(usuario):
+def generarMenu(usuario, conn):
     """Genera el menú dependiendo del usuario
 
     Args:
@@ -28,11 +30,11 @@ def generarMenu(usuario):
     with st.sidebar:
         st.logo("assets/images/marcet.png", size="large")
         # Cargamos la tabla de usuarios
-        dfusuarios = pd.read_csv('usuarios.csv')
+        dfusuarios = util.get_usuarios(conn)
         # Filtramos la tabla de usuarios
-        dfUsuario =dfusuarios[(dfusuarios['usuario']==usuario)]
+        dfUsuario =dfusuarios[(dfusuarios['USUARIO']==usuario)]
         # Cargamos el nombre del usuario
-        nombre= dfUsuario['nombre'].values[0]
+        nombre= dfUsuario['NOMBRE'].values[0]
         #Mostramos el nombre del usuario
         st.write(f"Hola **:blue-background[{nombre}]** ")
         # Mostramos los enlaces de páginas
@@ -42,6 +44,7 @@ def generarMenu(usuario):
         st.subheader("Administrador :material/manage_accounts:")
         st.page_link("pages/players.py", label="Jugadores", icon=":material/account_circle:")  
         st.page_link("pages/tests.py", label="Test Fisicos", icon=":material/directions_run:")
+        st.page_link("pages/users.py", label="Usuarios", icon=":material/groups:")
         st.divider()
         #st.subheader("Ajustes")
         btnReload=st.button("Recargar Datos", type="tertiary", icon=":material/update:")
@@ -57,7 +60,7 @@ def generarMenu(usuario):
             # Luego de borrar el Session State reiniciamos la app para mostrar la opción de usuario y clave
             #st.rerun()
 
-def generarLogin():
+def generarLogin(conn):
     """Genera la ventana de login o muestra el menú si el login es válido"""    
 
     # 🔹 Verificamos si el usuario ya está en la URL o en session_state
@@ -68,7 +71,7 @@ def generarLogin():
 
     # Si ya hay usuario, mostramos el menú
     if 'usuario' in st.session_state:
-        generarMenu(st.session_state['usuario']) 
+        generarMenu(st.session_state['usuario'], conn) 
     else: 
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
@@ -83,7 +86,7 @@ def generarLogin():
                 btnLogin = st.form_submit_button('Ingresar', type='primary')
 
                 if btnLogin:
-                    if validarUsuario(parUsuario, parPassword):
+                    if validarUsuario(parUsuario, parPassword, conn):
                         # Guardamos usuario en session_state y en la URL
                         st.session_state['usuario'] = parUsuario
                         st.query_params.user = parUsuario  # 🔹 Persistencia en la URL
