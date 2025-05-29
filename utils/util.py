@@ -59,6 +59,13 @@ def getData(conn):
     columnas_comunes = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
     df_data_test = unir_dataframes([df_an, df_ag, df_sp, df_cmj, df_yoyo, df_rsa], columnas_comunes)
 
+    columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
+    columnas_estructura = get_dataframe_columns(df_data_test)
+    # Eliminar columnas excluidas
+    columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+    df_data_test = limpiar_columnas_numericas(df_data_test, columnas_filtradas)
+
     #st.text("Datos de los tests")
     #st.dataframe(df_data_test)
     return df_datos, df_data_test
@@ -180,8 +187,9 @@ def getJoinedDataFrame(df_datos, df_data_test):
     df_data_test["FECHA REGISTRO"] = df_data_test["FECHA REGISTRO"].dt.strftime('%d/%m/%Y').astype(str)
 
     # # Aplicar transformación solo a esas columnas
-    df_data_test[columnas_filtradas] = df_data_test[columnas_filtradas].apply(lambda col: col.astype(str).str.replace(r"[,-]", ".", regex=True).astype(float))
-    
+    #df_data_test[columnas_filtradas] = df_data_test[columnas_filtradas].apply(lambda col: col.astype(str).str.replace(r"[,-]", ".", regex=True).astype(float))
+    df_data_test = limpiar_columnas_numericas(df_data_test, columnas_filtradas)
+
     # # Reemplazar valores nulos o 'None' por 0
     df_data_test = df_data_test.fillna(0).replace("None", 0)
 
@@ -190,6 +198,17 @@ def getJoinedDataFrame(df_datos, df_data_test):
     df_data_test = df_data_test.astype({ "JUGADOR": str })  # o ajusta a tus columnas específicas
 
     return df_data_test
+
+def limpiar_columnas_numericas(df, columnas_filtradas):
+    for col in columnas_filtradas:
+        # Reemplaza comas y guiones por puntos, convierte a numérico (NaN si falla)
+        df[col] = (
+            df[col]
+            .astype(str)
+            .str.replace(r"[,-]", ".", regex=True)
+            .pipe(pd.to_numeric, errors="coerce")
+        )
+    return df
 
 def columnas_sin_datos_utiles(df, columnas_excluidas=None, mostrar_alerta=False, mensaje="❗ No hay datos útiles en las columnas seleccionadas."):
     """
@@ -816,7 +835,7 @@ def obtener_bandera(pais):
     else:
         return ""
     
-def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav):
+def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figalt, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav):
     pdf = PDF()
     pdf.add_page()
 
@@ -833,33 +852,58 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         pdf.section_title("COMPOSICIÓN CORPORAL")
         pdf.add_last_measurements(altura, peso, grasa)
 
-        pdf.add_plotly_figure(figan,"")
+        pdf.add_plotly_figure(figalt,"")
 
         page_height = pdf.get_height()
         margen_inferior = 33
         y_final = page_height - margen_inferior
         pdf.draw_gradient_scale(x=10, y=y_final)
 
-    if  figcmj is not None or figspv is not None: 
         pdf.add_page()
         pdf.ln(20)
+
+        pdf.section_title("COMPOSICIÓN CORPORAL")
+        pdf.add_plotly_figure(figan,"")
+        pdf.ln(5)
+
+    if  figcmj is not None or figspv is not None: 
+        #pdf.add_page()
+        #pdf.ln(20)
 
         if df_cmj is not None and not df_cmj.empty and figcmj is not None:
             pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
             pdf.add_plotly_figure(figcmj,"")
 
-        if df_sprint is not None and not df_sprint.empty and figspv is not None:
-            pdf.section_title("VELOCIDAD EN SPRINT (40M)")
-            pdf.add_plotly_figure(figspv,"")
-
         page_height = pdf.get_height()
         margen_inferior = 33
         y_final = page_height - margen_inferior
         pdf.draw_gradient_scale(x=10, y=y_final)
 
+    if df_sprint is not None and not df_sprint.empty and figspv is not None:
+        pdf.add_page()
+        pdf.ln(20)
+        pdf.section_title("VELOCIDAD EN SPRINT (40M)")
+        pdf.add_plotly_figure(figspv,"")
+
+        pdf.section_title("TIEMPO EN SPRINT (40M)")
+        pdf.add_plotly_figure(figspt,"")
+
     if figyoyo is not None or figagd is not None: 
         pdf.add_page()
         pdf.ln(20)
+
+        if df_agilty is not None and not df_agilty.empty and figagd is not None:
+            pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
+            pdf.add_plotly_figure(figagd,"")
+
+        if df_agilty is not None and not df_agilty.empty and figagnd is not None:
+            pdf.ln(5)
+            pdf.add_plotly_figure(figagnd,"")
+
+        page_height = pdf.get_height()
+        margen_inferior = 33
+        y_final = page_height - margen_inferior
+        pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
 
         if df_yoyo is not None and not df_yoyo.empty and figyoyo is not None:
             pdf.section_title("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)")
@@ -868,22 +912,9 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             pdf.draw_gradient_scale(x=10, y=y+5)
             pdf.ln(5)
 
-        if df_agilty is not None and not df_agilty.empty and figagd is not None:
-            pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
-            pdf.add_plotly_figure(figagd,"")
-
-        page_height = pdf.get_height()
-        margen_inferior = 33
-        y_final = page_height - margen_inferior
-        pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
-
-    if figagnd is not None or figrsat is not None: 
+    if figrsat is not None: 
         pdf.add_page()
         pdf.ln(20)
-
-        if df_agilty is not None and not df_agilty.empty and figagnd is not None:
-            pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
-            pdf.add_plotly_figure(figagnd,"")
 
         if df_rsa is not None and not df_rsa.empty and figrsat is not None:
             pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
@@ -904,78 +935,6 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             margen_inferior = 33
             y_final = page_height - margen_inferior
             pdf.draw_gradient_scale(x=10, y=y_final)
-
-     # if percentiles_an:
-    #     pdf.section_subtitle("ANTOPOMETRIA")
-    #     x_start = 10
-    #     y_start = pdf.get_y()
-        
-    #     footer_text = "Tabla de percentiles: Comparación del jugador con atletas de su misma edad."
-    #     pdf.add_percentile_semaforo_table(df_anthropometrics.iloc[0], percentiles_an, x=x_start, y=y_start, footer=footer_text)
-    #     pdf.add_indices_table(df_anthropometrics.iloc[0], x_start + 105, y_start)
-    #     pdf.ln(10)
-
-    # if percentiles_ag or percentiles_cmj:
-    
-    #     # Resultados físicos
-    #     pdf.section_title("RESULTADOS TESTS FÍSICOS")
-
-    #     if percentiles_ag:
-    #         pdf.section_subtitle("AGILIDAD 505")
-    #         x_start = 10
-    #         y_start = pdf.get_y()
-    #         footer_text = "El objetivo de este test es medir la capacidad de un atleta para cambiar de dirección."
-    #         pdf.add_percentile_semaforo_table(df_agilty.iloc[0], percentiles_ag, x=x_start, y=y_start, footer=footer_text)
-    #         pdf.add_img("assets/images/test/505.jpg",x=130, y=y_start, w=55)
-    #         pdf.ln(3)
-
-    #     if percentiles_cmj:
-    #         pdf.section_subtitle("CMJ")
-    #         x_start = 10
-    #         y_start = pdf.get_y()
-    #         footer_text = "El objetivo de este test es medir la potencia explosiva del tren inferior."
-    #         pdf.add_percentile_semaforo_table(df_cmj.iloc[0], percentiles_cmj, x=x_start, y=y_start, footer=footer_text)
-    #         pdf.add_img("assets/images/test/cmj.jpg",x=130, y=y_start-5, w=65)
-    #         pdf.ln(3)
-
-
-
-        #if df_cmj:
-
-
-    #     if percentiles_rsa:
-    #         pdf.section_subtitle("RSA")
-    #         x_start = 10
-    #         y_start = pdf.get_y()
-    #         footer_text = "El objetivo de este test es medir la resistencia a la fatiga en sprints repetidos."
-    #         pdf.add_percentile_semaforo_table(df_rsa.iloc[0], percentiles_rsa, x=x_start, y=y_start, wm=50, footer=footer_text)
-    #         pdf.add_img("assets/images/test/rsa.jpg",x=135, y=y_start-2, w=65)
-    #         pdf.ln(3)
-
-    #     if percentiles_sp:
-    #         pdf.section_subtitle("SPRINT LINEAL")
-    #         x_start = 10
-    #         y_start = pdf.get_y()
-    #         footer_text = "El objetivo de este test es medir la capacidad de un atleta para acelerar en línea recta."
-    #         pdf.add_percentile_semaforo_table(df_sprint.iloc[0], percentiles_sp, x=x_start, y=y_start, wm=50, footer=footer_text)
-    #         pdf.add_img("assets/images/test/sprint.jpg",x=135, y=y_start+20, w=65)
-    #         pdf.ln(3)
-
-    #     if percentiles_yoyo:
-    #         pdf.section_subtitle("YO-YO")
-    #         x_start = 10
-    #         y_start = pdf.get_y()
-    #         footer_text = "El objetivo de este test es medir la capacidad de recuperación en esfuerzos intermitentes."
-    #         pdf.add_percentile_semaforo_table(df_yoyo.iloc[0], percentiles_yoyo, x=x_start, y=y_start, wm=75, footer=footer_text)
-            
-    #         y_start = pdf.get_y()
-    #         pdf.add_img("assets/images/test/yo-yo.jpg",x=65, y=y_start+5, w=75)
-    #         pdf.ln(45)
-
-    #     page_height = pdf.get_height()
-    #     margen_inferior = 35
-    #     y_final = page_height - margen_inferior
-    #     pdf.draw_gradient_scale(x=10, y=y_final)
 
     return pdf.output(dest='S').encode('latin1')
 
@@ -1085,7 +1044,9 @@ def calcular_promedios_filtrados(df, columnas_a_verificar):
     for (categoria, equipo), grupo in df.groupby(["CATEGORIA", "EQUIPO"]):
         fila = {"CATEGORIA": categoria, "EQUIPO": equipo}
         for columna in columnas_a_verificar:
-            datos_validos = grupo[columna][(grupo[columna] != 0) & (~grupo[columna].isna())]
+            # Asegurarse de que sean valores numéricos
+            datos_columna = pd.to_numeric(grupo[columna], errors="coerce")
+            datos_validos = datos_columna[(datos_columna != 0) & (~datos_columna.isna())]
             fila[columna] = datos_validos.mean() if not datos_validos.empty else np.nan
         filas_promedio.append(fila)
 

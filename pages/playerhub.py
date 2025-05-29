@@ -46,12 +46,10 @@ columnas_excluidas_promedio = ['FECHA REGISTRO', 'ID', "CATEGORIA", "EQUIPO" ,'T
 datatest_columns = util.get_dataframe_columns(df_data_test)
 columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
 
+#st.dataframe(df_joined)
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_data_test, columnas_a_verificar)
-
-# Redondear si lo deseas
-#st.dataframe(df_promedios)
 
 st.divider()
 ###################################################
@@ -191,6 +189,7 @@ else:
 
                     #st.dataframe(df_anthropometrics)
                     #df_ang = df_anthropometrics[["FECHA REGISTRO", "PESO (KG)", "GRASA (%)"]]
+                    figalt = graphics.get_height_graph(df_anthropometrics)
                     figan = graphics.get_anthropometrics_graph(df_anthropometrics, df_promedios, categoria, equipo)
                     
                     st.divider()
@@ -644,7 +643,7 @@ else:
                         # 1. Generar PDF como bytes (puede tardar)
                         pdf_bytes = util.generate_pdf(
                             df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                            df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav
+                            df_cmj, df_yoyo, df_rsa, figalt, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav
                         )
 
                         # 2. Codificar y preparar para mostrar

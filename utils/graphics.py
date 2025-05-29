@@ -6,6 +6,86 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
+def get_height_graph(df_altura):
+    df = pd.DataFrame(df_altura)
+    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
+    df = df.sort_values(by="FECHA REGISTRO")
+
+    if "ALTURA (CM)" not in df.columns:
+        st.warning("No se encontró la columna 'ALTURA (CM)' en los datos.")
+        return None
+
+    fig = go.Figure()
+
+    # Traza principal de altura con burbujas
+    fig.add_trace(go.Scatter(
+        x=df["FECHA REGISTRO"],
+        y=df["ALTURA (CM)"],
+        mode="markers+lines",
+        name="Altura (cm)",
+        marker=dict(
+            size=14,
+            color="lightblue",
+            line=dict(width=2, color="blue")
+        ),
+        line=dict(color="blue", width=2),
+        hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Altura:</b> %{y:.1f} cm<extra></extra>"
+    ))
+
+    # Calcular promedio para centrar el semáforo visual (sin mostrarlo)
+    altura_prom = df["ALTURA (CM)"].mean()
+    margen = 4  # Escala de referencia
+
+    # Traza invisible para generar la barra de color
+    fig.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
+        marker=dict(
+            size=0,
+            color=[altura_prom],
+            colorscale=[
+                [0.0, "red"],
+                [0.5, "orange"],
+                [1.0, "green"]
+            ],
+            cmin=altura_prom - margen,
+            cmax=altura_prom + margen,
+            colorbar=dict(
+                title="Altura (cm)",
+                titleside="right",
+                ticks="outside",
+                tickfont=dict(color="black"),
+                titlefont=dict(color="black"),
+                thickness=20,
+                len=0.9,
+                x=1.05
+            ),
+            showscale=True
+        ),
+        showlegend=False,
+        hoverinfo="skip"
+    ))
+
+    fig.update_layout(
+        title="📏 Evolución de la Altura (cm)",
+        xaxis_title=None,
+        yaxis_title="Altura (cm)",
+        template="plotly_white",
+        xaxis=dict(tickformat="%b", dtick="M1"),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    return fig
+
 def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo):
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -14,19 +94,16 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
     metricas = ["PESO (KG)", "GRASA (%)"]
     df = df[["FECHA REGISTRO"] + metricas]
 
-    # Colores de líneas del jugador
     color_lineas = {
-        "PESO (KG)": "#1f77b4",  # Azul oscuro
-        "GRASA (%)": "#66c2ff"   # Azul claro
+        "PESO (KG)": "#1f77b4",
+        "GRASA (%)": "#66c2ff"
     }
 
-    # Colores de líneas de promedio
     color_promedios = {
         "PESO (KG)": "purple",
         "GRASA (%)": "orange"
     }
 
-    # Obtener promedios
     promedio_row = df_promedios[
         (df_promedios["CATEGORIA"] == categoria) &
         (df_promedios["EQUIPO"] == equipo)
@@ -42,100 +119,145 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
     else:
         st.warning("No se encontraron promedios para la categoría y equipo especificados.")
 
-    # Crear figura
     fig = go.Figure()
-    tolerancia = 0.5
+    tolerancia = 1.0
 
-    for metrica in metricas:
-        if metrica not in df.columns:
-            continue
+    # --- PESO como barra ---
+    if "PESO (KG)" in df.columns:
+        fig.add_trace(go.Bar(
+            x=df["FECHA REGISTRO"],
+            y=df["PESO (KG)"],
+            name="PESO (KG)",
+            marker_color=color_lineas["PESO (KG)"],
+            text=df["PESO (KG)"].round(1),
+            textposition="inside",
+        ))
 
-        y_vals = df[metrica].tolist()
-        x_vals = df["FECHA REGISTRO"].tolist()
+        if "PESO (KG)" in promedios:
+            prom_peso = promedios["PESO (KG)"]
+            fig.add_hline(
+                y=prom_peso,
+                line=dict(color=color_promedios["PESO (KG)"], dash="dash"),
+                annotation_text=f"Promedio ({categoria}): {prom_peso:.1f} kg",
+                annotation_position="top left",
+                annotation=dict(
+                    font=dict(color="black", size=12, family="Arial")
+                )
+            )
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None],
+                mode="lines",
+                name="PESO (KG) PROMEDIO",
+                line=dict(color=color_promedios["PESO (KG)"], dash="dash")
+            ))
+
+    # --- GRASA como línea y puntos semáforo en el mismo eje ---
+    if "GRASA (%)" in df.columns:
+        x_vals = df["FECHA REGISTRO"]
+        y_vals = df["GRASA (%)"]
 
         colores_puntos = []
         for valor in y_vals:
-            if metrica in promedios:
-                prom = promedios[metrica]
+            if "GRASA (%)" in promedios:
+                prom = promedios["GRASA (%)"]
                 if abs(valor - prom) <= tolerancia:
-                    colores_puntos.append("rgba(255, 215, 0, 0.9)")  # Amarillo
+                    colores_puntos.append("green")
+                elif abs(valor - prom) <= tolerancia * 2:
+                    colores_puntos.append("orange")
                 else:
-                    if metrica == "GRASA (%)":
-                        colores_puntos.append(
-                            "rgba(0, 200, 0, 0.8)" if valor < prom else "rgba(255, 0, 0, 0.8)"
-                        )
-                    else:  # PESO (KG) y otros
-                        colores_puntos.append(
-                            "rgba(0, 200, 0, 0.8)" if valor > prom else "rgba(255, 0, 0, 0.8)"
-                        )
+                    colores_puntos.append("red")
             else:
-                colores_puntos.append(color_lineas[metrica])
+                colores_puntos.append(color_lineas["GRASA (%)"])
 
-        # Línea (sin puntos) → aparece en la leyenda
         fig.add_trace(go.Scatter(
             x=x_vals,
             y=y_vals,
-            mode="lines",
-            name=metrica,
-            line=dict(color=color_lineas[metrica], width=3),
-            showlegend=True
+            mode="lines+markers",
+            name="GRASA (%)",
+            line=dict(color="gray", width=3),
+            marker=dict(color=colores_puntos, size=10),
+            hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f}<extra></extra>"
         ))
 
-        # Puntos coloreados → NO aparece en la leyenda
-        fig.add_trace(go.Scatter(
-            x=x_vals,
-            y=y_vals,
-            mode="markers",
-            name=metrica,
-            marker=dict(size=10, color=colores_puntos, line=dict(width=0)),
-            showlegend=False,
-            hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>Métrica:</b> {metrica}<br><b>Valor:</b> %{{y:.2f}}<extra></extra>"
-        ))
-
-        # Anotar máximo (más reciente en caso de empate)
-        df_filtro = df[["FECHA REGISTRO", metrica]].dropna()
+        # Anotar máximo
+        df_filtro = df[["FECHA REGISTRO", "GRASA (%)"]].dropna()
         if not df_filtro.empty:
-            max_valor = df_filtro[metrica].max()
-            fila_max = df_filtro[df_filtro[metrica] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-
-            color_fondo = color_lineas.get(metrica, "gray")
-            texto = f"Max: {fila_max[metrica]:.1f} {metrica}" if fila_max[metrica] > 0 else f"{fila_max[metrica]:.1f} {metrica}"
+            max_valor = df_filtro["GRASA (%)"].max()
+            fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
 
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
-                y=fila_max[metrica],
-                text=texto,
+                y=fila_max["GRASA (%)"],
+                text=f"Max: {fila_max['GRASA (%)']:.1f} %",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
                 ay=-30,
-                bgcolor=color_fondo,
+                bgcolor=color_lineas["GRASA (%)"],
                 font=dict(color="white")
             )
 
-    # Añadir líneas de promedio
-    for metrica, valor_prom in promedios.items():
-        fig.add_hline(
-            y=valor_prom,
-            line=dict(color=color_promedios[metrica], dash="dash"),
-            annotation_text=f"Promedio ({categoria} {equipo}): {valor_prom:.1f}",
-            annotation_position="top left",
-            annotation=dict(font=dict(color="black", size=12, family="Arial"))
-        )
+        if "GRASA (%)" in promedios:
+            prom_grasa = promedios["GRASA (%)"]
+            fig.add_hline(
+                y=prom_grasa,
+                line=dict(color=color_promedios["GRASA (%)"], dash="dash"),
+                annotation_text=f"Promedio ({categoria}): {prom_grasa:.1f} %",
+                annotation_position="top right",
+                annotation=dict(
+                    font=dict(color="black", size=12, family="Arial")
+                )
+            )
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None],
+                mode="lines",
+                name="GRASA (%) PROMEDIO",
+                line=dict(color=color_promedios["GRASA (%)"], dash="dash")
+            ))
+
+    # Añadir barra de color para GRASA (%) (estética adicional, no afecta al gráfico)
+    if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
+        prom_grasa = promedios.get("GRASA (%)", df["GRASA (%)"].mean())
+        margen = 3  # Rango alrededor del promedio para definir extremos
+
         fig.add_trace(go.Scatter(
-            x=[None], y=[None],
-            mode="lines",
-            name=f"{metrica} PROMEDIO",
-            line=dict(color=color_promedios[metrica], dash="dash")
+            x=[None],
+            y=[None],
+            mode="markers",
+            marker=dict(
+                size=0,  # Invisible
+                color=[prom_grasa],
+                colorscale=[
+                    [0.0, "red"],
+                    [0.5, "green"],
+                    [1.0, "red"]
+                ],
+                cmin=prom_grasa - margen,
+                cmax=prom_grasa + margen,
+                colorbar=dict(
+                    title="% Grasa Corporal",
+                    titleside="right",
+                    ticks="outside",
+                    tickfont=dict(color="black"),
+                    titlefont=dict(color="black"),
+                    thickness=20,
+                    len=0.9,         # Más largo verticalmente
+                    x=1.05           # Posición derecha del gráfico
+                ),
+                showscale=True
+            ),
+            showlegend=False,
+            hoverinfo="skip"
         ))
 
+    # --- Layout unificado (1 solo eje Y) ---
     fig.update_layout(
-        title="📈 Evolución de las Medidas Antropométricas",
+        title="⚖️ Evolución del Peso y % Grasa",
         xaxis_title=None,
-        yaxis_title="MEDIDAS",
-        #legend_title="MÉTRICA",
-        xaxis=dict(tickformat="%b", dtick="M1"),
+        yaxis=dict(title="Valor"),
         template="plotly_white",
+        barmode="group",
+        xaxis=dict(tickformat="%b", dtick="M1"),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -168,10 +290,6 @@ def get_agility_graph_nd(df_agility, df_promedios, categoria, equipo):
     )
 
 def _render_agility_graph(df_agility, df_promedios, categoria, equipo, metrica, nombre_legenda, color, color_promedio):
-    import pandas as pd
-    import plotly.graph_objects as go
-    import streamlit as st
-
     df = pd.DataFrame(df_agility)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors="coerce")
     df = df.sort_values(by="FECHA REGISTRO")
@@ -283,8 +401,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     metricas = ["CMJ (CM)"]
     df = df[["FECHA REGISTRO"] + metricas]
 
-    # Colores personalizados
-    color_linea = {"CMJ (CM)": "#1f77b4"}       # Azul oscuro
+    color_linea = {"CMJ (CM)": "#1f77b4"}
     color_promedio = {"CMJ (CM)": "orange"}
 
     promedio_row = df_promedios_cmj[
@@ -305,7 +422,6 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     df_melted = df.melt(id_vars=["FECHA REGISTRO"], value_vars=metricas,
                         var_name="MÉTRICA", value_name="VALOR").dropna()
 
-    # Preparar figura manualmente
     fig = go.Figure()
     tolerancia = 0.5
 
@@ -314,7 +430,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
         x_vals = df_filtro["FECHA REGISTRO"].tolist()
         y_vals = df_filtro["VALOR"].tolist()
 
-        # 1️⃣ Línea con leyenda
+        # Línea
         fig.add_trace(go.Scatter(
             x=x_vals,
             y=y_vals,
@@ -324,17 +440,18 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             hoverinfo="skip"
         ))
 
-        # 2️⃣ Puntos coloreados sin leyenda
+        # Puntos coloreados (semáforo)
         colores_puntos = []
         for valor in y_vals:
             if metrica in promedios:
                 prom = promedios[metrica]
-                if abs(valor - prom) <= tolerancia:
-                    colores_puntos.append("rgba(255, 215, 0, 0.9)")
-                elif valor > prom:
-                    colores_puntos.append("rgba(0, 200, 0, 0.8)")
+                if valor >= prom:
+                    colores_puntos.append("rgba(0, 200, 0, 0.8)")    # Verde si igual o superior
+                elif abs(valor - prom) <= tolerancia:
+                    colores_puntos.append("rgba(255, 215, 0, 0.9)")  # Amarillo si cercano pero menor
                 else:
-                    colores_puntos.append("rgba(255, 0, 0, 0.8)")
+                    colores_puntos.append("rgba(255, 0, 0, 0.8)")    # Rojo si más alejado por debajo
+
             else:
                 colores_puntos.append("gray")
 
@@ -365,8 +482,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
                 font=dict(color="white")
             )
 
-    #st.dataframe(promedios)
-    # Promedio
+    # Línea de promedio
     for metrica, valor_prom in promedios.items():
         fig.add_hline(
             y=valor_prom,
@@ -380,6 +496,41 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             mode="lines",
             name="ALTURA DE SALTO PROMEDIO (CM)",
             line=dict(color="orange", dash="dash")
+        ))
+
+    # ➕ Añadir barra de color representativa a la derecha
+    if "CMJ (CM)" in df.columns and not df["CMJ (CM)"].isnull().all():
+        prom_cmj = promedios.get("CMJ (CM)", df["CMJ (CM)"].mean())
+        margen = 5  # Escala de ± alrededor del promedio
+
+        fig.add_trace(go.Scatter(
+            x=[None],
+            y=[None],
+            mode="markers",
+            marker=dict(
+                size=0,
+                color=[prom_cmj],
+                colorscale=[
+                    [0.0, "red"],
+                    [0.5, "yellow"],
+                    [1.0, "green"]
+                ],
+                cmin=prom_cmj - margen,
+                cmax=prom_cmj + margen,
+                colorbar=dict(
+                    title="Altura de salto (cm)",
+                    titleside="right",
+                    ticks="outside",
+                    tickfont=dict(color="black"),
+                    titlefont=dict(color="black"),
+                    thickness=20,
+                    len=0.9,
+                    x=1.05
+                ),
+                showscale=True
+            ),
+            showlegend=False,
+            hoverinfo="skip"
         ))
 
     fig.update_layout(
