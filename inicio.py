@@ -110,29 +110,29 @@ else:
 
     ########################################
 
-    import plotly.graph_objects as go
+    # import plotly.graph_objects as go
 
-    velocidad_max = 30.6
+    # velocidad_max = 30.6
 
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=velocidad_max,
-        title={'text': "Velocidad Máxima (km/h)"},
-        gauge={
-            'axis': {'range': [0, 40]},
-            'bar': {'color': "black"},
-            'steps': [
-                {'range': [0, 20], 'color': 'lightgray'},
-                {'range': [20, 30], 'color': 'green'},
-                {'range': [30, 40], 'color': '#ddd'}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': velocidad_max
-            }
-        }
-    ))
+    # fig = go.Figure(go.Indicator(
+    #     mode="gauge+number",
+    #     value=velocidad_max,
+    #     title={'text': "Velocidad Máxima (km/h)"},
+    #     gauge={
+    #         'axis': {'range': [0, 40]},
+    #         'bar': {'color': "black"},
+    #         'steps': [
+    #             {'range': [0, 20], 'color': 'lightgray'},
+    #             {'range': [20, 30], 'color': 'green'},
+    #             {'range': [30, 40], 'color': '#ddd'}
+    #         ],
+    #         'threshold': {
+    #             'line': {'color': "red", 'width': 4},
+    #             'thickness': 0.75,
+    #             'value': velocidad_max
+    #         }
+    #     }
+    # ))
 
-    #fig.show()
-    st.plotly_chart(fig, use_container_width=True)
+    # #fig.show()
+    # st.plotly_chart(fig, use_container_width=True)
