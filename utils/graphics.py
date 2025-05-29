@@ -32,41 +32,6 @@ def get_height_graph(df_altura):
         hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Altura:</b> %{y:.1f} cm<extra></extra>"
     ))
 
-    # Calcular promedio para centrar el semáforo visual (sin mostrarlo)
-    altura_prom = df["ALTURA (CM)"].mean()
-    margen = 4  # Escala de referencia
-
-    # Traza invisible para generar la barra de color
-    fig.add_trace(go.Scatter(
-        x=[None],
-        y=[None],
-        mode="markers",
-        marker=dict(
-            size=0,
-            color=[altura_prom],
-            colorscale=[
-                [0.0, "red"],
-                [0.5, "orange"],
-                [1.0, "green"]
-            ],
-            cmin=altura_prom - margen,
-            cmax=altura_prom + margen,
-            colorbar=dict(
-                title="Altura (cm)",
-                titleside="right",
-                ticks="outside",
-                tickfont=dict(color="black"),
-                titlefont=dict(color="black"),
-                thickness=20,
-                len=0.9,
-                x=1.05
-            ),
-            showscale=True
-        ),
-        showlegend=False,
-        hoverinfo="skip"
-    ))
-
     fig.update_layout(
         title="📏 Evolución de la Altura (cm)",
         xaxis_title=None,
@@ -87,6 +52,7 @@ def get_height_graph(df_altura):
     return fig
 
 def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo):
+
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
     df = df.sort_values(by="FECHA REGISTRO")
@@ -99,28 +65,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
         "GRASA (%)": "#66c2ff"
     }
 
-    color_promedios = {
-        "PESO (KG)": "purple",
-        "GRASA (%)": "orange"
-    }
-
-    promedio_row = df_promedios[
-        (df_promedios["CATEGORIA"] == categoria) &
-        (df_promedios["EQUIPO"] == equipo)
-    ]
-
-    promedios = {}
-    if not promedio_row.empty:
-        for metrica in metricas:
-            if metrica in promedio_row.columns:
-                valor = promedio_row[metrica].values[0]
-                if pd.notna(valor):
-                    promedios[metrica] = valor
-    else:
-        st.warning("No se encontraron promedios para la categoría y equipo especificados.")
-
     fig = go.Figure()
-    tolerancia = 1.0
 
     # --- PESO como barra ---
     if "PESO (KG)" in df.columns:
@@ -133,41 +78,19 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             textposition="inside",
         ))
 
-        if "PESO (KG)" in promedios:
-            prom_peso = promedios["PESO (KG)"]
-            fig.add_hline(
-                y=prom_peso,
-                line=dict(color=color_promedios["PESO (KG)"], dash="dash"),
-                annotation_text=f"Promedio ({categoria}): {prom_peso:.1f} kg",
-                annotation_position="top left",
-                annotation=dict(
-                    font=dict(color="black", size=12, family="Arial")
-                )
-            )
-            fig.add_trace(go.Scatter(
-                x=[None], y=[None],
-                mode="lines",
-                name="PESO (KG) PROMEDIO",
-                line=dict(color=color_promedios["PESO (KG)"], dash="dash")
-            ))
-
-    # --- GRASA como línea y puntos semáforo en el mismo eje ---
+    # --- GRASA como línea con puntos coloreados ---
     if "GRASA (%)" in df.columns:
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
-
         colores_puntos = []
+
         for valor in y_vals:
-            if "GRASA (%)" in promedios:
-                prom = promedios["GRASA (%)"]
-                if abs(valor - prom) <= tolerancia:
-                    colores_puntos.append("green")
-                elif abs(valor - prom) <= tolerancia * 2:
-                    colores_puntos.append("orange")
-                else:
-                    colores_puntos.append("red")
+            if 11 <= valor <= 12.5:
+                colores_puntos.append("green")
+            elif 10 <= valor < 11 or 12.5 < valor <= 13.5:
+                colores_puntos.append("orange")
             else:
-                colores_puntos.append(color_lineas["GRASA (%)"])
+                colores_puntos.append("red")
 
         fig.add_trace(go.Scatter(
             x=x_vals,
@@ -176,7 +99,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             name="GRASA (%)",
             line=dict(color="gray", width=3),
             marker=dict(color=colores_puntos, size=10),
-            hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f}<extra></extra>"
+            hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f} %<extra></extra>"
         ))
 
         # Anotar máximo
@@ -197,52 +120,75 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
                 font=dict(color="white")
             )
 
-        if "GRASA (%)" in promedios:
-            prom_grasa = promedios["GRASA (%)"]
+            # Líneas discontinuas para zona óptima
             fig.add_hline(
-                y=prom_grasa,
-                line=dict(color=color_promedios["GRASA (%)"], dash="dash"),
-                annotation_text=f"Promedio ({categoria}): {prom_grasa:.1f} %",
-                annotation_position="top right",
-                annotation=dict(
-                    font=dict(color="black", size=12, family="Arial")
-                )
+                y=11,
+                line=dict(color="green", dash="dash"),
+                annotation_text="Zona Óptima Inferior: 11%",
+                annotation_position="bottom left",
+                annotation=dict(font=dict(size=11, color="black"))
             )
+            fig.add_hline(
+                y=12.5,
+                line=dict(color="green", dash="dash"),
+                annotation_text="Zona Óptima Superior: 12.5%",
+                annotation_position="top left",
+                annotation=dict(font=dict(size=11, color="black"))
+            )
+
+            # Línea discontinua visible en leyenda
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name="GRASA (%) PROMEDIO",
-                line=dict(color=color_promedios["GRASA (%)"], dash="dash")
+                name=f"Promedio {categoria} A",
+                line=dict(color="green", dash="dash")
             ))
 
-    # Añadir barra de color para GRASA (%) (estética adicional, no afecta al gráfico)
+
+    # --- Barra de color a la derecha ---
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
-        prom_grasa = promedios.get("GRASA (%)", df["GRASA (%)"].mean())
-        margen = 3  # Rango alrededor del promedio para definir extremos
+        zona_optima_min = 11
+        zona_optima_max = 12.5
+        cmin = 9
+        cmax = 15
+
+        # Centro de la zona óptima y su longitud proporcional
+        y_centro = (zona_optima_min + zona_optima_max) / 2
+        rango_total = cmax - cmin
+        proporcion_centro = (y_centro - cmin) / rango_total  # para 'y'
+        proporcion_len = (zona_optima_max - zona_optima_min) / rango_total  + 0.2 # para 'len'
 
         fig.add_trace(go.Scatter(
-            x=[None],
-            y=[None],
+            x=[None], y=[0.1],
             mode="markers",
             marker=dict(
-                size=0,  # Invisible
-                color=[prom_grasa],
+                size=0,
+                color=[y_centro],
                 colorscale=[
                     [0.0, "red"],
-                    [0.5, "green"],
+                    [0.25, "orange"],
+                    [0.4, "green"],   # 11%
+                    [0.6, "green"],   # 12.5%
+                    [0.75, "orange"],
                     [1.0, "red"]
                 ],
-                cmin=prom_grasa - margen,
-                cmax=prom_grasa + margen,
+                cmin=cmin,
+                cmax=cmax,
                 colorbar=dict(
-                    title="% Grasa Corporal",
+                    title="% Grasa",
                     titleside="right",
-                    ticks="outside",
-                    tickfont=dict(color="black"),
-                    titlefont=dict(color="black"),
+                    orientation="v",         # (por defecto, no hace falta incluirlo)
+                    y=0.05,                     # 🔽 Posición vertical en la base del gráfico
+                    yanchor="bottom",        # ⬅️ Anclaje desde abajo
+                    len=0.35,                # Largo de la barra como proporción del gráfico
+                    lenmode="fraction",
+                    x=1.05,                  # ⬅️ Derecha del gráfico
+                    xanchor="left",
                     thickness=20,
-                    len=0.9,         # Más largo verticalmente
-                    x=1.05           # Posición derecha del gráfico
+                    tickvals=[9, 10.5, 11, 12.5, 13.5, 15],
+                    ticktext=["9%", "10.5%", "11%", "12.5%", "13.5%", "15%"],
+                    tickfont=dict(color="black"),
+                    titlefont=dict(color="black")
                 ),
                 showscale=True
             ),
@@ -250,11 +196,13 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             hoverinfo="skip"
         ))
 
-    # --- Layout unificado (1 solo eje Y) ---
+
+
+    # Layout final
     fig.update_layout(
         title="⚖️ Evolución del Peso y % Grasa",
         xaxis_title=None,
-        yaxis=dict(title="Valor"),
+        yaxis=dict(title="Peso"),
         template="plotly_white",
         barmode="group",
         xaxis=dict(tickformat="%b", dtick="M1"),
@@ -268,7 +216,6 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
     return fig
 
 def get_agility_graph_dom(df_agility, df_promedios, categoria, equipo):
@@ -401,8 +348,8 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     metricas = ["CMJ (CM)"]
     df = df[["FECHA REGISTRO"] + metricas]
 
-    color_linea = {"CMJ (CM)": "#1f77b4"}
-    color_promedio = {"CMJ (CM)": "orange"}
+    color_linea = {"CMJ (CM)": "#163B5B"}
+    color_promedio = {"CMJ (CM)": "green"}
 
     promedio_row = df_promedios_cmj[
         (df_promedios_cmj["CATEGORIA"] == categoria) &
@@ -423,7 +370,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
                         var_name="MÉTRICA", value_name="VALOR").dropna()
 
     fig = go.Figure()
-    tolerancia = 0.5
+    tolerancia = 5
 
     for metrica in metricas:
         df_filtro = df_melted[df_melted["MÉTRICA"] == metrica]
@@ -487,21 +434,30 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
         fig.add_hline(
             y=valor_prom,
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash"),
-            annotation_text=f"Promedio ({categoria} {equipo}): {valor_prom:.2f} (cm)",
+            annotation_text=f"",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
         )
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name="ALTURA DE SALTO PROMEDIO (CM)",
-            line=dict(color="orange", dash="dash")
+            name=f"ALTURA DE SALTO PROMEDIO (CM) ({categoria} A)",
+            line=dict(color="green", dash="dash")
         ))
 
     # ➕ Añadir barra de color representativa a la derecha
     if "CMJ (CM)" in df.columns and not df["CMJ (CM)"].isnull().all():
-        prom_cmj = promedios.get("CMJ (CM)", df["CMJ (CM)"].mean())
-        margen = 5  # Escala de ± alrededor del promedio
+
+        # Obtener el promedio desde promedio_row
+        if not promedio_row.empty and "CMJ (CM)" in promedio_row.columns:
+            prom_cmj = promedio_row["CMJ (CM)"].values[0]
+        else:
+            prom_cmj = df["CMJ (CM)"].mean()
+
+        # Margen para la escala de color: ±20% del promedio
+        margen = prom_cmj * 0.2
+        cmin = prom_cmj - margen
+        cmax = prom_cmj + margen
 
         fig.add_trace(go.Scatter(
             x=[None],
@@ -511,21 +467,25 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
                 size=0,
                 color=[prom_cmj],
                 colorscale=[
-                    [0.0, "red"],
-                    [0.5, "yellow"],
-                    [1.0, "green"]
+                    [0.0, "red"],       # parte baja
+                    [0.5, "orange"],    # valor medio
+                    [0.7, "yellow"],    # intermedio superior
+                    [1.0, "green"]      # parte alta
                 ],
-                cmin=prom_cmj - margen,
-                cmax=prom_cmj + margen,
+                cmin=cmin,
+                cmax=cmax,
                 colorbar=dict(
-                    title="Altura de salto (cm)",
+                    #title="Altura de salto (cm)",
                     titleside="right",
                     ticks="outside",
                     tickfont=dict(color="black"),
                     titlefont=dict(color="black"),
                     thickness=20,
-                    len=0.9,
-                    x=1.05
+                    len=1,            # 🔼 más altura de barra (proporción del gráfico)
+                    lenmode="fraction",
+                    y=0,                # base del gráfico
+                    yanchor="bottom",
+                    x=1.05              # a la derecha del gráfico
                 ),
                 showscale=True
             ),
@@ -533,6 +493,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             hoverinfo="skip"
         ))
 
+    
     fig.update_layout(
         title="📈 Evolución de la Potencia Muscular de Salto (CMJ)",
         xaxis_title=None,

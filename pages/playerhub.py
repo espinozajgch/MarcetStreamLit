@@ -123,6 +123,7 @@ else:
 ###################################################
 
     if not df_datos_filtrado.empty:
+        equipo = "A"
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
         antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
         
