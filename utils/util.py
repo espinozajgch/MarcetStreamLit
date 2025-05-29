@@ -835,7 +835,25 @@ def obtener_bandera(pais):
     else:
         return ""
     
-def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figalt, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav):
+def add_footer(pdf, invertido=False):
+    page_height = pdf.get_height()
+    margen_inferior = 33
+    y_final = page_height - margen_inferior
+    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+
+def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict):
+    
+    figalt = figs_dict.get("Altura")
+    figan = figs_dict.get("Peso y Grasa")
+    figcmj = figs_dict.get("CMJ")
+    figspt = figs_dict.get("Sprint Tiempo")
+    figspv = figs_dict.get("Sprint Velocidad")
+    figyoyo = figs_dict.get("Yo-Yo")
+    figagd = figs_dict.get("Agilidad DOM")
+    figagnd = figs_dict.get("Agilidad ND")
+    figrsat = figs_dict.get("RSA Tiempo")
+    figrsav = figs_dict.get("RSA Velocidad")
+
     pdf = PDF()
     pdf.add_page()
 
@@ -844,7 +862,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     pdf.add_player_block(df_jugador)
     
     # Composición corporal
-    if df_anthropometrics is not None and not df_anthropometrics.empty and figan is not None:
+    if df_anthropometrics is not None and not df_anthropometrics.empty:
         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
@@ -852,34 +870,40 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         pdf.section_title("COMPOSICIÓN CORPORAL")
         pdf.add_last_measurements(altura, peso, grasa)
 
+    if figalt is not None: 
         pdf.add_plotly_figure(figalt,"")
+        add_footer(pdf)
 
-        page_height = pdf.get_height()
-        margen_inferior = 33
-        y_final = page_height - margen_inferior
-        pdf.draw_gradient_scale(x=10, y=y_final)
+        if figan is not None: 
+            pdf.add_page()
+            pdf.ln(20)
 
-        pdf.add_page()
-        pdf.ln(20)
+    if figan is not None: 
+        if figalt is not None: 
+            pdf.section_title("COMPOSICIÓN CORPORAL")
+            pdf.add_plotly_figure(figan,"")
+            pdf.ln(5)
 
-        pdf.section_title("COMPOSICIÓN CORPORAL")
-        pdf.add_plotly_figure(figan,"")
-        pdf.ln(5)
+            if figcmj is None: 
+                add_footer(pdf)
+            
+        else:
+            pdf.add_plotly_figure(figan,"")
+            add_footer(pdf)
+            pdf.add_page()
+            pdf.ln(20)
 
-    if  figcmj is not None or figspv is not None: 
-        #pdf.add_page()
-        #pdf.ln(20)
+    if figcmj is not None or figspv is not None: 
+        #if figalt is not None and figan is not None:
 
         if df_cmj is not None and not df_cmj.empty and figcmj is not None:
             pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
             pdf.add_plotly_figure(figcmj,"")
 
-        page_height = pdf.get_height()
-        margen_inferior = 33
-        y_final = page_height - margen_inferior
-        pdf.draw_gradient_scale(x=10, y=y_final)
+        add_footer(pdf)
 
     if df_sprint is not None and not df_sprint.empty and figspv is not None:
+
         pdf.add_page()
         pdf.ln(20)
         pdf.section_title("VELOCIDAD EN SPRINT (40M)")
@@ -920,10 +944,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
             pdf.add_plotly_figure(figrsat,"")
 
-            page_height = pdf.get_height()
-            margen_inferior = 33
-            y_final = page_height - margen_inferior
-            pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+            add_footer(pdf, invertido=True)
 
             pdf.add_page()
             pdf.ln(20)
@@ -931,10 +952,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
             pdf.add_plotly_figure(figrsav,"")
 
-            page_height = pdf.get_height()
-            margen_inferior = 33
-            y_final = page_height - margen_inferior
-            pdf.draw_gradient_scale(x=10, y=y_final)
+            add_footer(pdf, invertido=True)
 
     return pdf.output(dest='S').encode('latin1')
 

@@ -610,30 +610,34 @@ else:
                 percentiles_rsa = None
                 
         with reporte:
-            # # 1. Generar PDF como bytes (puede tardar)
-            # pdf_bytes = util.generate_pdf(
-            #     df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-            #     df_cmj, df_yoyo, df_rsa, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav, 
-            # )
-
-            # # 2. Codificar y preparar para mostrar
-            # b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-            # pdf_data = base64.b64decode(b64_pdf)
-
-            # # Enlace de descarga con nombre específico
-            # st.markdown(f'''
-            #     <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{nombre}.pdf" target="_blank">
-            #     📥 Descargar PDF
-            #     </a>
-            # ''', unsafe_allow_html=True)
-
-            # # 3. Mostrar PDF en Streamlit
-            # html_code = f'''
-            #     <object data="data:application/pdf;base64,{b64_pdf}" type="application/pdf" width="100%" height="1200px"></object>
-            # '''
-            # st.write(html_code, unsafe_allow_html=True)
-
             if len(df_joined_filtrado) > 0:
+
+                # Inicializar solo una vez si no existe
+                if "graficos_pdf" not in st.session_state:
+                    st.session_state.graficos_pdf = [
+                        "Altura", "Composición Corporal", "CMJ",
+                        "Sprint Tiempo", "Sprint Velocidad", "Yo-Yo",
+                        "Agilidad DOM", "Agilidad ND", "RSA Tiempo", "RSA Velocidad"
+                    ]
+
+                st.markdown("#### 📊 Selecciona los gráficos a incluir en el PDF:")
+                
+                graficos_disponibles = {
+                    "Altura": figalt,
+                    "Peso y Grasa": figan,
+                    "CMJ": figcmj,
+                    "Sprint Tiempo": figspt,
+                    "Sprint Velocidad": figspv,
+                    "Yo-Yo": figyoyo,
+                    "Agilidad DOM": figagd,
+                    "Agilidad ND": figagnd,
+                    "RSA Tiempo": figrsat,
+                    "RSA Velocidad": figrsav
+                }
+
+                graficos_seleccionados = st.multiselect("Gráficos:", options=list(graficos_disponibles.keys()))
+
+                figs_filtrados = {k: v for k, v in graficos_disponibles.items() if k in graficos_seleccionados}
 
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
@@ -643,8 +647,7 @@ else:
                         # 1. Generar PDF como bytes (puede tardar)
                         pdf_bytes = util.generate_pdf(
                             df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                            df_cmj, df_yoyo, df_rsa, figalt, figan, figcmj, figspt, figspv, figyoyo, figagd, figagnd, figrsat, figrsav
-                        )
+                            df_cmj, df_yoyo, df_rsa, figs_filtrados)
 
                         # 2. Codificar y preparar para mostrar
                         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
