@@ -50,7 +50,7 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_data_test, columnas_a_verificar)
-
+#st.dataframe(df_promedios)
 st.divider()
 ###################################################
 
@@ -191,7 +191,7 @@ else:
                     #st.dataframe(df_anthropometrics)
                     #df_ang = df_anthropometrics[["FECHA REGISTRO", "PESO (KG)", "GRASA (%)"]]
                     figalt = graphics.get_height_graph(df_anthropometrics)
-                    figan = graphics.get_anthropometrics_graph(df_anthropometrics, df_promedios, categoria, equipo)
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, df_promedios, categoria, equipo)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -255,7 +255,6 @@ else:
                 #df_cmj = df_cmj[~(df_cmj[columnas_filtradas] == 0).all(axis=1)]
                 todos_ceros = (df_cmj[columnas_filtradas] == 0).all().all()
 
-                
                 if not todos_ceros:
                     df_cmj = df_cmj[~(df_cmj[columnas_filtradas] == 0).all(axis=1)]
                     #st.dataframe(df_cmj)  
@@ -292,7 +291,7 @@ else:
                     with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
-                        st.dataframe(styled_df)
+                        st.dataframe(df_cmj)
                         #st.dataframe(df_cmj)
                     #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #    graphics.mostrar_percentiles_coloreados(df_cmj.iloc[0], percentiles_cmj)  
@@ -316,6 +315,9 @@ else:
 
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+                # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
+                df_sprint = df_sprint.loc[~(df_sprint[columnas_filtradas].fillna(0) == 0).all(axis=1)]
 
                 todos_ceros = (df_sprint[columnas_filtradas] == 0).all().all()
                 
@@ -419,6 +421,12 @@ else:
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
 
+                # Seleccionar las columnas filtradas
+                #df_filtrado = df_yoyo[columnas_filtradas]
+
+                # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
+                df_yoyo = df_yoyo.loc[~(df_yoyo[columnas_filtradas].fillna(0) == 0).all(axis=1)]
+
                 todos_ceros = (df_yoyo[columnas_filtradas] == 0).all().all()
 
                 if not todos_ceros:
@@ -452,7 +460,6 @@ else:
                     #df_yoyo = df_yoyo.fillna(0).replace("None", 0)
                     #st.dataframe(df_yoyo) 
                     
-
                     #st.divider()
                     cola, colb = st.columns([2.5,1.5])
 
@@ -464,7 +471,7 @@ else:
                         df_yoyo = df_yoyo.rename(columns={"ACCUMULATED SHUTTLE DISTANCE (M)": "DISTANCE (M)"})
 
                         styled_df = util.aplicar_semaforo(df_yoyo)
-                        st.dataframe(styled_df)    
+                        st.dataframe(df_yoyo)    
                     #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #    graphics.mostrar_percentiles_coloreados(df_yoyo.iloc[0], percentiles_yoyo)  
                 else:
@@ -485,6 +492,9 @@ else:
 
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+                # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
+                df_agilty = df_agilty.loc[~(df_agilty[columnas_filtradas].fillna(0) == 0).all(axis=1)]
 
                 todos_ceros = (df_agilty[columnas_filtradas] == 0).all().all()
 
@@ -522,7 +532,8 @@ else:
                     with colb:
                         #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]], invertir=True))
+                        #st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]], invertir=True))
+                        st.dataframe(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]])
                     #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #    graphics.mostrar_percentiles_coloreados(df_agilty.iloc[0], percentiles_ag)
 
@@ -530,12 +541,13 @@ else:
                     colc, cold = st.columns([3,1])
 
                     with colc:
-                        figagnd = None
+                        #figagnd = None
                         figagnd = graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
                     with cold:
                         #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]], invertir=True))
+                        #st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]], invertir=True))
+                        st.dataframe(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]])
                 else:
                     st.text(mensaje_no_data)
                     percentiles_ag = None
@@ -555,8 +567,11 @@ else:
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
 
-                todos_ceros = (df_rsa[columnas_filtradas] == 0).all().all()
+                # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
+                df_rsa = df_rsa.loc[~(df_rsa[columnas_filtradas].fillna(0) == 0).all(axis=1)]
 
+                todos_ceros = (df_rsa[columnas_filtradas] == 0).all().all()
+                #st.dataframe(df_rsa)
                 if not todos_ceros:
                     df_rsa = df_rsa[~(df_rsa[columnas_estructura] == 0).all(axis=1)]
                     percentiles_rsa = util.calcular_percentiles(df_rsa.iloc[0], referencia_test, columnas_filtradas)
@@ -578,7 +593,7 @@ else:
                         st.metric(f"VELOCIDAD (M*SEG)",f'{act:,.1f}', f'{variacion:,.1f}')
 
                     with col3:
-                        act = df_agilty['FECHA REGISTRO'].iloc[0]
+                        act = df_rsa['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
                     styled_dfa = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","MEDIDA EN TIEMPO (SEG)"]], invertir=True)
@@ -590,7 +605,7 @@ else:
                         #st.dataframe(df_rsa)
                     with colb:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(styled_dfa) 
+                        st.dataframe(df_rsa[["FECHA REGISTRO","MEDIDA EN TIEMPO (SEG)"]]) 
 
                     df_rsa = util.convertir_m_s_a_km_h(df_rsa, ["VELOCIDAD (M*SEG)"])
                     styled_dfb = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","VELOCIDAD (KM/H)"]])
@@ -600,7 +615,7 @@ else:
                         #st.dataframe(df_rsa)
                     with cold:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(styled_dfb) 
+                        st.dataframe(df_rsa[["FECHA REGISTRO","VELOCIDAD (KM/H)"]]) 
 
                     #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #    graphics.mostrar_percentiles_coloreados(df_rsa.iloc[0], percentiles_rsa) 
@@ -627,7 +642,7 @@ else:
                 
                 graficos_disponibles = {
                     "Altura": figalt,
-                    "Peso y Grasa": figan,
+                    "Peso y Grasa": figant,
                     "CMJ": figcmj,
                     "Sprint Tiempo": figspt,
                     "Sprint Velocidad": figspv,
@@ -638,10 +653,13 @@ else:
                     "RSA Velocidad": figrsav
                 }
 
+                
                 graficos_seleccionados = st.multiselect("Gráficos:", options=list(graficos_disponibles.keys()))
 
                 figs_filtrados = {k: v for k, v in graficos_disponibles.items() if k in graficos_seleccionados}
-
+                
+                #figan =  figs_filtrados.get("Peso y Grasa")
+                #st.dataframe(figan)
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)

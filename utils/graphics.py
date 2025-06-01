@@ -26,18 +26,49 @@ def get_height_graph(df_altura):
         marker=dict(
             size=14,
             color="lightblue",
-            line=dict(width=2, color="blue")
+            line=dict(width=2, color="#12527c")
         ),
-        line=dict(color="blue", width=2),
+        line=dict(color="#12527c", width=2),
         hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Altura:</b> %{y:.1f} cm<extra></extra>"
     ))
+
+    # Etiquetas personalizadas del eje X
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
+
+    # Anotación de máximo más reciente
+    if not df.empty:
+        max_valor = df["ALTURA (CM)"].max()
+        fila_max = df[df["ALTURA (CM)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+        fig.add_annotation(
+            x=fila_max["FECHA REGISTRO"],
+            y=fila_max["ALTURA (CM)"],
+            text=f"Max: {fila_max['ALTURA (CM)']:.1f} cm",
+            showarrow=True,
+            arrowhead=2,
+            ax=0,
+            ay=-30,
+            bgcolor="#12527c",
+            font=dict(color="white")
+        )
 
     fig.update_layout(
         title="📏 Evolución de la Altura (cm)",
         xaxis_title=None,
         yaxis_title="Altura (cm)",
         template="plotly_white",
-        xaxis=dict(tickformat="%b", dtick="M1"),
+        xaxis=dict(
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
+        ),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -60,10 +91,38 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
     metricas = ["PESO (KG)", "GRASA (%)"]
     df = df[["FECHA REGISTRO"] + metricas]
 
+    # --- Definir etiquetas personalizadas de eje X ---
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
+
+
     zona_optima_min = 11
     zona_optima_max = 12.5
     grasa_min = df_antropometria["GRASA (%)"].min()
-    dif_zona_optima = zona_optima_min - grasa_min
+    grasa_max = df_antropometria["GRASA (%)"].max()
+    dif_zona_optima_min = zona_optima_min - grasa_min
+    dif_zona_optima_max = grasa_max - zona_optima_max
+    #st.text(f"Zona óptima: {dif_zona_optima_min} - {dif_zona_optima_max} %")
+    
+    if(dif_zona_optima_min < 2 and dif_zona_optima_max < 2):
+        cmin = zona_optima_min - 5
+        cmax = zona_optima_max + 5
+    elif(dif_zona_optima_min < 2 and dif_zona_optima_max > 2):
+        cmin = zona_optima_min - dif_zona_optima_max - 2
+        cmax = grasa_max + 2
+    elif(dif_zona_optima_min > 2 and dif_zona_optima_max < 2):
+        cmin = grasa_min - 2
+        cmax = zona_optima_max + dif_zona_optima_min + 2
+    else:
+        cmin = grasa_min - 2
+        cmax = grasa_max
 
     color_lineas = {
         "PESO (KG)": "#66c2ff",
@@ -90,7 +149,11 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             marker_color=color_lineas["PESO (KG)"],
             text=df["PESO (KG)"].round(1),
             textposition="inside",
-            yaxis="y1"
+            yaxis="y1",
+            hovertemplate=(
+                "<b>Fecha:</b> %{x|%d-%m-%Y}<br>"
+                "<b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
+            )
         ))
 
     # --- GRASA como línea con puntos coloreados (eje derecho) ---
@@ -132,7 +195,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
-                ay=-30,
+                ay=30,
                 bgcolor=color_lineas["GRASA (%)"],
                 font=dict(color="white")
             )
@@ -190,53 +253,50 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
                 yaxis="y2"
             ))
 
-    # --- Barra de color (eje derecho) ---
+    # --- Barra de color (sin usar yaxis="y2" para evitar error de Kaleido) ---
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
-        cmin = grasa_min - 2
-        cmax = zona_optima_max + dif_zona_optima
-
-        fig.add_trace(go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            marker=dict(
-                size=0,
-                color=[(cmin + cmax) / 2],
-                colorscale=[
-                    [0.0, "red"],
-                    [0.35, "orange"],
-                    [0.5, "green"],
-                    [0.65, "orange"],
-                    [1.0, "red"]
-                ],
-                cmin=cmin,
-                cmax=cmax,
-                colorbar=dict(
-                    title="% Grasa",
-                    titleside="right",
-                    orientation="v",
-                    y=-0.01,
-                    yanchor="bottom",
-                    len=1.05,
-                    lenmode="fraction",
-                    x=1.05,
-                    xanchor="left",
-                    thickness=20,
-                    showticklabels=False,
-                    tickfont=dict(color="gray"),
-                    titlefont=dict(color="gray")
-                ),
-                showscale=True
+        fig.add_trace(go.Heatmap(
+            z=[[0]],  # dummy heatmap
+            x=[df["FECHA REGISTRO"].min()],
+            y=[(cmin + cmax) / 2],
+            colorscale=[
+                [0.0, "red"],
+                [0.35, "orange"],
+                [0.5, "green"],
+                [0.65, "orange"],
+                [1.0, "red"]
+            ],
+            zmin=cmin,
+            zmax=cmax,
+            showscale=True,
+            colorbar=dict(
+                title="% Grasa",
+                titleside="right",
+                orientation="v",
+                y=-0.02,
+                yanchor="bottom",
+                len=1.05,
+                lenmode="fraction",
+                x=1.03,
+                xanchor="left",
+                thickness=20,
+                #showticklabels=False,
+                tickfont=dict(color="white"),
+                titlefont=dict(color="gray")
             ),
-            showlegend=False,
-            hoverinfo="skip",
-            yaxis="y2"
+            hoverinfo="skip"
         ))
 
     # --- Layout final con dos ejes ---
     fig.update_layout(
         title="⚖️ Evolución del Peso y % Grasa",
-        xaxis=dict(tickformat="%b", dtick="M1"),
+        xaxis=dict(
+            tickformat="%b",     # Mantén esto si quieres seguir usando el formato base (mes)
+            dtick="M1",          # Mantén esto si quieres controlar cada mes
+            tickmode="array",    # Usamos arreglo para mostrar solo meses relevantes
+            tickvals=tickvals,
+            ticktext=ticktext
+        ),
         yaxis=dict(
             title="Peso (kg)",
             side="left"
@@ -247,7 +307,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             side="right",
             showgrid=False,
             dtick=2,
-            range=[grasa_min - 2, zona_optima_max + dif_zona_optima + 2]
+            range=[cmin, cmax],
         ),
         template="plotly_white",
         barmode="group",
@@ -259,6 +319,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             x=0.5
         )
     )
+
 
     st.plotly_chart(fig, use_container_width=True)
     return fig
@@ -417,6 +478,27 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     fig = go.Figure()
     tolerancia = 5
 
+    # --- Calcular rango del eje Y incluyendo el promedio ---
+    valores = df_melted["VALOR"].tolist()
+    if promedios:
+        for valor_prom in promedios.values():
+            valores.append(valor_prom)
+
+    ymin = min(valores) - 2  # margen inferior fijo
+    ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)  # margen superior dinámico
+
+    # --- Etiquetas personalizadas del eje X ---
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
+
+    # --- Graficar la métrica principal ---
     for metrica in metricas:
         df_filtro = df_melted[df_melted["MÉTRICA"] == metrica]
         x_vals = df_filtro["FECHA REGISTRO"].tolist()
@@ -438,12 +520,11 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             if metrica in promedios:
                 prom = promedios[metrica]
                 if valor >= prom:
-                    colores_puntos.append("rgba(0, 200, 0, 0.8)")    # Verde si igual o superior
+                    colores_puntos.append("rgba(0, 200, 0, 0.8)")
                 elif abs(valor - prom) <= tolerancia:
-                    colores_puntos.append("rgba(255, 215, 0, 0.9)")  # Amarillo si cercano pero menor
+                    colores_puntos.append("rgba(255, 215, 0, 0.9)")
                 else:
-                    colores_puntos.append("rgba(255, 0, 0, 0.8)")    # Rojo si más alejado por debajo
-
+                    colores_puntos.append("rgba(255, 0, 0, 0.8)")
             else:
                 colores_puntos.append("gray")
 
@@ -454,18 +535,17 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             name=metrica,
             showlegend=False,
             marker=dict(size=10, color=colores_puntos),
-            hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>Métrica:</b> {metrica}<br><b>Valor:</b> %{{y:.2f}}<extra></extra>"
+            hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
         ))
 
         # Máximo más reciente
         if not df_filtro.empty:
             max_val = df_filtro["VALOR"].max()
             fila_max = df_filtro[df_filtro["VALOR"] == max_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["VALOR"],
-                text=f"Max: {fila_max['VALOR']:.1f} {metrica}",
+                text=f"Max: {fila_max['VALOR']:.2f} {metrica}",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -479,7 +559,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
         fig.add_hline(
             y=valor_prom,
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash"),
-            annotation_text=f"",
+            annotation_text=f"{valor_prom:.2f} cm",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
         )
@@ -490,19 +570,24 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             line=dict(color="green", dash="dash")
         ))
 
-    # ➕ Añadir barra de color representativa a la derecha
+    # ➕ Barra de color sincronizada con el eje Y y el promedio
     if "CMJ (CM)" in df.columns and not df["CMJ (CM)"].isnull().all():
-
-        # Obtener el promedio desde promedio_row
-        if not promedio_row.empty and "CMJ (CM)" in promedio_row.columns:
-            prom_cmj = promedio_row["CMJ (CM)"].values[0]
+        if promedios and "CMJ (CM)" in promedios:
+            valor_prom = promedios["CMJ (CM)"]
+            rel_promedio = (valor_prom - ymin) / (ymax - ymin)
+            colorscale = [
+                [0.0, "red"],
+                [max(rel_promedio * 0.7, 0.001), "orange"],
+                [rel_promedio, "green"],
+                [1.0, "green"]
+            ]
         else:
-            prom_cmj = df["CMJ (CM)"].mean()
-
-        # Margen para la escala de color: ±20% del promedio
-        margen = prom_cmj * 0.2
-        cmin = prom_cmj - margen
-        cmax = prom_cmj + margen
+            colorscale = [
+                [0.0, "red"],
+                [0.5, "orange"],
+                [0.7, "yellow"],
+                [1.0, "green"]
+            ]
 
         fig.add_trace(go.Scatter(
             x=[None],
@@ -510,27 +595,21 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             mode="markers",
             marker=dict(
                 size=0,
-                color=[prom_cmj],
-                colorscale=[
-                    [0.0, "red"],       # parte baja
-                    [0.5, "orange"],    # valor medio
-                    [0.7, "yellow"],    # intermedio superior
-                    [1.0, "green"]      # parte alta
-                ],
-                cmin=cmin,
-                cmax=cmax,
+                color=[(ymin + ymax) / 2],
+                colorscale=colorscale,
+                cmin=ymin,
+                cmax=ymax,
                 colorbar=dict(
-                    #title="Altura de salto (cm)",
                     titleside="right",
                     ticks="outside",
                     tickfont=dict(color="black"),
                     titlefont=dict(color="black"),
                     thickness=20,
-                    len=1,            # 🔼 más altura de barra (proporción del gráfico)
+                    len=1,
                     lenmode="fraction",
-                    y=0,                # base del gráfico
+                    y=0,
                     yanchor="bottom",
-                    x=1.05              # a la derecha del gráfico
+                    x=1.05
                 ),
                 showscale=True
             ),
@@ -538,12 +617,18 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             hoverinfo="skip"
         ))
 
-    
+    # --- Layout final ---
     fig.update_layout(
         title="📈 Evolución de la Potencia Muscular de Salto (CMJ)",
-        xaxis_title=None,
-        yaxis_title="ALTURA DE SALTO (CM)",
-        xaxis=dict(tickformat="%b", dtick="M1"),
+        xaxis=dict(
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
+        ),
+        yaxis=dict(
+            title="ALTURA DE SALTO (CM)",
+            range=[ymin, ymax]
+        ),
         template="plotly_white",
         legend=dict(
             orientation="h",
@@ -555,7 +640,6 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
     return fig
 
 def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
@@ -586,24 +670,43 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
     ]
     valor_prom = promedio_row[metrica].values[0] if not promedio_row.empty and metrica in promedio_row.columns else None
 
+    # Calcular rango del eje Y incluyendo el promedio
+    valores = df[metrica].tolist()
+    if valor_prom is not None and not pd.isna(valor_prom):
+        valores.append(valor_prom)
+
+    ymin = min(valores) - 10
+    ymax = max(valores) + (max(valores) - min(valores)) * 0.1
+
+    # Etiquetas personalizadas del eje X
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
+
     # Colorear puntos según comparación con el promedio
     colores_puntos = []
-    tolerancia = 10
+    tolerancia = 5  # Ajustable
     for valor in df[metrica]:
-        if valor_prom is not None:
-            if abs(valor - valor_prom) <= tolerancia:
-                colores_puntos.append("rgba(255, 215, 0, 0.9)")   # dorado
-            elif valor > valor_prom:
-                colores_puntos.append("rgba(0, 200, 0, 0.8)")     # verde
+        if valor_prom is not None and not pd.isna(valor_prom):
+            if valor >= valor_prom:
+                colores_puntos.append("rgba(0, 200, 0, 0.8)")  # Verde
+            elif abs(valor - valor_prom) <= tolerancia:
+                colores_puntos.append("rgba(255, 215, 0, 0.9)")  # Amarillo
             else:
-                colores_puntos.append("rgba(255, 0, 0, 0.8)")     # rojo
+                colores_puntos.append("rgba(255, 0, 0, 0.8)")  # Rojo
         else:
-            colores_puntos.append("blue")
+            colores_puntos.append("gray")
 
     # Crear figura
     fig = go.Figure()
 
-    # Línea
+    # Línea principal
     fig.add_trace(go.Scatter(
         x=df["FECHA REGISTRO"],
         y=df[metrica],
@@ -624,19 +727,18 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
     ))
 
     # Línea de promedio
-    if valor_prom is not None:
+    if valor_prom is not None and not pd.isna(valor_prom):
         fig.add_hline(
             y=valor_prom,
             line=dict(color="orange", dash="dash"),
-            annotation_text=f"Promedio ({categoria} {equipo}): {valor_prom:.2f}",
+            annotation_text=f"{valor_prom:.2f} m",
             annotation_position="top left",
-            #annotation_font=dict(color="orange"),
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
         )
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name="DISTANCIA PROMEDIO (M)",
+            name=f"DISTANCIA PROMEDIO (M) ({categoria} {equipo})",
             line=dict(color="orange", dash="dash")
         ))
 
@@ -656,12 +758,63 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
             font=dict(color="white")
         )
 
-    # Eje X por mes
+    # Barra de color sincronizada con el eje Y y el promedio
+    if valor_prom is not None and not pd.isna(valor_prom):
+        rel_promedio = (valor_prom - ymin) / (ymax - ymin)
+        colorscale = [
+            [0.0, "red"],
+            [max(rel_promedio * 0.7, 0.001), "orange"],  # gradual hasta el promedio
+            [rel_promedio, "green"],
+            [1.0, "green"]
+        ]
+    else:
+        colorscale = [
+            [0.0, "red"],
+            [0.5, "orange"],
+            [0.7, "yellow"],
+            [1.0, "green"]
+        ]
+
+    fig.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
+        marker=dict(
+            size=0,
+            color=[(ymin + ymax) / 2],
+            colorscale=colorscale,
+            cmin=ymin,
+            cmax=ymax,
+            colorbar=dict(
+                titleside="right",
+                ticks="outside",
+                tickfont=dict(color="black"),
+                titlefont=dict(color="black"),
+                thickness=20,
+                len=1,
+                lenmode="fraction",
+                y=0,
+                yanchor="bottom",
+                x=1.05
+            ),
+            showscale=True
+        ),
+        showlegend=False,
+        hoverinfo="skip"
+    ))
+
+    # Layout final
     fig.update_layout(
         title="📈 Evolución de la Distancia Acumulada",
-        xaxis_title="FECHA",
-        yaxis_title="DISTANCIA ACUMULADA (M)",
-        xaxis=dict(tickformat="%b", dtick="M1"),
+        xaxis=dict(
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
+        ),
+        yaxis=dict(
+            title="DISTANCIA ACUMULADA (M)",
+            range=[ymin, ymax]
+        ),
         template="plotly_white",
         legend=dict(
             orientation="h",
@@ -953,21 +1106,40 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     y_vals = df["MEDIDA EN TIEMPO (SEG)"].tolist()
     x_vals = df["FECHA REGISTRO"].tolist()
 
-    color_linea = "#1f77b4"  # Azul
+    color_linea = "#1f77b4"
     prom = promedios.get("MEDIDA EN TIEMPO (SEG)", None)
-    tolerancia = 0.1
+    tolerancia = 1.5
     colores_puntos = []
 
     for val in y_vals:
-        if prom is not None:
-            if abs(val - prom) <= tolerancia:
-                colores_puntos.append("rgba(255, 215, 0, 0.9)")
-            elif val < prom:
-                colores_puntos.append("rgba(0, 200, 0, 0.8)")
+        if prom is not None and not pd.isna(prom):
+            if val < (prom - tolerancia):
+                colores_puntos.append("rgba(0, 200, 0, 0.8)")  # Verde (menorual)
+            elif abs(val - prom) <= tolerancia:
+                colores_puntos.append("rgba(255, 215, 0, 0.9)")  # Amarillo (cercano)
             else:
-                colores_puntos.append("rgba(255, 0, 0, 0.8)")
+                colores_puntos.append("rgba(255, 0, 0, 0.8)")    # Rojo (peor)
         else:
             colores_puntos.append(color_linea)
+
+    # Calcular rango del eje Y incluyendo el promedio
+    valores = y_vals.copy()
+    if prom is not None and not pd.isna(prom):
+        valores.append(prom)
+
+    ymin = min(valores) - 0.5
+    ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)
+
+    # Etiquetas personalizadas del eje X
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
     # Línea
     fig_tiempo.add_trace(go.Scatter(
@@ -990,24 +1162,22 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     ))
 
     # Línea de promedio
-    if prom is not None:
+    if prom is not None and not pd.isna(prom):
         fig_tiempo.add_hline(
             y=prom,
             line=dict(color="orange", dash="dash"),
-            annotation_text=f"Promedio ({categoria} {equipo}): {prom:.2f}",
+            annotation_text=f"{prom:.2f} seg",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12))
         )
-
-        # Agregar a la leyenda
         fig_tiempo.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name="TIEMPO PROMEDIO (SEG)",
+            name=f"TIEMPO PROMEDIO (SEG) ({categoria} {equipo})",
             line=dict(color="orange", dash="dash")
         ))
 
-    # Anotación de máximo más reciente
+    # Anotación de mejor registro (menor tiempo)
     df_max = df[df["MEDIDA EN TIEMPO (SEG)"] == min(y_vals)].sort_values(by="FECHA REGISTRO", ascending=False)
     if not df_max.empty:
         fila = df_max.iloc[0]
@@ -1023,14 +1193,62 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
             font=dict(color="white")
         )
 
+    # Barra de color sincronizada con el eje Y y promedio
+    if prom is not None and not pd.isna(prom):
+        rel_promedio = (prom - ymin) / (ymax - ymin)
+        colorscale = [
+            [0.0, "green"],  # Verde para mejores registros (menor tiempo)
+            [rel_promedio * 0.7, "yellow"],
+            [rel_promedio, "orange"],
+            [1.0, "red"]     # Rojo para peores registros (mayor tiempo)
+        ]
+    else:
+        colorscale = [
+            [0.0, "green"],
+            [0.5, "yellow"],
+            [0.7, "orange"],
+            [1.0, "red"]
+        ]
+
+    fig_tiempo.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
+        marker=dict(
+            size=0,
+            color=[(ymin + ymax) / 2],
+            colorscale=colorscale,
+            cmin=ymin,
+            cmax=ymax,
+            colorbar=dict(
+                titleside="right",
+                ticks="outside",
+                tickfont=dict(color="black"),
+                titlefont=dict(color="black"),
+                thickness=20,
+                len=1,
+                lenmode="fraction",
+                y=0,
+                yanchor="bottom",
+                x=1.05
+            ),
+            showscale=True
+        ),
+        showlegend=False,
+        hoverinfo="skip"
+    ))
+
+    # Layout final
     fig_tiempo.update_layout(
         title="📈 Evolución del Tiempo Total en Repeticiones de Sprint",
-        xaxis_title="Fecha",
-        yaxis_title="Tiempo (Seg)",
         xaxis=dict(
-            tickformat="%b",  # Mostrar mes abreviado
-            dtick="M1",
-            title=None
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
+        ),
+        yaxis=dict(
+            title="Tiempo (Seg)",
+            range=[ymin, ymax]
         ),
         template="plotly_white",
         legend=dict(
@@ -1061,17 +1279,15 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         (df_promedios_rsa["EQUIPO"] == equipo)
     ]
 
-    promedios = {}
+    prom = None
     if not promedio_row.empty and "VELOCIDAD (M*SEG)" in promedio_row.columns:
         prom = promedio_row["VELOCIDAD (M*SEG)"].values[0] * 3.6
-        if pd.notna(prom):
-            promedios[metric] = prom
     else:
-        prom = None
+        st.warning("No se encontraron promedios de Velocidad para esta categoría y equipo.")
 
     # Crear figura
     fig = go.Figure()
-    tolerancia = 0.2 * 3.6  # adaptar tolerancia al nuevo rango
+    tolerancia = 0.3 * 3.6
 
     color_linea = "#66c2ff"
     color_promedio = "orange"
@@ -1079,17 +1295,36 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     y_vals = df[metric].tolist()
     x_vals = df["FECHA REGISTRO"].tolist()
 
+    # Colorear puntos
     colores_puntos = []
     for valor in y_vals:
-        if metric in promedios:
-            if abs(valor - prom) <= tolerancia:
-                colores_puntos.append("rgba(255, 215, 0, 0.9)")
-            elif valor > prom:
-                colores_puntos.append("rgba(0, 200, 0, 0.8)")
+        if prom is not None and not pd.isna(prom):
+            if valor >= prom:
+                colores_puntos.append("rgba(0, 200, 0, 0.8)")  # Verde
+            elif abs(valor - prom) <= tolerancia:
+                colores_puntos.append("rgba(255, 215, 0, 0.9)")  # Amarillo
             else:
-                colores_puntos.append("rgba(255, 0, 0, 0.8)")
+                colores_puntos.append("rgba(255, 0, 0, 0.8)")  # Rojo
         else:
             colores_puntos.append(color_linea)
+
+    # Rango del eje Y
+    valores = y_vals.copy()
+    if prom is not None and not pd.isna(prom):
+        valores.append(prom)
+    ymin = min(valores) - 1
+    ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)
+
+    # Etiquetas personalizadas del eje X
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
     # Línea base
     fig.add_trace(go.Scatter(
@@ -1112,6 +1347,21 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Velocidad:</b> %{y:.2f} km/h<extra></extra>"
     ))
 
+    # Línea de promedio
+    if prom is not None and not pd.isna(prom):
+        fig.add_hline(
+            y=prom,
+            line=dict(color=color_promedio, dash="dash"),
+            annotation_text=f"{prom:.2f} km/h",
+            annotation=dict(font=dict(color="black", size=12))
+        )
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None],
+            mode="lines",
+            name=f"VELOCIDAD PROMEDIO (KM/H) ({categoria} {equipo})",
+            line=dict(color=color_promedio, dash="dash")
+        ))
+
     # Anotación del máximo
     df_filtro = df[["FECHA REGISTRO", metric]].dropna()
     if not df_filtro.empty:
@@ -1130,28 +1380,62 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
             font=dict(color="white")
         )
 
-    # Línea de promedio
-    if prom is not None:
-        fig.add_hline(
-            y=prom,
-            line=dict(color=color_promedio, dash="dash"),
-            annotation_text=f"Promedio ({categoria} {equipo}): {prom:.2f} km/h",
-            annotation=dict(font=dict(color="black", size=12))
-        )
-        fig.add_trace(go.Scatter(
-            x=[None], y=[None],
-            mode="lines",
-            name="VELOCIDAD PROMEDIO (KM/H)",
-            line=dict(color=color_promedio, dash="dash")
-        ))
+    # Barra de color sincronizada con el eje Y y promedio
+    if prom is not None and not pd.isna(prom):
+        rel_promedio = (prom - ymin) / (ymax - ymin)
+        colorscale = [
+            [0.0, "red"],
+            [rel_promedio * 0.7, "orange"],
+            [rel_promedio, "green"],
+            [1.0, "green"]
+        ]
+    else:
+        colorscale = [
+            [0.0, "red"],
+            [0.5, "orange"],
+            [0.7, "yellow"],
+            [1.0, "green"]
+        ]
 
+    fig.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
+        marker=dict(
+            size=0,
+            color=[(ymin + ymax) / 2],
+            colorscale=colorscale,
+            cmin=ymin,
+            cmax=ymax,
+            colorbar=dict(
+                titleside="right",
+                ticks="outside",
+                tickfont=dict(color="black"),
+                titlefont=dict(color="black"),
+                thickness=20,
+                len=1,
+                lenmode="fraction",
+                y=0,
+                yanchor="bottom",
+                x=1.05
+            ),
+            showscale=True
+        ),
+        showlegend=False,
+        hoverinfo="skip"
+    ))
+
+    # Layout final
     fig.update_layout(
         title="📈 Evolución de la Velocidad en Repeticiones de Sprint",
-        yaxis_title="Velocidad (km/h)",
+        yaxis=dict(
+            title="Velocidad (km/h)",
+            range=[ymin, ymax]
+        ),
         xaxis=dict(
-            tickformat="%b",
-            dtick="M1",
-            title=None
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
         ),
         template="plotly_white",
         legend=dict(
@@ -1166,7 +1450,6 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     st.plotly_chart(fig, use_container_width=True)
 
     return fig
-
 
 def generar_tabla_imc_personalizada(categoria_jugador, path="tabla_imc_personalizada.png"):
     rangos = ["MENOR A 18.49", "18.50 A 24.99", "25 A 29.99", "30 A 34.99", "35 A 39.99", "MAYOR A 40"]

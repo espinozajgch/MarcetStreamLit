@@ -31,6 +31,10 @@ def get_player_data(conn):
     #st.dataframe(df)
     hoy = datetime.today()
 
+    df["JUGADOR"] = df["JUGADOR"].str.strip()
+    df["CATEGORIA"] = df["CATEGORIA"].str.strip()
+    df["EQUIPO"] = df["EQUIPO"].str.strip()
+
     # Convertir a tipo datetime (asegura formato día/mes/año)
     df["FECHA DE NACIMIENTO"] = pd.to_datetime(df["FECHA DE NACIMIENTO"], format="%d/%m/%Y")
     df["EDAD"] = df["FECHA DE NACIMIENTO"].apply(lambda x: hoy.year - x.year - ((hoy.month, hoy.day) < (x.month, x.day)))    
@@ -59,6 +63,9 @@ def getData(conn):
     columnas_comunes = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
     df_data_test = unir_dataframes([df_an, df_ag, df_sp, df_cmj, df_yoyo, df_rsa], columnas_comunes)
 
+    df_data_test["CATEGORIA"] = df_data_test["CATEGORIA"].str.strip()
+    df_data_test["EQUIPO"] = df_data_test["EQUIPO"].str.strip()
+
     columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
     columnas_estructura = get_dataframe_columns(df_data_test)
     # Eliminar columnas excluidas
@@ -67,7 +74,7 @@ def getData(conn):
     df_data_test = limpiar_columnas_numericas(df_data_test, columnas_filtradas)
 
     #st.text("Datos de los tests")
-    #st.dataframe(df_data_test)
+    #st.dataframe(columnas_filtradas)
     return df_datos, df_data_test
 
 def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
@@ -208,6 +215,7 @@ def limpiar_columnas_numericas(df, columnas_filtradas):
             .str.replace(r"[,-]", ".", regex=True)
             .pipe(pd.to_numeric, errors="coerce")
         )
+    
     return df
 
 def columnas_sin_datos_utiles(df, columnas_excluidas=None, mostrar_alerta=False, mensaje="❗ No hay datos útiles en las columnas seleccionadas."):
@@ -844,7 +852,7 @@ def add_footer(pdf, invertido=False):
 def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict):
     
     figalt = figs_dict.get("Altura")
-    figan = figs_dict.get("Peso y Grasa")
+    figan =  figs_dict.get("Peso y Grasa")
     figcmj = figs_dict.get("CMJ")
     figspt = figs_dict.get("Sprint Tiempo")
     figspv = figs_dict.get("Sprint Velocidad")
@@ -856,6 +864,8 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
 
     pdf = PDF()
     pdf.add_page()
+
+    
 
     # Datos personales
     #pdf.section_title("DATOS PERSONALES")
@@ -874,12 +884,11 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         pdf.add_plotly_figure(figalt,"")
         add_footer(pdf)
 
-        if figan is not None: 
-            pdf.add_page()
-            pdf.ln(20)
-
     if figan is not None: 
         if figalt is not None: 
+
+            pdf.add_page()
+            pdf.ln(20)
             pdf.section_title("COMPOSICIÓN CORPORAL")
             pdf.add_plotly_figure(figan,"")
             pdf.ln(5)
@@ -894,7 +903,9 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             pdf.ln(20)
 
     if figcmj is not None or figspv is not None: 
-        #if figalt is not None and figan is not None:
+        if figalt is not None or figan is not None:
+            pdf.add_page()
+            pdf.ln(20)
 
         if df_cmj is not None and not df_cmj.empty and figcmj is not None:
             pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
