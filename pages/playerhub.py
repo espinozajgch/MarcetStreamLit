@@ -518,6 +518,7 @@ else:
 
                     with cola:
                         figagd = graphics.get_agility_graph_dom(df_agilty, df_promedios, categoria, equipo)
+                        #graphics.get_agility_graph_combined(df_agilty, df_promedios, categoria, equipo)
                     with colb:
                         #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
                         st.markdown("📊 **Históricos**")
@@ -529,6 +530,7 @@ else:
                     colc, cold = st.columns([3,1])
 
                     with colc:
+                        figagnd = None
                         figagnd = graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
                     with cold:
                         #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)

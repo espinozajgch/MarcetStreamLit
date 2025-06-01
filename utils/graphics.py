@@ -60,14 +60,28 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
     metricas = ["PESO (KG)", "GRASA (%)"]
     df = df[["FECHA REGISTRO"] + metricas]
 
+    zona_optima_min = 11
+    zona_optima_max = 12.5
+    grasa_min = df_antropometria["GRASA (%)"].min()
+    dif_zona_optima = zona_optima_min - grasa_min
+
     color_lineas = {
-        "PESO (KG)": "#1f77b4",
-        "GRASA (%)": "#66c2ff"
+        "PESO (KG)": "#66c2ff",
+        "GRASA (%)": "#12527c"
     }
 
     fig = go.Figure()
 
-    # --- PESO como barra ---
+    # Asegurar que la barra de peso se vea si hay un solo registro
+    if len(df) == 1:
+        new_row = {
+            "FECHA REGISTRO": df["FECHA REGISTRO"].iloc[0] + pd.Timedelta(days=1),
+            "PESO (KG)": None,
+            "GRASA (%)": None
+        }
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    # --- PESO como barra (eje izquierdo) ---
     if "PESO (KG)" in df.columns:
         fig.add_trace(go.Bar(
             x=df["FECHA REGISTRO"],
@@ -76,9 +90,10 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             marker_color=color_lineas["PESO (KG)"],
             text=df["PESO (KG)"].round(1),
             textposition="inside",
+            yaxis="y1"
         ))
 
-    # --- GRASA como línea con puntos coloreados ---
+    # --- GRASA como línea con puntos coloreados (eje derecho) ---
     if "GRASA (%)" in df.columns:
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
@@ -87,7 +102,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
         for valor in y_vals:
             if 11 <= valor <= 12.5:
                 colores_puntos.append("green")
-            elif 10 <= valor < 11 or 12.5 < valor <= 13.5:
+            elif 9 <= valor < 11 or 12.5 < valor <= 14:
                 colores_puntos.append("orange")
             else:
                 colores_puntos.append("red")
@@ -99,6 +114,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             name="GRASA (%)",
             line=dict(color="gray", width=3),
             marker=dict(color=colores_puntos, size=10),
+            yaxis="y2",
             hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f} %<extra></extra>"
         ))
 
@@ -111,6 +127,7 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["GRASA (%)"],
+                yref="y2",
                 text=f"Max: {fila_max['GRASA (%)']:.1f} %",
                 showarrow=True,
                 arrowhead=2,
@@ -120,56 +137,76 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
                 font=dict(color="white")
             )
 
-            # Líneas discontinuas para zona óptima
-            fig.add_hline(
-                y=11,
+            # Líneas discontinuas para zona óptima (en y2)
+            x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=15)
+            x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=15)
+
+            fig.add_trace(go.Scatter(
+                x=[x_min, x_max],
+                y=[12.5, 12.5],
+                mode="lines",
+                name="",
                 line=dict(color="green", dash="dash"),
-                annotation_text="Zona Óptima Inferior: 11%",
-                annotation_position="bottom left",
-                annotation=dict(font=dict(size=11, color="black"))
-            )
-            fig.add_hline(
+                yaxis="y2",
+                showlegend=False
+            ))
+            fig.add_annotation(
+                x=x_min,
                 y=12.5,
+                yref="y2",
+                text="",
+                showarrow=False,
+                font=dict(size=11, color="black"),
+                xanchor="left",
+                yanchor="top"
+            )
+
+            fig.add_trace(go.Scatter(
+                x=[x_min, x_max],
+                y=[11, 11],
+                mode="lines",
+                name="",
                 line=dict(color="green", dash="dash"),
-                annotation_text="Zona Óptima Superior: 12.5%",
-                annotation_position="top left",
-                annotation=dict(font=dict(size=11, color="black"))
+                yaxis="y2",
+                showlegend=False
+            ))
+            fig.add_annotation(
+                x=x_min,
+                y=11,
+                yref="y2",
+                text="",
+                showarrow=False,
+                font=dict(size=11, color="black"),
+                xanchor="left",
+                yanchor="bottom"
             )
 
             # Línea discontinua visible en leyenda
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"Promedio {categoria} A",
-                line=dict(color="green", dash="dash")
+                name=f"Zona %Grasa Promedio {categoria} A",
+                line=dict(color="green", dash="dash"),
+                yaxis="y2"
             ))
 
-
-    # --- Barra de color a la derecha ---
+    # --- Barra de color (eje derecho) ---
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
-        zona_optima_min = 11
-        zona_optima_max = 12.5
-        cmin = 9
-        cmax = 15
-
-        # Centro de la zona óptima y su longitud proporcional
-        y_centro = (zona_optima_min + zona_optima_max) / 2
-        rango_total = cmax - cmin
-        proporcion_centro = (y_centro - cmin) / rango_total  # para 'y'
-        proporcion_len = (zona_optima_max - zona_optima_min) / rango_total  + 0.2 # para 'len'
+        cmin = grasa_min - 2
+        cmax = zona_optima_max + dif_zona_optima
 
         fig.add_trace(go.Scatter(
-            x=[None], y=[0.1],
+            x=[None],
+            y=[None],
             mode="markers",
             marker=dict(
                 size=0,
-                color=[y_centro],
+                color=[(cmin + cmax) / 2],
                 colorscale=[
                     [0.0, "red"],
-                    [0.25, "orange"],
-                    [0.4, "green"],   # 11%
-                    [0.6, "green"],   # 12.5%
-                    [0.75, "orange"],
+                    [0.35, "orange"],
+                    [0.5, "green"],
+                    [0.65, "orange"],
                     [1.0, "red"]
                 ],
                 cmin=cmin,
@@ -177,35 +214,43 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
                 colorbar=dict(
                     title="% Grasa",
                     titleside="right",
-                    orientation="v",         # (por defecto, no hace falta incluirlo)
-                    y=0.05,                     # 🔽 Posición vertical en la base del gráfico
-                    yanchor="bottom",        # ⬅️ Anclaje desde abajo
-                    len=0.35,                # Largo de la barra como proporción del gráfico
+                    orientation="v",
+                    y=-0.01,
+                    yanchor="bottom",
+                    len=1.05,
                     lenmode="fraction",
-                    x=1.05,                  # ⬅️ Derecha del gráfico
+                    x=1.05,
                     xanchor="left",
                     thickness=20,
-                    tickvals=[9, 10.5, 11, 12.5, 13.5, 15],
-                    ticktext=["9%", "10.5%", "11%", "12.5%", "13.5%", "15%"],
-                    tickfont=dict(color="black"),
-                    titlefont=dict(color="black")
+                    showticklabels=False,
+                    tickfont=dict(color="gray"),
+                    titlefont=dict(color="gray")
                 ),
                 showscale=True
             ),
             showlegend=False,
-            hoverinfo="skip"
+            hoverinfo="skip",
+            yaxis="y2"
         ))
 
-
-
-    # Layout final
+    # --- Layout final con dos ejes ---
     fig.update_layout(
         title="⚖️ Evolución del Peso y % Grasa",
-        xaxis_title=None,
-        yaxis=dict(title="Peso"),
+        xaxis=dict(tickformat="%b", dtick="M1"),
+        yaxis=dict(
+            title="Peso (kg)",
+            side="left"
+        ),
+        yaxis2=dict(
+            title="",
+            overlaying="y",
+            side="right",
+            showgrid=False,
+            dtick=2,
+            range=[grasa_min - 2, zona_optima_max + dif_zona_optima + 2]
+        ),
         template="plotly_white",
         barmode="group",
-        xaxis=dict(tickformat="%b", dtick="M1"),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -1165,8 +1210,6 @@ def generar_tabla_imc_personalizada(categoria_jugador, path="tabla_imc_personali
     #plt.close()
     st.pyplot(fig, use_container_width=True)
 
-import matplotlib.pyplot as plt
-
 def mostrar_grafico_percentiles(percentiles):
     fig, ax = plt.subplots()
     labels = list(percentiles.keys())
@@ -1179,7 +1222,6 @@ def mostrar_grafico_percentiles(percentiles):
     ax.set_title("Comparativa por Percentil del Jugador")
     ax.legend()
     st.pyplot(fig)
-
 
 def mostrar_percentiles_coloreados(jugador: dict, percentiles: dict):
     data = []
@@ -1199,3 +1241,118 @@ def mostrar_percentiles_coloreados(jugador: dict, percentiles: dict):
     #styled_df = df.style.apply(color_fila, axis=1)
 
     st.dataframe(df)
+
+def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
+
+    df = pd.DataFrame(df_agility)
+    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors="coerce")
+    df = df.sort_values(by="FECHA REGISTRO")
+
+    metricas = ["505-DOM (SEG)", "505-ND (SEG)"]
+
+    color_linea_dom = "#1f77b4"   # azul
+    color_linea_nd = "#66c2ff"    # celeste
+    color_promedio = "orange"
+
+    fig = go.Figure()
+
+    # --- Calcular promedios ---
+    promedio_row = df_promedios[
+        (df_promedios["CATEGORIA"] == categoria) &
+        (df_promedios["EQUIPO"] == equipo)
+    ]
+
+    promedios = {}
+    for metrica in metricas:
+        if not promedio_row.empty and metrica in promedio_row.columns:
+            valor = promedio_row[metrica].values[0]
+            if pd.notna(valor):
+                promedios[metrica] = valor
+
+    # --- Trazas de las piernas ---
+    for metrica, color, dash in zip(
+        ["505-ND (SEG)", "505-DOM (SEG)"], [color_linea_nd, color_linea_dom], ["solid", "dash"]
+    ):
+        df_metric = df[["FECHA REGISTRO", metrica]].dropna()
+        x_vals = df_metric["FECHA REGISTRO"].tolist()
+        y_vals = df_metric[metrica].tolist()
+
+        fig.add_trace(go.Scatter(
+            x=x_vals,
+            y=y_vals,
+            mode="lines+markers",
+            name=metrica,
+            line=dict(color=color, width=3, dash=dash),
+            marker=dict(size=8, color=color),
+            hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
+        ))
+
+        # Mejor registro
+        if not df_metric.empty:
+            min_val = df_metric[metrica].min()
+            fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+            fig.add_annotation(
+                x=fila_min["FECHA REGISTRO"],
+                y=fila_min[metrica],
+                text=f"Mejor Registro: {fila_min[metrica]:.2f} seg",
+                showarrow=True,
+                arrowhead=2,
+                ax=0,
+                ay=-30,
+                bgcolor=color,
+                font=dict(color="white")
+            )
+
+        # Línea de promedio
+        if metrica in promedios:
+            prom = promedios[metrica]
+            fig.add_hline(
+                y=prom,
+                line=dict(color=color_promedio, dash="dash"),
+                annotation_text=f"Promedio ({metrica}): {prom:.2f} seg",
+                annotation_position="top right",
+                annotation=dict(font=dict(color="black", size=12, family="Arial"))
+            )
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None],
+                mode="lines",
+                name=f"{metrica} PROMEDIO",
+                line=dict(color=color_promedio, dash="dash")
+            ))
+
+    # --- Calcular y marcar % diferencia (DOM vs ND) ---
+    for idx, row in df.iterrows():
+        fecha = row["FECHA REGISTRO"]
+        dom = row.get("505-DOM (SEG)")
+        nd = row.get("505-ND (SEG)")
+        if pd.notna(dom) and pd.notna(nd) and nd != 0:
+            diferencia = ((dom - nd) / nd) * 100
+            fig.add_trace(go.Scatter(
+                x=[fecha],
+                y=[max(dom, nd) + 0.1],  # posición vertical un poco arriba
+                mode="markers+text",
+                marker=dict(size=15, color="orange", opacity=0.7),
+                text=f"{diferencia:.1f}%",
+                textposition="top center",
+                showlegend=False,
+                hoverinfo="skip"
+            ))
+
+    # --- Layout final ---
+    fig.update_layout(
+        title="📈 Evolución de la Agilidad (DOM y ND)",
+        xaxis_title=None,
+        yaxis_title="Tiempo (Seg)",
+        xaxis=dict(tickformat="%b", dtick="M1"),
+        template="plotly_white",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+    return fig
