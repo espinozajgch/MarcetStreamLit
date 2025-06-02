@@ -71,8 +71,6 @@ if len(metricas) > 0:
 
 on = st.toggle("Solo Jugadores con Datos")
 
-st.divider()
-
 # Lista de columnas que quieres excluir de la validación
 columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
 
@@ -88,6 +86,7 @@ if on:
 else:
     edited_df = util.get_data_editor(df_nuevo)
 
+st.divider()
 
 # 💾 Diálogo para guardar cambios (manual o auto)
 @st.dialog("💾 Guardando datos en Google Sheets...", width="small")

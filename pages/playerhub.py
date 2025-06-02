@@ -39,7 +39,17 @@ st.header(" :blue[Player Hub] :material/contacts:", divider=True)
 df_datos, df_data_test = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
 
-df_datos_filtrado = util.get_filters(df_datos)
+on = st.toggle("Solo Jugadores con Test Realizados")
+if on:
+    test = util.get_test(conn)
+    test_cat = util.construir_diccionario_test_categorias(test)
+    df_sesiones = util.sesiones_por_test(df_joined, test_cat)
+    df_filtrado = df_datos[df_datos["JUGADOR"].isin(df_sesiones["JUGADOR"])]
+    
+    df_datos_filtrado = util.get_filters(df_filtrado)
+    #st.dataframe(df_joined)
+else:
+    df_datos_filtrado = util.get_filters(df_datos)
 
 columnas_excluidas_promedio = ['FECHA REGISTRO', 'ID', "CATEGORIA", "EQUIPO" ,'TEST']
 
@@ -63,6 +73,7 @@ else:
 
     # Validar que exista al menos un ID
     if ids_disponibles:
+
         jugador_id = ids_disponibles[0]
 
         columnas_excluidas = ["FECHA REGISTRO"]
@@ -76,7 +87,7 @@ else:
         referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
             
         # Mostrar DataFrame principal
-        #st.dataframe(df_joined_filtrado)
+        #st.dataframe(df_joined)
 
         response = util.get_photo(df_jugador['FOTO PERFIL'].iloc[0])
 
@@ -123,7 +134,6 @@ else:
 ###################################################
 
     if not df_datos_filtrado.empty:
-        equipo = "A"
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
         antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
         
@@ -136,6 +146,7 @@ else:
         figyoyo = None
         figrsat = None
         figrsav = None
+        equipo_promedio = "A"
 
         with antropometria:
             if len(df_joined_filtrado) > 0:
@@ -157,7 +168,10 @@ else:
                     
                     #st.markdown("### :blue[ANTROPOMETRÍA]")
                     st.markdown("📆 **Ultímas Mediciones**")
-                    #st.dataframe(df_anthropometrics.iloc[0])    
+                    #st.dataframe(df_anthropometrics.iloc[0]) 
+                    
+                    zona_optima_min = 11
+                    zona_optima_max = 12.5   
                     
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
@@ -179,19 +193,27 @@ else:
                     #    st.metric(f"MG (Kg)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
 
                     with col3:
-                        act = df_anthropometrics['GRASA (%)'].iloc[0]
-                        ant = df_anthropometrics['GRASA (%)'].iloc[1] if len(df_anthropometrics) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"Grasa (%)",f'{float(act):,.2f}')
+                        gact = df_anthropometrics['GRASA (%)'].iloc[0]
+                        gant = df_anthropometrics['GRASA (%)'].iloc[1] if len(df_anthropometrics) > 1 else 0
+                        variacion = gact - gant
+                        st.metric(f"Grasa (%)",f'{float(gact):,.2f}')
                     
                     with col4:
                         act = df_anthropometrics['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
+                    if(gact < zona_optima_min) or (gact > zona_optima_max):
+                        st.warning(f"El porcentaje de grasa corporal ({gact:.2f}%) está fuera de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%)", icon="⚠️")
+                    else:
+                        st.success(f"El porcentaje de grasa corporal ({gact:.2f}%) está dentro de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%)", icon="✅")
+                    
+                    #st.success('This is a success message!', icon="✅")
                     #st.dataframe(df_anthropometrics)
                     #df_ang = df_anthropometrics[["FECHA REGISTRO", "PESO (KG)", "GRASA (%)"]]
                     figalt = graphics.get_height_graph(df_anthropometrics)
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, df_promedios, categoria, equipo)
+
+                    #equipo = "A"
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -265,28 +287,40 @@ else:
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        act = df_cmj['CMJ (CM)'].iloc[0]
-                        ant = df_cmj['CMJ (CM)'].iloc[1] if len(df_cmj) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"CMJ (CM)",f'{act:,.1f}', f'{variacion:,.1f}')
+                        cactc = df_cmj['CMJ (CM)'].iloc[0]
+                        cantc = df_cmj['CMJ (CM)'].iloc[1] if len(df_cmj) > 1 else 0
+                        variacion = cactc - cantc
+                        st.metric(f"CMJ (CM)",f'{cactc:,.2f}', f'{variacion:,.2f}')
 
                     with col2:
-                        act = df_cmj['CMJ (W)'].iloc[0]
-                        ant = df_cmj['CMJ (W)'].iloc[1] if len(df_cmj) > 1 else 0
-                        variacion = act - ant
-                        st.metric(f"CMJ (W)",f'{act:,.1f}', f'{variacion:,.1f}')
+                        cactw = df_cmj['CMJ (W)'].iloc[0]
+                        cantw = df_cmj['CMJ (W)'].iloc[1] if len(df_cmj) > 1 else 0
+                        variacion = cactw - cantw
+                        st.metric(f"CMJ (W)",f'{cactw:,.2f}', f'{variacion:,.2f}')
 
                     with col3:
                         act = df_cmj['FECHA REGISTRO'].iloc[0]
                         st.metric(f"Último Registro",act)
 
+                    promedio_cmj = df_promedios.loc[
+                    (df_promedios["CATEGORIA"] == categoria) & (df_promedios["EQUIPO"] == equipo_promedio),
+                    "CMJ (CM)"].values[0] if not df_promedios.loc[
+                    (df_promedios["CATEGORIA"] == categoria) & (df_promedios["EQUIPO"] == equipo_promedio),
+                    "CMJ (CM)"].empty else None
+                    
+                    if promedio_cmj is not None:
+                        if(cactc < promedio_cmj):
+                            st.warning(f"El CMJ (CM) ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
+                        else:
+                            st.success(f"El CMJ (CM) ({cactc:.2f} cm) está por encima del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="✅")
                     #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
                     #st.divider()
                     cola, colb = st.columns([2.5,1])
 
                     with cola:
-                        figcmj = graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
+                        
+                        figcmj = graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio)
 
                     with colb:
                         st.markdown("📊 **Históricos**")
@@ -464,7 +498,7 @@ else:
                     cola, colb = st.columns([2.5,1.5])
 
                     with cola:
-                        figyoyo = graphics.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo)
+                        figyoyo = graphics.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio)
                         #st.dataframe(df_yoyo)    
                     with colb:   
                         st.markdown("📊 **Históricos**")
@@ -599,9 +633,8 @@ else:
                     styled_dfa = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","MEDIDA EN TIEMPO (SEG)"]], invertir=True)
                     #st.divider()
                     cola, colb = st.columns([2.5,1])
-
                     with cola:
-                        figrsat = graphics.get_rsa_graph(df_rsa, df_promedios, categoria, equipo)
+                        figrsat = graphics.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio)
                         #st.dataframe(df_rsa)
                     with colb:    
                         st.markdown("📊 **Históricos**")
@@ -611,7 +644,7 @@ else:
                     styled_dfb = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","VELOCIDAD (KM/H)"]])
                     colc, cold = st.columns([2.5,1])
                     with colc:
-                        figrsav = graphics.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo)
+                        figrsav = graphics.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio)
                         #st.dataframe(df_rsa)
                     with cold:    
                         st.markdown("📊 **Históricos**")
@@ -631,15 +664,19 @@ else:
             if len(df_joined_filtrado) > 0:
 
                 # Inicializar solo una vez si no existe
-                if "graficos_pdf" not in st.session_state:
-                    st.session_state.graficos_pdf = [
-                        "Altura", "Composición Corporal", "CMJ",
-                        "Sprint Tiempo", "Sprint Velocidad", "Yo-Yo",
-                        "Agilidad DOM", "Agilidad ND", "RSA Tiempo", "RSA Velocidad"
+                graficos_pdf = [
+                        "COMPOSICIÓN CORPORAL", "CMJ",
+                        "SPRINT", "YO-YO", "AGILIDAD", "RSA"
                     ]
 
-                st.markdown("#### 📊 Selecciona los gráficos a incluir en el PDF:")
-                
+                # Multiselect para tests
+                tests_seleccionados = st.multiselect(
+                    "Gráficos:",
+                    options=graficos_pdf,
+                    placeholder="Seleccione una opción"
+                )
+
+                # Diccionario de gráficos disponibles
                 graficos_disponibles = {
                     "Altura": figalt,
                     "Peso y Grasa": figant,
@@ -653,11 +690,28 @@ else:
                     "RSA Velocidad": figrsav
                 }
 
-                
-                graficos_seleccionados = st.multiselect("Gráficos:", options=list(graficos_disponibles.keys()))
+                # Generar figs_filtrados según tests seleccionados
+                figs_filtrados = {}
+                for test in tests_seleccionados:
+                    if test == "COMPOSICIÓN CORPORAL":
+                        figs_filtrados["Altura"] = figalt
+                        figs_filtrados["Peso y Grasa"] = figant
+                    elif test == "AGILIDAD":
+                        figs_filtrados["Agilidad DOM"] = figagd
+                        figs_filtrados["Agilidad ND"] = figagnd
+                    elif test == "RSA":
+                        figs_filtrados["RSA Tiempo"] = figrsat
+                        figs_filtrados["RSA Velocidad"] = figrsav
+                    elif test == "SPRINT":
+                        figs_filtrados["Sprint Tiempo"] = figspt
+                        figs_filtrados["Sprint Velocidad"] = figspv
+                    else:
+                        # Asumimos que para CMJ, Sprint, Yo-Yo los nombres coinciden con las claves
+                        for k in graficos_disponibles.keys():
+                            if test in k:
+                                figs_filtrados[k] = graficos_disponibles[k]
 
-                figs_filtrados = {k: v for k, v in graficos_disponibles.items() if k in graficos_seleccionados}
-                
+
                 #figan =  figs_filtrados.get("Peso y Grasa")
                 #st.dataframe(figan)
                 if st.button("📄 Generar PDF"):

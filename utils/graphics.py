@@ -82,7 +82,7 @@ def get_height_graph(df_altura):
 
     return fig
 
-def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo):
+def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max):
 
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -102,9 +102,6 @@ def get_anthropometrics_graph(df_antropometria, df_promedios, categoria, equipo)
         tickvals = df_fechas_unicas
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
-
-    zona_optima_min = 11
-    zona_optima_max = 12.5
     grasa_min = df_antropometria["GRASA (%)"].min()
     grasa_max = df_antropometria["GRASA (%)"].max()
     dif_zona_optima_min = zona_optima_min - grasa_min

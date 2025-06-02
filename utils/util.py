@@ -740,7 +740,7 @@ def resumen_sesiones(df, total_jugadores):
 
     return resumen_df
 
-def sesiones_por_test(df, test_categorias):
+def sesiones_por_test(df_joined, test_categorias):
     """
     Cuenta la cantidad de sesiones por jugador y por tipo de test.
     También agrega la fecha de la última sesión registrada por jugador.
@@ -753,8 +753,10 @@ def sesiones_por_test(df, test_categorias):
         pd.DataFrame: Cantidad de sesiones por jugador, tipo de test, y su última sesión.
     """
     
-    if df.empty:
+    if df_joined.empty:
         return pd.DataFrame()
+    
+    df = pd.DataFrame(df_joined)
 
     # Verificar columnas esenciales
     columnas_requeridas = {"ID", "JUGADOR", "FECHA REGISTRO"}
@@ -865,8 +867,6 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     pdf = PDF()
     pdf.add_page()
 
-    
-
     # Datos personales
     #pdf.section_title("DATOS PERSONALES")
     pdf.add_player_block(df_jugador)
@@ -885,27 +885,17 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         add_footer(pdf)
 
     if figan is not None: 
-        if figalt is not None: 
+        pdf.add_page()
+        pdf.ln(20)
 
-            pdf.add_page()
-            pdf.ln(20)
-            pdf.section_title("COMPOSICIÓN CORPORAL")
-            pdf.add_plotly_figure(figan,"")
-            pdf.ln(5)
+        pdf.section_title("COMPOSICIÓN CORPORAL")
+        pdf.add_plotly_figure(figan,"")
+        pdf.ln(5)
 
-            if figcmj is None: 
-                add_footer(pdf)
-            
-        else:
-            pdf.add_plotly_figure(figan,"")
+        if figcmj is None: 
             add_footer(pdf)
-            pdf.add_page()
-            pdf.ln(20)
 
     if figcmj is not None or figspv is not None: 
-        if figalt is not None or figan is not None:
-            pdf.add_page()
-            pdf.ln(20)
 
         if df_cmj is not None and not df_cmj.empty and figcmj is not None:
             pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
