@@ -139,8 +139,10 @@ else:
         
         figan = None
         figcmj = None
+        figag = None
         figagd = None
         figagnd = None
+        figsp = None
         figspt = None
         figspv = None
         figyoyo = None
@@ -158,14 +160,15 @@ else:
                 df_anthropometrics = df_anthropometrics.reset_index(drop=True)
     
                 columnas_estructura = util.get_dataframe_columns(df_anthropometrics)
+                
                 # Eliminar columnas excluidas
                 columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
                 #todos_ceros = (df_anthropometrics[columnas_filtradas] == 0).all().all()
-
+                
                 if not util.columnas_sin_datos_utiles(df_anthropometrics, columnas_excluidas):
-                    df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columnas_estructura] == 0).any(axis=1)]
-                    percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
-                    
+                    #df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columnas_estructura] == 0).any(axis=1)]
+                    #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
+                    #st.dataframe(df_anthropometrics)
                     #st.markdown("### :blue[ANTROPOMETRÍA]")
                     st.markdown("📆 **Ultímas Mediciones**")
                     #st.dataframe(df_anthropometrics.iloc[0]) 
@@ -319,9 +322,7 @@ else:
                     cola, colb = st.columns([2.5,1])
 
                     with cola:
-                        
                         figcmj = graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio)
-
                     with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
@@ -406,27 +407,34 @@ else:
                         variacion = act - ant
                         st.metric(f"VEL 20-40M (M/S)",f'{float(act):,.2f}', f'{float(variacion):,.2f}')
 
+
                     df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
+                    
+                    figsp = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, metrica_tiempo="TIEMPO 0-5M (SEG)",metrica_velocidad="VEL 0-5M (M/S)")
+                
                     st.divider()
-                    cola ,colb = st.columns([2,1])
-                    with cola:
-                        figspt = graphics.get_sprint_time_graph(df_sprint, df_promedios, categoria, equipo)
-                    with colb:
-                        # Mostrar el DataFrame estilizado en Streamlit
-                        st.markdown("📊 **Históricos**")
-                        styled_df = util.aplicar_semaforo(df_sprint[["FECHA REGISTRO", "TIEMPO 0-5M (SEG)", "TIEMPO 20-40M (SEG)"]], invertir=True)
-                        st.dataframe(styled_df)   
 
-                    st.divider()
-                    colc ,cold = st.columns([2,1])
-                    with colc:
-                        figspv = graphics.get_sprint_velocity_graph(df_sprint, df_promedios, categoria, equipo)
-                    with cold:
-                        # Mostrar el DataFrame estilizado en Streamlit
-                        st.markdown("📊 **Históricos**")
-                        styled_df = util.aplicar_semaforo(df_sprint[["FECHA REGISTRO", "VEL 0-5M (KM/H)", "VEL 20-40M (KM/H)"]])
-                        st.dataframe(styled_df)
+                    st.markdown("📊 **Históricos**")
+                    st.dataframe(df_sprint)   
+                    
+                    # cola ,colb = st.columns([2,1])
+                    # with cola:
+                    #     figspt = graphics.get_sprint_time_graph(df_sprint, df_promedios, categoria, equipo)
+                    # with colb:
+                    #     # Mostrar el DataFrame estilizado en Streamlit
+                    #     st.markdown("📊 **Históricos**")
+                    #     styled_df = util.aplicar_semaforo(df_sprint[["FECHA REGISTRO", "TIEMPO 0-5M (SEG)", "TIEMPO 20-40M (SEG)"]], invertir=True)
+                    #     st.dataframe(styled_df)   
 
+                    # st.divider()
+                    # colc ,cold = st.columns([2,1])
+                    # with colc:
+                    #     figspv = graphics.get_sprint_velocity_graph(df_sprint, df_promedios, categoria, equipo)
+                    # with cold:
+                    #     # Mostrar el DataFrame estilizado en Streamlit
+                    #     st.markdown("📊 **Históricos**")
+                    #     styled_df = util.aplicar_semaforo(df_sprint[["FECHA REGISTRO", "VEL 0-5M (KM/H)", "VEL 20-40M (KM/H)"]])
+                    #     st.dataframe(styled_df)
 
                     #st.divider()
                     #st.markdown("📊 **Históricos Generales**")
@@ -556,32 +564,38 @@ else:
                         act = df_agilty['FECHA REGISTRO'].iloc[0] if len(df_agilty) > 0 else 0
                         st.metric(f"Último Registro",act)
 
-                    #st.divider()
+
+                    figag = graphics.get_agility_graph_combined(df_agilty, df_promedios, categoria, equipo)
+                    st.divider()
+                    
+                    st.markdown("📊 **Históricos**")
+                    st.dataframe(df_agilty)
                     #styled_df = util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]])
-                    cola, colb = st.columns([3,1])
+                    # cola, colb = st.columns([3,1])
 
-                    with cola:
-                        figagd = graphics.get_agility_graph_dom(df_agilty, df_promedios, categoria, equipo)
-                        #graphics.get_agility_graph_combined(df_agilty, df_promedios, categoria, equipo)
-                    with colb:
-                        #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
-                        st.markdown("📊 **Históricos**")
-                        #st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]], invertir=True))
-                        st.dataframe(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]])
-                    #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                    #    graphics.mostrar_percentiles_coloreados(df_agilty.iloc[0], percentiles_ag)
+                    # with cola:
+                    #     #figagd = None
+                    #     figagd = graphics.get_agility_graph_dom(df_agilty, df_promedios, categoria, equipo)
+                    #     #graphics.get_agility_graph_combined(df_agilty, df_promedios, categoria, equipo)
+                    # with colb:
+                    #     #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
+                    #     st.markdown("📊 **Históricos**")
+                    #     #st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]], invertir=True))
+                    #     st.dataframe(df_agilty[["FECHA REGISTRO","505-DOM (SEG)"]])
+                    # #    st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
+                    # #    graphics.mostrar_percentiles_coloreados(df_agilty.iloc[0], percentiles_ag)
 
-                    #styled_df = util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]])
-                    colc, cold = st.columns([3,1])
+                    # #styled_df = util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]])
+                    # colc, cold = st.columns([3,1])
 
-                    with colc:
-                        #figagnd = None
-                        figagnd = graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
-                    with cold:
-                        #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
-                        st.markdown("📊 **Históricos**")
-                        #st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]], invertir=True))
-                        st.dataframe(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]])
+                    # with colc:
+                    #     #figagnd = None
+                    #     figagnd = graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
+                    # with cold:
+                    #     #graphics.get_agility_graph_nd(df_agilty, df_promedios, categoria, equipo)
+                    #     st.markdown("📊 **Históricos**")
+                    #     #st.dataframe(util.aplicar_semaforo(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]], invertir=True))
+                    #     st.dataframe(df_agilty[["FECHA REGISTRO","505-ND (SEG)"]])
                 else:
                     st.text(mensaje_no_data)
                     percentiles_ag = None
@@ -681,11 +695,9 @@ else:
                     "Altura": figalt,
                     "Peso y Grasa": figant,
                     "CMJ": figcmj,
-                    "Sprint Tiempo": figspt,
-                    "Sprint Velocidad": figspv,
-                    "Yo-Yo": figyoyo,
-                    "Agilidad DOM": figagd,
-                    "Agilidad ND": figagnd,
+                    "SPRINT": figsp,
+                    "YO-YO": figyoyo,
+                    "AGILIDAD": figag,
                     "RSA Tiempo": figrsat,
                     "RSA Velocidad": figrsav
                 }
@@ -696,15 +708,9 @@ else:
                     if test == "COMPOSICIÓN CORPORAL":
                         figs_filtrados["Altura"] = figalt
                         figs_filtrados["Peso y Grasa"] = figant
-                    elif test == "AGILIDAD":
-                        figs_filtrados["Agilidad DOM"] = figagd
-                        figs_filtrados["Agilidad ND"] = figagnd
                     elif test == "RSA":
                         figs_filtrados["RSA Tiempo"] = figrsat
                         figs_filtrados["RSA Velocidad"] = figrsav
-                    elif test == "SPRINT":
-                        figs_filtrados["Sprint Tiempo"] = figspt
-                        figs_filtrados["Sprint Velocidad"] = figspv
                     else:
                         # Asumimos que para CMJ, Sprint, Yo-Yo los nombres coinciden con las claves
                         for k in graficos_disponibles.keys():
@@ -713,7 +719,7 @@ else:
 
 
                 #figan =  figs_filtrados.get("Peso y Grasa")
-                #st.dataframe(figan)
+                #st.dataframe(figs_filtrados)
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)
@@ -748,6 +754,5 @@ else:
                         # Mostrar error si algo falla
                         status.update(label="❌ Error al generar el PDF", state="error", expanded=True)
                         st.exception(e)
-                
             else:
                 st.text(mensaje_no_data)

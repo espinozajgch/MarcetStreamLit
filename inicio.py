@@ -37,7 +37,8 @@ else:
 
     test = util.get_test(conn)
     test_cat = util.construir_diccionario_test_categorias(test)
-    #st.dataframe(df_data_test)
+    
+    #st.dataframe(df_datos)
 
     # 1. Lista de columnas que quieres excluir de la validación
     columnas_excluidas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO','anio','mes']

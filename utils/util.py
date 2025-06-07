@@ -48,6 +48,12 @@ def get_player_data(conn):
     df["FECHA REGISTRO"] = df["FECHA REGISTRO"].dt.strftime('%d/%m/%Y').astype(str)
     df = df.astype({ "ID": str }) 
     df = df.astype({ "JUGADOR": str }) 
+
+    # Eliminar filas donde ID es NaN, 0 o "nan"
+    df = df[df["ID"].notnull() &
+    (df["ID"].astype(str) != "0") &
+    (df["ID"].astype(str).str.lower() != "nan")]
+
     return df
 
 def getData(conn):
@@ -856,11 +862,11 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     figalt = figs_dict.get("Altura")
     figan =  figs_dict.get("Peso y Grasa")
     figcmj = figs_dict.get("CMJ")
-    figspt = figs_dict.get("Sprint Tiempo")
-    figspv = figs_dict.get("Sprint Velocidad")
-    figyoyo = figs_dict.get("Yo-Yo")
-    figagd = figs_dict.get("Agilidad DOM")
-    figagnd = figs_dict.get("Agilidad ND")
+    figsp = figs_dict.get("SPRINT")
+    #figspv = figs_dict.get("Sprint Velocidad")
+    figyoyo = figs_dict.get("YO-YO")
+    figag = figs_dict.get("AGILIDAD")
+    #figagnd = figs_dict.get("Agilidad ND")
     figrsat = figs_dict.get("RSA Tiempo")
     figrsav = figs_dict.get("RSA Velocidad")
 
@@ -895,7 +901,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         if figcmj is None: 
             add_footer(pdf)
 
-    if figcmj is not None or figspv is not None: 
+    if figcmj is not None or figsp is not None: 
 
         if df_cmj is not None and not df_cmj.empty and figcmj is not None:
             pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
@@ -903,39 +909,40 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
 
         add_footer(pdf)
 
-    if df_sprint is not None and not df_sprint.empty and figspv is not None:
+    if df_sprint is not None and not df_sprint.empty and figsp is not None:
 
         pdf.add_page()
         pdf.ln(20)
-        pdf.section_title("VELOCIDAD EN SPRINT (40M)")
-        pdf.add_plotly_figure(figspv,"")
+        pdf.section_title("SPRINT (0-5M)")
+        pdf.add_plotly_figure(figsp,"")
 
-        pdf.section_title("TIEMPO EN SPRINT (40M)")
-        pdf.add_plotly_figure(figspt,"")
+        #pdf.section_title("TIEMPO EN SPRINT (40M)")
+        #pdf.add_plotly_figure(figspt,"")
 
-    if figyoyo is not None or figagd is not None: 
+    if figyoyo is not None or figag is not None: 
         pdf.add_page()
         pdf.ln(20)
 
-        if df_agilty is not None and not df_agilty.empty and figagd is not None:
+        if df_agilty is not None and not df_agilty.empty and figag is not None:
             pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
-            pdf.add_plotly_figure(figagd,"")
+            pdf.add_plotly_figure(figag,"")
 
-        if df_agilty is not None and not df_agilty.empty and figagnd is not None:
-            pdf.ln(5)
-            pdf.add_plotly_figure(figagnd,"")
-
-        page_height = pdf.get_height()
-        margen_inferior = 33
-        y_final = page_height - margen_inferior
-        pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+        #if df_agilty is not None and not df_agilty.empty and figagnd is not None:
+        #    pdf.ln(5)
+        #    pdf.add_plotly_figure(figagnd,"")
 
         if df_yoyo is not None and not df_yoyo.empty and figyoyo is not None:
             pdf.section_title("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)")
             pdf.add_plotly_figure(figyoyo,"")
-            y = pdf.get_altura()
-            pdf.draw_gradient_scale(x=10, y=y+5)
-            pdf.ln(5)
+            #y = pdf.get_altura()
+            #pdf.draw_gradient_scale(x=10, y=y+5)
+            #pdf.ln(5)
+        
+        #page_height = pdf.get_height()
+        #margen_inferior = 33
+        #y_final = page_height - margen_inferior
+        #pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+        add_footer(pdf, invertido=True)
 
     if figrsat is not None: 
         pdf.add_page()
@@ -945,10 +952,10 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
             pdf.add_plotly_figure(figrsat,"")
 
-            add_footer(pdf, invertido=True)
+            #add_footer(pdf, invertido=True)
 
-            pdf.add_page()
-            pdf.ln(20)
+            #pdf.add_page()
+            #pdf.ln(20)
 
             pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
             pdf.add_plotly_figure(figrsav,"")
