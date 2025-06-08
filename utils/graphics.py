@@ -245,7 +245,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"Zona %Grasa Promedio {categoria} A",
+                name=f"Zona %Grasa Promedio {categoria} A".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
@@ -420,7 +420,7 @@ def _render_agility_graph(df_agility, df_promedios, categoria, equipo, metrica, 
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{metrica} PROMEDIO",
+            name=f"{metrica} PROMEDIO {categoria} {equipo}".upper(),
             line=dict(color=color_promedio, dash="dash")
         ))
 
@@ -473,16 +473,33 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
                         var_name="MÉTRICA", value_name="VALOR").dropna()
 
     fig = go.Figure()
-    tolerancia = 5
 
-    # --- Calcular rango del eje Y incluyendo el promedio ---
+    # Ajuste dinámico de márgenes inferior y superior
     valores = df_melted["VALOR"].tolist()
-    if promedios:
-        for valor_prom in promedios.values():
-            valores.append(valor_prom)
+    for prom in promedios.values():
+        valores.append(prom)
 
-    ymin = min(valores) - 2  # margen inferior fijo
-    ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)  # margen superior dinámico
+    ymin, ymax = 0, 0  # inicializar
+    if promedios and "CMJ (CM)" in promedios:
+        prom = promedios["CMJ (CM)"]
+        data_min = min(valores)
+        data_max = max(valores)
+
+        if data_min >= prom:
+            margen_inferior = max(1, prom * 0.2)
+        else:
+            margen_inferior = prom - data_min + 1
+
+        if data_max <= prom:
+            margen_superior = max(1, prom * 0.1)
+        else:
+            margen_superior = data_max - prom + 1
+
+        ymin = max(0, prom - margen_inferior)
+        ymax = prom + margen_superior
+    else:
+        ymin = min(valores) - 2
+        ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)
 
     # --- Etiquetas personalizadas del eje X ---
     df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
@@ -511,8 +528,9 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             hoverinfo="skip"
         ))
 
-        # Puntos coloreados (semáforo)
+        # Puntos coloreados
         colores_puntos = []
+        tolerancia = 5
         for valor in y_vals:
             if metrica in promedios:
                 prom = promedios[metrica]
@@ -535,7 +553,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
         ))
 
-        # Máximo más reciente
+        # Máximo
         if not df_filtro.empty:
             max_val = df_filtro["VALOR"].max()
             fila_max = df_filtro[df_filtro["VALOR"] == max_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
@@ -557,17 +575,18 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             y=valor_prom,
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash"),
             annotation_text=f"{valor_prom:.2f} cm",
-            annotation_position="top left",
-            annotation=dict(font=dict(color="black", size=12, family="Arial"))
+            annotation_position="top right",
+            annotation=dict(font=dict(color="black", size=12, family="Arial")),
+            layer="above"
         )
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"ALTURA DE SALTO PROMEDIO (CM) ({categoria} A)",
-            line=dict(color="green", dash="dash")
+            name=f"ALTURA DE SALTO (CM) Promedio ({categoria} {equipo})".upper(),
+            line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
-    # ➕ Barra de color sincronizada con el eje Y y el promedio
+    # ➕ Barra de color (semaforo)
     if "CMJ (CM)" in df.columns and not df["CMJ (CM)"].isnull().all():
         if promedios and "CMJ (CM)" in promedios:
             valor_prom = promedios["CMJ (CM)"]
@@ -614,7 +633,6 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
             hoverinfo="skip"
         ))
 
-    # --- Layout final ---
     fig.update_layout(
         title="📈 Evolución de la Potencia Muscular de Salto (CMJ)",
         xaxis=dict(
@@ -727,7 +745,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
     if valor_prom is not None and not pd.isna(valor_prom):
         fig.add_hline(
             y=valor_prom,
-            line=dict(color="orange", dash="dash"),
+            line=dict(color="green", dash="dash"),
             annotation_text=f"{valor_prom:.2f} m",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
@@ -735,8 +753,8 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"DISTANCIA PROMEDIO (M) ({categoria} {equipo})",
-            line=dict(color="orange", dash="dash")
+            name=f"DISTANCIA PROMEDIO (M) ({categoria} {equipo})".upper(),
+            line=dict(color="green", dash="dash")
         ))
 
     # Máximo (más reciente)
@@ -924,7 +942,7 @@ def get_sprint_time_graph(df_sprint, df_promedios, categoria, equipo):
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{nombre_legenda} PROMEDIO",
+                name=f"{nombre_legenda} PROMEDIO".upper(),
                 line=dict(color=colores_promedio[metrica], dash="dash", width=3)
             ))
 
@@ -1050,7 +1068,7 @@ def get_sprint_velocity_graph(df_sprint, df_promedios, categoria, equipo):
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{nombre_legenda} PROMEDIO",
+                name=f"{nombre_legenda} PROMEDIO".upper(),
                 line=dict(color=color_prom, dash="dash")
             ))
 
@@ -1086,9 +1104,9 @@ def get_sprint_graph(
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors='coerce')
     df = df.sort_values(by="FECHA REGISTRO")
 
-    color_barra = "#66c2ff"   # Velocidad (barra)
-    color_linea = "#1f77b4"   # Tiempo (línea)
-    color_promedio = "orange"
+    color_barra = "#66c2ff"
+    color_linea = "#1f77b4"
+    color_promedio = "green"
 
     fig = go.Figure()
 
@@ -1102,7 +1120,7 @@ def get_sprint_graph(
         tickvals = df_fechas_unicas
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
-    # Obtener promedios
+    # Obtener promedio
     promedio_row = df_promedios[
         (df_promedios["CATEGORIA"] == categoria) &
         (df_promedios["EQUIPO"] == equipo)
@@ -1113,12 +1131,36 @@ def get_sprint_graph(
         if pd.notna(val):
             prom_vel = val
 
-    # 1️⃣ Añadir velocidad como barra (eje izquierdo)
+    # --- Velocidad (barra) ---
+    vel_min, vel_max = 0, 10  # valores por defecto
     if metrica_velocidad in df.columns:
         df_metric_vel = df[["FECHA REGISTRO", metrica_velocidad]].dropna()
         if not df_metric_vel.empty:
-            vel_min = df_metric_vel[metrica_velocidad].min() * 0.95
-            vel_max = df_metric_vel[metrica_velocidad].max() * 1.05
+            data_min = df_metric_vel[metrica_velocidad].min()
+            data_max = df_metric_vel[metrica_velocidad].max()
+
+            # Calcular margen inferior y superior dinámico
+            margen_inferior = 0
+            margen_superior = 0
+            if prom_vel is not None:
+                if data_min >= prom_vel:
+                    margen_inferior = max(1, prom_vel * 0.2)
+                else:
+                    margen_inferior = prom_vel - data_min + 1
+
+                if data_max <= prom_vel:
+                    margen_superior = max(1, prom_vel * 0.2)
+                else:
+                    margen_superior = data_max - prom_vel + 1
+
+                vel_min = prom_vel - margen_inferior
+                vel_max = prom_vel + margen_superior
+
+                # Asegurarse que vel_min no sea negativo
+                vel_min = max(0, vel_min)
+            else:
+                vel_min = data_min * 0.95
+                vel_max = data_max * 1.05
 
             fig.add_trace(go.Bar(
                 x=df_metric_vel["FECHA REGISTRO"],
@@ -1131,7 +1173,7 @@ def get_sprint_graph(
                 hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica_velocidad}:</b> %{{y:.2f}} km/h<extra></extra>"
             ))
 
-            # Anotar el máximo
+            # Anotación del mejor registro
             max_val = df_metric_vel[metrica_velocidad].max()
             fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == max_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
             fig.add_annotation(
@@ -1149,33 +1191,23 @@ def get_sprint_graph(
 
             # Línea de promedio de velocidad
             if prom_vel is not None:
-                x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=15)
-                x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=15)
-
-                fig.add_trace(go.Scatter(
-                    x=[x_min, x_max],
-                    y=[prom_vel, prom_vel],
-                    mode="lines",
-                    name=f"Promedio {categoria} {equipo}",
+                fig.add_hline(
+                    y=prom_vel,
                     line=dict(color=color_promedio, dash="dash", width=2),
-                    yaxis="y1",
+                    annotation_text=f"{prom_vel:.2f} km/h",
+                    annotation_position="top right",
+                    annotation=dict(font=dict(color=color_promedio, size=12, family="Arial")),
+                    layer="above"
+                )
+                fig.add_trace(go.Scatter(
+                    x=[None], y=[None],
+                    mode="lines",
+                    name=f"{metrica_velocidad} Promedio ({categoria} {equipo})".upper(),
+                    line=dict(color=color_promedio, dash="dash", width=2),
                     showlegend=True
                 ))
-                fig.add_annotation(
-                    x=x_max,
-                    y=prom_vel,
-                    yref="y1",
-                    text=f"{prom_vel:.2f} km/h",
-                    showarrow=False,
-                    font=dict(color="black", size=12, family="Arial")
-                )
-        else:
-            vel_min, vel_max = 0, 10  # valores por defecto si no hay datos
 
-    else:
-        vel_min, vel_max = 0, 10  # valores por defecto si la columna no existe
-
-    # 2️⃣ Añadir tiempo como línea con puntos (eje derecho)
+    # --- Tiempo (línea) ---
     if metrica_tiempo in df.columns:
         df_metric_time = df[["FECHA REGISTRO", metrica_tiempo]].dropna()
         if not df_metric_time.empty:
@@ -1190,7 +1222,6 @@ def get_sprint_graph(
                 hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica_tiempo}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
 
-            # Anotación de mejor registro
             min_val = df_metric_time[metrica_tiempo].min()
             fila_min = df_metric_time[df_metric_time[metrica_tiempo] == min_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
             fig.add_annotation(
@@ -1206,7 +1237,7 @@ def get_sprint_graph(
                 font=dict(color="white")
             )
 
-    # 3️⃣ Barra de colores a la derecha (semaforo)
+    # --- Barra de colores (semaforo) ---
     if prom_vel is not None:
         fig.add_trace(go.Scatter(
             x=[None],
@@ -1220,12 +1251,12 @@ def get_sprint_graph(
                     [0.5, "orange"],
                     [1.0, "green"]
                 ],
-                cmin=vel_min,  # sincronizado con el eje izquierdo
-                cmax=vel_max,  # sincronizado con el eje izquierdo
+                cmin=vel_min,
+                cmax=vel_max,
                 colorbar=dict(
-                    title="Velocidad (km/h)",
+                    title="",
                     titleside="right",
-                    ticks="inside",
+                    ticks="outside",
                     tickfont=dict(color="black"),
                     titlefont=dict(color="black"),
                     thickness=20,
@@ -1242,39 +1273,39 @@ def get_sprint_graph(
             hoverinfo="skip"
         ))
 
-        # --- Layout final ---
-        fig.update_layout(
-            title=f"📈 Evolución de la velocidad de aceleración ({metrica_tiempo.replace(' (SEG)','')} y {metrica_velocidad.replace(' (KM/H)','')})",
-            xaxis=dict(
-                tickmode="array",
-                tickvals=tickvals,
-                ticktext=ticktext
-            ),
-            yaxis=dict(
-                title="",
-                side="left",
-                showgrid=True,
-                range=[vel_min, vel_max]
-            ),
-            yaxis2=dict(
-                title="Tiempo (seg)",
-                overlaying="y",
-                side="right",
-                showgrid=False
-            ),
-            template="plotly_white",
-            barmode="group",
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.3,
-                xanchor="center",
-                x=0.5
-            )
+    # --- Layout final ---
+    fig.update_layout(
+        title=f"📈 Evolución del Sprint ({metrica_tiempo.replace(' (SEG)','')} y {metrica_velocidad.replace(' (KM/H)','')})",
+        xaxis=dict(
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
+        ),
+        yaxis=dict(
+            title="Velocidad (km/h)",
+            side="left",
+            showgrid=True,
+            range=[vel_min, vel_max]
+        ),
+        yaxis2=dict(
+            title="Tiempo (seg)",
+            overlaying="y",
+            side="right",
+            showgrid=False
+        ),
+        template="plotly_white",
+        barmode="group",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5
         )
+    )
 
-        st.plotly_chart(fig, use_container_width=True)
-        return fig
+    st.plotly_chart(fig, use_container_width=True)
+    return fig
 
 def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     df = pd.DataFrame(df_rsa)
@@ -1346,7 +1377,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         x=x_vals,
         y=y_vals,
         mode="lines",
-        name="MEDIDA EN TIEMPO",
+        name="TIEMPO (SEG)",
         line=dict(color=color_linea, width=3)
     ))
 
@@ -1365,7 +1396,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     if prom is not None and not pd.isna(prom):
         fig_tiempo.add_hline(
             y=prom,
-            line=dict(color="orange", dash="dash"),
+            line=dict(color="green", dash="dash"),
             annotation_text=f"{prom:.2f} seg",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12))
@@ -1373,8 +1404,8 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         fig_tiempo.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"TIEMPO PROMEDIO (SEG) ({categoria} {equipo})",
-            line=dict(color="orange", dash="dash")
+            name=f"TIEMPO PROMEDIO (SEG) ({categoria} {equipo})".upper(),
+            line=dict(color="green", dash="dash")
         ))
 
     # Anotación de mejor registro (menor tiempo)
@@ -1490,7 +1521,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     tolerancia = 0.3 * 3.6
 
     color_linea = "#66c2ff"
-    color_promedio = "orange"
+    color_promedio = "green"
 
     y_vals = df[metric].tolist()
     x_vals = df["FECHA REGISTRO"].tolist()
@@ -1558,7 +1589,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"VELOCIDAD PROMEDIO (KM/H) ({categoria} {equipo})",
+            name=f"VELOCIDAD PROMEDIO (KM/H) ({categoria} {equipo})".upper(),
             line=dict(color=color_promedio, dash="dash")
         ))
 
@@ -1735,7 +1766,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
 
     color_linea_dom = "#1f77b4"   # azul
     color_linea_nd = "#66c2ff"    # celeste
-    color_promedio = "orange"
+    color_promedio = "green"
 
     fig = go.Figure()
 

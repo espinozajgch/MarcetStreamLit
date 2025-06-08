@@ -391,7 +391,7 @@ class PDF(FPDF):
     def get_altura(self):
         return self.get_y()
     
-    def add_plotly_figure(self, fig, title=None, w=180):
+    def add_plotly_figure(self, fig, title=None, w=190):
         if title:
             self.set_font("Arial", "B", 12)
             self.cell(0, 10, title, ln=True)
@@ -432,10 +432,13 @@ class PDF(FPDF):
         def add_metric(label, value, x):
             self.set_xy(x, y_start)
             self.set_font("Helvetica", "", 10)
+            self.set_text_color(0, 0, 0)
             self.cell(col_width, 6, label, align="C")
             self.set_xy(x, y_start + 6)
             self.set_font("Helvetica", "B", 18)
+            self.set_text_color(0, 51, 102) # Azul oscuro
             self.cell(col_width, 10, f"{value:.2f}", align="C")
+            
 
         x1 = x_start
         x2 = x1 + col_width + 5

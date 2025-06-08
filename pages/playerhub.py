@@ -142,8 +142,8 @@ else:
         figag = None
         figagd = None
         figagnd = None
-        figsp = None
-        figspt = None
+        figsp05 = None
+        figsp2040 = None
         figspv = None
         figyoyo = None
         figrsat = None
@@ -166,7 +166,7 @@ else:
                 #todos_ceros = (df_anthropometrics[columnas_filtradas] == 0).all().all()
                 
                 if not util.columnas_sin_datos_utiles(df_anthropometrics, columnas_excluidas):
-                    #df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columnas_estructura] == 0).any(axis=1)]
+                    df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columnas_filtradas] == 0).all(axis=1)]
                     #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
                     #st.dataframe(df_anthropometrics)
                     #st.markdown("### :blue[ANTROPOMETRÍA]")
@@ -216,7 +216,8 @@ else:
                     figalt = graphics.get_height_graph(df_anthropometrics)
 
                     #equipo = "A"
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max)
+                    df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columnas_filtradas] == 0).any(axis=1)]
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -410,7 +411,9 @@ else:
 
                     df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
-                    figsp = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, metrica_tiempo="TIEMPO 0-5M (SEG)",metrica_velocidad="VEL 0-5M (M/S)")
+                    figsp05 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, metrica_tiempo="TIEMPO 0-5M (SEG)",metrica_velocidad="VEL 0-5M (M/S)")
+
+                    figsp2040 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, metrica_tiempo="TIEMPO 20-40M (SEG)",metrica_velocidad="VEL 20-40M (M/S)")
                 
                     st.divider()
 
@@ -652,7 +655,8 @@ else:
                         #st.dataframe(df_rsa)
                     with colb:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(df_rsa[["FECHA REGISTRO","MEDIDA EN TIEMPO (SEG)"]]) 
+                        df_rsa = df_rsa.rename(columns={"MEDIDA EN TIEMPO (SEG)": "TIEMPO (SEG)"})
+                        st.dataframe(df_rsa[["FECHA REGISTRO", "TIEMPO (SEG)"]]) 
 
                     df_rsa = util.convertir_m_s_a_km_h(df_rsa, ["VELOCIDAD (M*SEG)"])
                     styled_dfb = util.aplicar_semaforo(df_rsa[["FECHA REGISTRO","VELOCIDAD (KM/H)"]])
@@ -677,30 +681,53 @@ else:
         with reporte:
             if len(df_joined_filtrado) > 0:
 
-                # Inicializar solo una vez si no existe
-                graficos_pdf = [
-                        "COMPOSICIÓN CORPORAL", "CMJ",
-                        "SPRINT", "YO-YO", "AGILIDAD", "RSA"
-                    ]
-
-                # Multiselect para tests
-                tests_seleccionados = st.multiselect(
-                    "Gráficos:",
-                    options=graficos_pdf,
-                    placeholder="Seleccione una opción"
-                )
-
                 # Diccionario de gráficos disponibles
                 graficos_disponibles = {
                     "Altura": figalt,
                     "Peso y Grasa": figant,
                     "CMJ": figcmj,
-                    "SPRINT": figsp,
+                    "SPRINT 0-5": figsp05,
+                    "SPRINT 20-40": figsp2040,
                     "YO-YO": figyoyo,
                     "AGILIDAD": figag,
                     "RSA Tiempo": figrsat,
                     "RSA Velocidad": figrsav
                 }
+
+                # Lista de categorías para el PDF (dinámica según gráficos disponibles)
+                graficos_pdf = []
+
+                # Composición Corporal requiere Altura y Peso y Grasa
+                if figalt is not None and figant is not None:
+                    graficos_pdf.append("COMPOSICIÓN CORPORAL")
+
+                # CMJ
+                if figcmj is not None:
+                    graficos_pdf.append("CMJ")
+
+                # SPRINT
+                if figsp05 is not None and figsp2040 is not None:
+                    graficos_pdf.append("SPRINT")
+
+                # YO-YO
+                if figyoyo is not None:
+                    graficos_pdf.append("YO-YO")
+
+                # AGILIDAD
+                if figag is not None:
+                    graficos_pdf.append("AGILIDAD")
+
+                # RSA (Tiempo y Velocidad)
+                if figrsat is not None and figrsav is not None:
+                    graficos_pdf.append("RSA")
+
+                # Multiselect para tests
+                tests_seleccionados = st.multiselect(
+                    "Gráficos:",
+                    options=graficos_pdf,
+                    default=graficos_pdf,  # Por defecto, todos los gráficos están seleccionados
+                    placeholder="Seleccione una opción"
+                )
 
                 # Generar figs_filtrados según tests seleccionados
                 figs_filtrados = {}
@@ -711,6 +738,9 @@ else:
                     elif test == "RSA":
                         figs_filtrados["RSA Tiempo"] = figrsat
                         figs_filtrados["RSA Velocidad"] = figrsav
+                    elif test == "SPRINT":
+                        figs_filtrados["SPRINT 0-5"] = figsp05
+                        figs_filtrados["SPRINT 20-40"] = figsp2040
                     else:
                         # Asumimos que para CMJ, Sprint, Yo-Yo los nombres coinciden con las claves
                         for k in graficos_disponibles.keys():

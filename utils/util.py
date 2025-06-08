@@ -862,8 +862,8 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     figalt = figs_dict.get("Altura")
     figan =  figs_dict.get("Peso y Grasa")
     figcmj = figs_dict.get("CMJ")
-    figsp = figs_dict.get("SPRINT")
-    #figspv = figs_dict.get("Sprint Velocidad")
+    figsp05 = figs_dict.get("SPRINT 0-5")
+    figsp2040 = figs_dict.get("SPRINT 20-40")
     figyoyo = figs_dict.get("YO-YO")
     figag = figs_dict.get("AGILIDAD")
     #figagnd = figs_dict.get("Agilidad ND")
@@ -887,7 +887,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         pdf.add_last_measurements(altura, peso, grasa)
 
     if figalt is not None: 
-        pdf.add_plotly_figure(figalt,"")
+        pdf.add_plotly_figure(figalt,"", 200)
         add_footer(pdf)
 
     if figan is not None: 
@@ -909,15 +909,15 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
 
         add_footer(pdf)
 
-    if df_sprint is not None and not df_sprint.empty and figsp is not None:
+    if df_sprint is not None and not df_sprint.empty and figsp05 is not None:
 
         pdf.add_page()
         pdf.ln(20)
         pdf.section_title("SPRINT (0-5M)")
-        pdf.add_plotly_figure(figsp,"")
+        pdf.add_plotly_figure(figsp05,"")
 
-        #pdf.section_title("TIEMPO EN SPRINT (40M)")
-        #pdf.add_plotly_figure(figspt,"")
+        pdf.section_title("TIEMPO EN SPRINT (20-40M)")
+        pdf.add_plotly_figure(figsp2040,"")
 
     if figyoyo is not None or figag is not None: 
         pdf.add_page()
