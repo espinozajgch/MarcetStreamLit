@@ -60,7 +60,7 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_data_test, columnas_a_verificar)
-#st.dataframe(df_promedios)
+
 st.divider()
 ###################################################
 
@@ -71,30 +71,37 @@ else:
     # Obtener ID del jugador seleccionado (único y limpio)
     ids_disponibles = df_datos_filtrado["ID"].dropna().astype(str).str.strip().unique().tolist()
 
-    # Validar que exista al menos un ID
-    if ids_disponibles:
-
+    if any(isinstance(id, str) and id.strip().lower() == 'nan' for id in ids_disponibles):
+        names_disponibles = df_datos_filtrado["JUGADOR"].dropna().astype(str).str.strip().unique().tolist()
+        jugador_id = names_disponibles[0]
+        # Filtrar los DataFrames por el ID seleccionado
+        df_jugador = df_datos[df_datos["JUGADOR"].astype(str).str.strip() == jugador_id]
+        df_joined_filtrado = df_joined[df_joined["JUGADOR"].astype(str).str.strip() == jugador_id]
+        id = "NO ID"
+    else:
         jugador_id = ids_disponibles[0]
-
-        columnas_excluidas = ["FECHA REGISTRO"]
-
         # Filtrar los DataFrames por el ID seleccionado
         df_jugador = df_datos[df_datos["ID"].astype(str).str.strip() == jugador_id]
         df_joined_filtrado = df_joined[df_joined["ID"].astype(str).str.strip() == jugador_id]
+        id = df_jugador['ID'].iloc[0]
 
+    # Validar que exista al menos un ID
+    if ids_disponibles or names_disponibles:
+        
+        columnas_excluidas = ["FECHA REGISTRO"]
         jugador = df_jugador.iloc[0]
-        referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
-        referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
-            
-        # Mostrar DataFrame principal
-        #st.dataframe(df_joined)
-
+        
         response = util.get_photo(df_jugador['FOTO PERFIL'].iloc[0])
 
-        id = df_jugador['ID'].iloc[0]
         nombre = df_jugador['JUGADOR'].iloc[0]
         nacionalidad = df_jugador['NACIONALIDAD'].iloc[0]
         bandera = util.obtener_bandera(nacionalidad.replace(",", "."))
+
+        #referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
+        #referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
+            
+        # Mostrar DataFrame principal
+        #st.dataframe(df_joined)
 
 
         st.markdown(f"## {nombre} ")
@@ -106,13 +113,13 @@ else:
             if response:
                 st.image(response.content, width=150)
             else:
-                st.image("assets/images/profile.png", width=180)
+                st.image("https://cdn-icons-png.flaticon.com/512/5281/5281619.png", width=180)
         with col2:
             categoria = df_jugador['CATEGORIA'].iloc[0]
             equipo = df_jugador['EQUIPO'].iloc[0]
             fnacimiento = df_jugador['FECHA DE NACIMIENTO'].iloc[0]
 
-            if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN"):
+            if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CURSO VERANO"):
                 st.metric(label="Categoria", value=f" {categoria}", border=True)
                 st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
                 
@@ -284,7 +291,7 @@ else:
                 if not todos_ceros:
                     df_cmj = df_cmj[~(df_cmj[columnas_filtradas] == 0).all(axis=1)]
                     #st.dataframe(df_cmj)  
-                    percentiles_cmj = util.calcular_percentiles(df_cmj.iloc[0], referencia_test, columnas_filtradas)
+                    #percentiles_cmj = util.calcular_percentiles(df_cmj.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
                     
@@ -360,7 +367,7 @@ else:
                 #st.dataframe(df_sprint)
                 if not todos_ceros:
                     df_sprint = df_sprint[~(df_sprint[columnas_estructura] == 0).all(axis=1)]
-                    percentiles_sp = util.calcular_percentiles(df_sprint.iloc[0], referencia_test, columnas_filtradas)
+                    #percentiles_sp = util.calcular_percentiles(df_sprint.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
 
@@ -476,7 +483,7 @@ else:
 
                 if not todos_ceros:
                     df_yoyo = df_yoyo[~(df_yoyo[columnas_estructura] == 0).all(axis=1)]
-                    percentiles_yoyo = util.calcular_percentiles(df_yoyo.iloc[0], referencia_test, columnas_filtradas)
+                    #percentiles_yoyo = util.calcular_percentiles(df_yoyo.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
                     col1, col2, col3, col4 = st.columns(4)
@@ -530,6 +537,7 @@ else:
             #st.dataframe(df_joined_filtrado)
             if len(df_joined_filtrado) > 0: 
                 df_agilty = df_joined_filtrado[["FECHA REGISTRO", "505-DOM (SEG)", "505-ND (SEG)"]]
+                df_agilty = df_agilty.rename(columns={"505-DOM (SEG)": "PIERNA IZQ (SEG)", "505-ND (SEG)": "PIERNA DER (SEG)"})
                 df_agilty = df_agilty.reset_index(drop=True)
 
                 #columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
@@ -546,22 +554,22 @@ else:
                 if not todos_ceros:
                     
                     df_agilty = df_agilty[~(df_agilty[columnas_estructura] == 0).any(axis=1)]
-                    percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
+                    #percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        act = df_agilty['505-DOM (SEG)'].iloc[0]
-                        ant = df_agilty['505-DOM (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
+                        act = df_agilty['PIERNA IZQ (SEG)'].iloc[0]
+                        ant = df_agilty['PIERNA IZQ (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
                         variacion = act - ant
-                        st.metric(f"505-DOM (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        st.metric(f"PIERNA IZQ (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
                         
                     with col2:
-                        act = df_agilty['505-ND (SEG)'].iloc[0]
-                        ant = df_agilty['505-ND (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
+                        act = df_agilty['PIERNA DER (SEG)'].iloc[0]
+                        ant = df_agilty['PIERNA DER (SEG)'].iloc[1] if len(df_agilty) > 1 else 0
                         variacion = act - ant
-                        st.metric(f"505-ND (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        st.metric(f"PIERNA DER (SEG)",f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
 
                     with col3:
                         act = df_agilty['FECHA REGISTRO'].iloc[0] if len(df_agilty) > 0 else 0
@@ -625,7 +633,7 @@ else:
                 #st.dataframe(df_rsa)
                 if not todos_ceros:
                     df_rsa = df_rsa[~(df_rsa[columnas_estructura] == 0).all(axis=1)]
-                    percentiles_rsa = util.calcular_percentiles(df_rsa.iloc[0], referencia_test, columnas_filtradas)
+                    #percentiles_rsa = util.calcular_percentiles(df_rsa.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
 

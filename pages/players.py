@@ -34,6 +34,7 @@ df_jugadores.drop(columns=["EDAD"], inplace=True, errors="ignore")
 # 🔎 Aplicar filtros definidos
 df_filtrado = util.get_filters(df_jugadores)
 
+#st.dataframe(df_filtrado)
 # ✏️ Editor de datos filtrados
 st.divider()
 df_editado = util.get_data_editor(df_filtrado, num_rows_user="dynamic")

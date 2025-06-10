@@ -50,9 +50,9 @@ def get_player_data(conn):
     df = df.astype({ "JUGADOR": str }) 
 
     # Eliminar filas donde ID es NaN, 0 o "nan"
-    df = df[df["ID"].notnull() &
-    (df["ID"].astype(str) != "0") &
-    (df["ID"].astype(str).str.lower() != "nan")]
+    #df = df[df["ID"].notnull() &
+    #(df["ID"].astype(str) != "0") &
+    #(df["ID"].astype(str).str.lower() != "nan")]
 
     return df
 
@@ -901,7 +901,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         if figcmj is None: 
             add_footer(pdf)
 
-    if figcmj is not None or figsp is not None: 
+    if figcmj is not None or figsp05 is not None: 
 
         if df_cmj is not None and not df_cmj.empty and figcmj is not None:
             pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")

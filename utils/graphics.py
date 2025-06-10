@@ -1762,7 +1762,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors="coerce")
     df = df.sort_values(by="FECHA REGISTRO")
 
-    metricas = ["505-DOM (SEG)", "505-ND (SEG)"]
+    metricas = ["PIERNA IZQ (SEG)", "PIERNA DER (SEG)"]
 
     color_linea_dom = "#1f77b4"   # azul
     color_linea_nd = "#66c2ff"    # celeste
@@ -1798,7 +1798,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
 
     # --- Trazas de las piernas ---
     for metrica, color, dash in zip(
-        ["505-ND (SEG)", "505-DOM (SEG)"], [color_linea_nd, color_linea_dom], ["solid", "dash"]
+        ["PIERNA DER (SEG)", "PIERNA IZQ (SEG)"], [color_linea_nd, color_linea_dom], ["solid", "dash"]
     ):
         df_metric = df[["FECHA REGISTRO", metrica]].dropna()
         x_vals = df_metric["FECHA REGISTRO"].tolist()
@@ -1819,7 +1819,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
             min_val = df_metric[metrica].min()
             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
 
-            offset_y = -40 if metrica == "505-ND (SEG)" else -90
+            offset_y = -40 if metrica == "PIERNA DER (SEG)" else -90
             fig.add_annotation(
                 x=fila_min["FECHA REGISTRO"],
                 y=fila_min[metrica],
@@ -1836,8 +1836,8 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
     added_to_legend = False  # solo la primera vez
     for idx, row in df.iterrows():
         fecha = row["FECHA REGISTRO"]
-        dom = row.get("505-DOM (SEG)")
-        nd = row.get("505-ND (SEG)")
+        dom = row.get("PIERNA IZQ (SEG)")
+        nd = row.get("PIERNA DER (SEG)")
         if pd.notna(dom) and pd.notna(nd) and nd != 0:
             diferencia = ((dom - nd) / nd) * 100
             fig.add_trace(go.Scatter(
@@ -1855,7 +1855,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
 
     # --- Barra de colores a la derecha ---
     if valores:
-        prom_dom = promedios.get("505-DOM (SEG)", (ymin + ymax) / 2)
+        prom_dom = promedios.get("PIERNA IZQ (SEG)", (ymin + ymax) / 2)
         fig.add_trace(go.Scatter(
             x=[None],
             y=[None],
@@ -1903,7 +1903,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
 
     # --- Layout final ---
     fig.update_layout(
-        title="📈 Evolución de la Agilidad (DOM y ND)",
+        title="📈 Evolución de la Agilidad (IZQ y DER)",
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
