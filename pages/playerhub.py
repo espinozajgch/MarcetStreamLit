@@ -130,7 +130,6 @@ else:
         else:
             bandera = util.obtener_bandera(str(nacionalidad).replace(",", "."))
 
-        #bandera = util.obtener_bandera(nacionalidad.replace(",", "."))
         #referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
         #referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
             
@@ -148,7 +147,8 @@ else:
             if response:
                 st.image(response.content, width=150)
             else:
-                st.image("https://cdn-icons-png.flaticon.com/512/5281/5281619.png", width=180)
+                #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
+                st.image("assets/images/profile.png", width=180)
         with col2:
 
             if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):
@@ -175,7 +175,7 @@ else:
     
     if not df_datos_filtrado.empty:
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
-        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
+        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["1.ANTROPOMETRIA", "2.CMJ", "3.SPRINT LINEAL", "4.YO-YO", "5.AGILIDAD", "6.RSA", "7.REPORTE"])
         
         figalt = None
         figant = None
@@ -191,8 +191,6 @@ else:
         figrsav = None
         equipo_promedio = "A"
 
-        #st.balloons()
-        #st.snow()
         with antropometria:
             if len(df_joined_filtrado) > 0:
 
@@ -327,9 +325,9 @@ else:
                     
                     if promedio_cmj is not None:
                         if(cactc < promedio_cmj):
-                            st.warning(f"El {columns[0]} ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
+                            st.warning(f"{columns[0]} ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
                         else:
-                            st.success(f"El {columns[0]} ({cactc:.2f} cm) está por encima del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="✅")
+                            st.success(f"{columns[0]} ({cactc:.2f} cm) está por encima del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="✅")
                     #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
                     #st.divider()
@@ -374,37 +372,39 @@ else:
                     col1, col2, col3, col4, col5 = st.columns(5)
 
                     with col1:
-                        act = df_sprint[columns[0]].iloc[0]
-                        ant = df_sprint[columns[0]].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(columns[0].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        act05t = df_sprint[columns[0]].iloc[0]
+                        ant05t = df_sprint[columns[0]].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion05t = act05t - ant05t
+                        st.metric(columns[0].capitalize(),f'{float(act05t):,.2f}', f'{float(variacion05t):,.2f}', delta_color="inverse")
 
                     with col2:
-                        act = df_sprint[columns[1]].iloc[0]
-                        ant = df_sprint[columns[1]].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(columns[1].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        act05v = df_sprint[columns[1]].iloc[0]
+                        ant05v = df_sprint[columns[1]].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion05v = act05v - ant05v
+                        st.metric(columns[1].capitalize(),f'{float(act05v):,.2f}', f'{float(variacion05v):,.2f}', delta_color="inverse")
 
                     with col3:
-                        act = df_sprint[columns[2]].iloc[0]
-                        ant = df_sprint[columns[2]].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(columns[2].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+                        act040t = df_sprint[columns[2]].iloc[0]
+                        ant040t = df_sprint[columns[2]].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion040t = act040t - ant040t
+                        st.metric(columns[2].capitalize(),f'{float(act040t):,.2f}', f'{float(variacion040t):,.2f}')
 
                     with col4:
-                        act = df_sprint[columns[3]].iloc[0]
-                        ant = df_sprint[columns[3]].iloc[1] if len(df_sprint) > 1 else 0
-                        variacion = act - ant
-                        st.metric(columns[3].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        act040v = df_sprint[columns[3]].iloc[0]
+                        ant040v = df_sprint[columns[3]].iloc[1] if len(df_sprint) > 1 else 0
+                        variacion040v = act040v - ant040v
+                        st.metric(columns[3].capitalize(),f'{float(act040v):,.2f}', f'{float(variacion040v):,.2f}', delta_color="inverse")
 
                     with col5:
                         act = df_sprint[fecha_registro].iloc[0]
                         st.metric(f"Último Registro",act)
                     #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
-                    figsp05 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro)
+                    if(act05t != 0) or (act05v != 0):
+                        figsp05 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro)
 
-                    figsp040 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro)
+                    if(act040t != 0) or (act040v != 0):
+                        figsp040 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro)
                 
                     st.divider()
 
@@ -609,7 +609,7 @@ else:
                     graficos_pdf.append("CMJ")
 
                 # SPRINT
-                if figsp05 is not None and figsp040 is not None:
+                if figsp05 is not None or figsp040 is not None:
                     graficos_pdf.append("SPRINT")
 
                 # YO-YO
@@ -649,7 +649,6 @@ else:
                         for k in graficos_disponibles.keys():
                             if test in k:
                                 figs_filtrados[k] = graficos_disponibles[k]
-
 
                 #st.dataframe(df_jugador)
 

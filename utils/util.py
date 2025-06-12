@@ -875,109 +875,89 @@ def add_footer(pdf, invertido=False):
     pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
 
 def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict):
-    
-    figalt = figs_dict.get("Altura")
-    figan =  figs_dict.get("Peso y Grasa")
-    figcmj = figs_dict.get("CMJ")
-    figsp05 = figs_dict.get("SPRINT 0-5")
-    figsp040 = figs_dict.get("SPRINT 0-40")
-    figyoyo = figs_dict.get("YO-YO")
-    figag = figs_dict.get("AGILIDAD")
-    #figagnd = figs_dict.get("Agilidad ND")
-    figrsat = figs_dict.get("RSA Tiempo")
-    figrsav = figs_dict.get("RSA Velocidad")
-
     pdf = PDF()
     pdf.add_page()
 
-    # Datos personales
-    #pdf.section_title("DATOS PERSONALES")
+    # Bloque de datos personales
     pdf.add_player_block(df_jugador)
-    
-    # Composición corporal
-    if df_anthropometrics is not None and not df_anthropometrics.empty:
+
+    seccion_ya_impresa = set()
+
+    # Preparar secciones
+    secciones = [
+        ("COMPOSICIÓN CORPORAL", df_anthropometrics, [
+            ("Altura", figs_dict.get("Altura")),
+            ("Peso y Grasa", figs_dict.get("Peso y Grasa"))
+        ]),
+        ("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)", df_cmj, [
+            ("CMJ", figs_dict.get("CMJ"))
+        ]),
+        ("EVOLUCIÓN DEL SPRINT (0-5M)", df_sprint, [
+            ("SPRINT 0-5", figs_dict.get("SPRINT 0-5"))
+        ]),
+        ("EVOLUCIÓN DEL SPRINT (0-40M)", df_sprint, [
+            ("SPRINT 0-40", figs_dict.get("SPRINT 0-40"))
+        ]),
+        ("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)", df_agilty, [
+            ("AGILIDAD", figs_dict.get("AGILIDAD"))
+        ]),
+        ("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)", df_yoyo, [
+            ("YO-YO", figs_dict.get("YO-YO"))
+        ]),
+        ("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)", df_rsa, [
+            ("RSA Tiempo", figs_dict.get("RSA Tiempo")),
+            ("RSA Velocidad", figs_dict.get("RSA Velocidad"))
+        ])
+    ]
+
+    # Comprobar si "COMPOSICIÓN CORPORAL" está en los gráficos seleccionados
+    tiene_composicion = any(
+        nombre_seccion == "COMPOSICIÓN CORPORAL" and any(fig for _, fig in figuras)
+        for nombre_seccion, _, figuras in secciones
+    )
+
+    # Agregar medidas si se seleccionó "COMPOSICIÓN CORPORAL"
+    if tiene_composicion and df_anthropometrics is not None and not df_anthropometrics.empty:
         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-
         pdf.section_title("COMPOSICIÓN CORPORAL")
         pdf.add_last_measurements(altura, peso, grasa)
 
-    if figalt is not None: 
-        pdf.add_plotly_figure(figalt,"", 200)
+    # Inicializar contador de gráficos y sección actual
+    contador_graficos = 0
+    primer_grafico_insertado = False
+
+    # Insertar gráficos de forma ordenada
+    for nombre_seccion, df_seccion, figuras in secciones:
+        if df_seccion is not None and not df_seccion.empty:
+            for nombre_fig, fig in figuras:
+                if fig is not None:
+                    if not primer_grafico_insertado:
+                        if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
+                            pdf.section_title(nombre_seccion)
+                            seccion_ya_impresa.add(nombre_seccion)
+                        pdf.add_plotly_figure(fig, "")
+                        add_footer(pdf)
+                        primer_grafico_insertado = True
+                        continue
+
+                    if contador_graficos % 2 == 0:
+                        pdf.add_page()
+                        pdf.ln(20)
+
+                    if nombre_seccion not in seccion_ya_impresa:
+                        pdf.section_title(nombre_seccion)
+                        seccion_ya_impresa.add(nombre_seccion)
+
+                    pdf.add_plotly_figure(fig, "")
+                    contador_graficos += 1
+
+                    if contador_graficos % 2 == 0:
+                        add_footer(pdf)
+
+    if contador_graficos % 2 == 1:
         add_footer(pdf)
-
-    if figan is not None: 
-        pdf.add_page()
-        pdf.ln(20)
-
-        pdf.section_title("COMPOSICIÓN CORPORAL")
-        pdf.add_plotly_figure(figan,"")
-        pdf.ln(5)
-
-        if figcmj is None: 
-            add_footer(pdf)
-
-    if figcmj is not None or figsp05 is not None: 
-
-        if df_cmj is not None and not df_cmj.empty and figcmj is not None:
-            pdf.section_title("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)")
-            pdf.add_plotly_figure(figcmj,"")
-
-        add_footer(pdf)
-
-    if df_sprint is not None and not df_sprint.empty and figsp05 is not None:
-
-        pdf.add_page()
-        pdf.ln(20)
-        pdf.section_title("SPRINT (0-5M)")
-        pdf.add_plotly_figure(figsp05,"")
-
-        pdf.section_title("TIEMPO EN SPRINT (20-40M)")
-        pdf.add_plotly_figure(figsp040,"")
-
-    if figyoyo is not None or figag is not None: 
-        pdf.add_page()
-        pdf.ln(20)
-
-        if df_agilty is not None and not df_agilty.empty and figag is not None:
-            pdf.section_title("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)")
-            pdf.add_plotly_figure(figag,"")
-
-        #if df_agilty is not None and not df_agilty.empty and figagnd is not None:
-        #    pdf.ln(5)
-        #    pdf.add_plotly_figure(figagnd,"")
-
-        if df_yoyo is not None and not df_yoyo.empty and figyoyo is not None:
-            pdf.section_title("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)")
-            pdf.add_plotly_figure(figyoyo,"")
-            #y = pdf.get_altura()
-            #pdf.draw_gradient_scale(x=10, y=y+5)
-            #pdf.ln(5)
-        
-        #page_height = pdf.get_height()
-        #margen_inferior = 33
-        #y_final = page_height - margen_inferior
-        #pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
-        add_footer(pdf, invertido=True)
-
-    if figrsat is not None: 
-        pdf.add_page()
-        pdf.ln(20)
-
-        if df_rsa is not None and not df_rsa.empty and figrsat is not None:
-            pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
-            pdf.add_plotly_figure(figrsat,"")
-
-            #add_footer(pdf, invertido=True)
-
-            #pdf.add_page()
-            #pdf.ln(20)
-
-            pdf.section_title("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)")
-            pdf.add_plotly_figure(figrsav,"")
-
-            add_footer(pdf, invertido=True)
 
     return pdf.output(dest='S').encode('latin1')
 
