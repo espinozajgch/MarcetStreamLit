@@ -143,7 +143,7 @@ class PDF(FPDF):
         # Imagen del campo (derecha)
         #self.image("assets/images/test/505.jpg", 130, 50, 70)
 
-        demarcacion_larga = data.get("DEMARCACION", "").capitalize()
+        demarcacion_larga = data.get("DEMARCACION", "").upper()
         MAPA_DEMARCACIONES = util.get_demarcaciones()
         codigo = MAPA_DEMARCACIONES.get(demarcacion_larga)
 
