@@ -32,13 +32,12 @@ else:
     #conn = st.connection("gsheets", type=GSheetsConnection)
     #########################################################
 
-    df_datos, df_data_test = util.getData(conn)
+    df_datos, df_data_test, df_checkin = util.getData(conn)
     df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
 
-    test = util.get_test(conn)
-    test_cat = util.construir_diccionario_test_categorias(test)
-    
-    #st.dataframe(df_datos)
+    test_cat = util.get_diccionario_test_categorias(conn)
+
+    #st.dataframe(test)
 
     # 1. Lista de columnas que quieres excluir de la validación
     columnas_excluidas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO','anio','mes']

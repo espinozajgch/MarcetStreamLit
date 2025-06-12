@@ -33,7 +33,7 @@ df_estructura_test = util.get_test(conn)
 nombres_tests = df_estructura_test.columns.tolist()
 #st.dataframe(nombres_tests)
 
-player_data, test_data = util.getData(conn)
+player_data, test_data, df_checkin = util.getData(conn)
 
 player_data_filtered = util.get_filters(player_data)
 

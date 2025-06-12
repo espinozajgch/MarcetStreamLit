@@ -66,22 +66,26 @@ def getData(conn):
     df_yoyo = get_test_data(conn,'YO-YO')
     df_rsa = get_test_data(conn,'RSA')
 
+    df_checkin = get_test_data(conn,'CHECK-IN')
+
     columnas_comunes = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
     df_data_test = unir_dataframes([df_an, df_ag, df_sp, df_cmj, df_yoyo, df_rsa], columnas_comunes)
 
     df_data_test["CATEGORIA"] = df_data_test["CATEGORIA"].str.strip()
     df_data_test["EQUIPO"] = df_data_test["EQUIPO"].str.strip()
 
-    columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
+    columnas_excluidas = ["FECHA REGISTRO", "ID", "JUGADOR" ,"CATEGORIA", "EQUIPO", "TEST"]
     columnas_estructura = get_dataframe_columns(df_data_test)
+   
     # Eliminar columnas excluidas
     columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
 
     df_data_test = limpiar_columnas_numericas(df_data_test, columnas_filtradas)
+    df_checkin = limpiar_columnas_numericas(df_checkin, columnas_filtradas)
 
     #st.text("Datos de los tests")
     #st.dataframe(columnas_filtradas)
-    return df_datos, df_data_test
+    return df_datos, df_data_test, df_checkin
 
 def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
     """
@@ -123,13 +127,17 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
 def get_test_data(conn, hoja):
     df = conn.read(worksheet=hoja, ttl=get_ttl())
     df = df.reset_index(drop=True)  # Reinicia los índices
-    # Asegúrate de que todas las columnas tienen tipos compatibles con Arrow
-    df = df.astype({ "ID": str })  # o ajusta a tus columnas específicas
-    
-    #df.columns = df.iloc[0]  # Usa la primera fila como nombres de columna
-    #df = df[1:]  # Elimina la fila de encabezado original
-    #df = df.reset_index(drop=True)  # Reinicia los índices
-    #df = df.fillna(0).replace("None", 0)
+
+    if "ID" in df.columns:
+        df = df.astype({ "ID": str })  # o ajusta a tus columnas específicas
+    else:
+        df.columns = df.iloc[0]  # Usa la primera fila como nombres de columna
+        df = df[1:]  # Elimina la fila de encabezado original
+        df = df.reset_index(drop=True)  # Reinicia los índices
+        df["CATEGORIA"] = "Check in"  # Asigna una categoría por defecto si no existe
+        df = df.fillna(0).replace("None", 0)
+
+
     return df
 
 def get_dataframe_columns(dataframe):
@@ -211,6 +219,56 @@ def getJoinedDataFrame(df_datos, df_data_test):
     df_data_test = df_data_test.astype({ "JUGADOR": str })  # o ajusta a tus columnas específicas
 
     return df_data_test
+
+def merge_by_nombre_categoria(df_unido, df_nuevo):
+    """
+    Une dos DataFrames con estructura similar usando 'JUGADOR' y 'CATEGORIA' como claves.
+    - Conserva el orden y columnas de df_unido.
+    - Llena columnas faltantes en df_nuevo con NaN o 0 según tipo.
+    - Limpia solo columnas numéricas.
+    - Mantiene los valores originales de JUGADOR y CATEGORIA.
+    """
+    if df_unido.empty or df_nuevo.empty:
+        return pd.DataFrame()
+
+    # === Columnas que NO deben tocarse durante limpieza ===
+    columnas_excluidas = ["FECHA REGISTRO", "ID", "EQUIPO", "TEST", "JUGADOR", "CATEGORIA"]
+    columnas_estructura = get_dataframe_columns(df_nuevo)
+    columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+    # === Procesamiento de fechas ===
+    df_nuevo["FECHA REGISTRO"] = pd.to_datetime(df_nuevo["FECHA REGISTRO"], errors='coerce', dayfirst=True)
+    df_nuevo["anio"] = df_nuevo["FECHA REGISTRO"].dt.year.astype(str)
+    df_nuevo["mes"] = df_nuevo["FECHA REGISTRO"].dt.month.astype(str)
+    df_nuevo = df_nuevo.sort_values(by="FECHA REGISTRO", ascending=False)
+    df_nuevo["FECHA REGISTRO"] = df_nuevo["FECHA REGISTRO"].dt.strftime('%d/%m/%Y')
+
+    # === Limpieza SOLO de columnas numéricas ===
+    df_nuevo = limpiar_columnas_numericas(df_nuevo, columnas_filtradas)
+    df_nuevo[columnas_filtradas] = df_nuevo[columnas_filtradas].fillna(0).replace("None", 0)
+
+    # === Asegurar tipo texto correcto en claves ===
+    df_nuevo["JUGADOR"] = df_nuevo["JUGADOR"].astype(str).str.strip()
+    df_nuevo["CATEGORIA"] = df_nuevo["CATEGORIA"].astype(str).str.strip()
+
+    # === Asegurar que df_nuevo tenga todas las columnas de df_unido ===
+    columnas_faltantes = [col for col in df_unido.columns if col not in df_nuevo.columns]
+    for col in columnas_faltantes:
+        if df_unido[col].dtype.kind in "iufc":  # numérico
+            df_nuevo[col] = 0
+        else:
+            df_nuevo[col] = None
+
+    # === Reordenar columnas en el orden de df_unido ===
+    df_nuevo = df_nuevo[df_unido.columns]
+
+    # === Concatenar ===
+    df_final = pd.concat([df_unido, df_nuevo], ignore_index=True)
+
+    # === Eliminar duplicados si corresponde ===
+    df_final = df_final.drop_duplicates(subset=["JUGADOR", "CATEGORIA", "FECHA REGISTRO"], keep="last")
+
+    return df_final
 
 def limpiar_columnas_numericas(df, columnas_filtradas):
     for col in columnas_filtradas:
@@ -748,15 +806,15 @@ def resumen_sesiones(df, total_jugadores):
 
 def sesiones_por_test(df_joined, test_categorias):
     """
-    Cuenta la cantidad de sesiones por jugador y por tipo de test.
-    También agrega la fecha de la última sesión registrada por jugador.
+    Cuenta la cantidad de sesiones por jugador y categoría, y por tipo de test.
+    También agrega la fecha de la última sesión registrada por cada jugador.
 
     Parámetros:
-        df (pd.DataFrame): DataFrame con los registros de sesiones.
+        df_joined (pd.DataFrame): DataFrame con los registros de sesiones.
         test_categorias (dict): Diccionario con los tipos de test y sus columnas asociadas.
 
     Retorna:
-        pd.DataFrame: Cantidad de sesiones por jugador, tipo de test, y su última sesión.
+        pd.DataFrame: Cantidad de sesiones por jugador/categoría, tipo de test y su última sesión.
     """
     
     if df_joined.empty:
@@ -765,23 +823,23 @@ def sesiones_por_test(df_joined, test_categorias):
     df = pd.DataFrame(df_joined)
 
     # Verificar columnas esenciales
-    columnas_requeridas = {"ID", "JUGADOR", "FECHA REGISTRO"}
+    columnas_requeridas = {"JUGADOR", "CATEGORIA", "FECHA REGISTRO"}
     if not columnas_requeridas.issubset(df.columns):
         return pd.DataFrame()
 
-    # Convertir fecha a datetime
+    # Convertir fecha
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], errors='coerce', dayfirst=True)
     df = df.dropna(subset=["FECHA REGISTRO"])
 
-    # Inicializar diccionario
-    sesiones_dict = {"ID": [], "JUGADOR": [], "ÚLTIMA SESIÓN": []}
+    # Inicializar diccionario de resultados
+    sesiones_dict = {"JUGADOR": [], "CATEGORIA": [], "ÚLTIMA SESIÓN": []}
     for test in test_categorias:
         sesiones_dict[test] = []
 
-    # Agrupar por jugador
-    for (jugador_id, jugador_nombre), datos_jugador in df.groupby(["ID", "JUGADOR"]):
-        sesiones_dict["ID"].append(jugador_id)
+    # Agrupar por nombre y categoría
+    for (jugador_nombre, categoria), datos_jugador in df.groupby(["JUGADOR", "CATEGORIA"]):
         sesiones_dict["JUGADOR"].append(jugador_nombre)
+        sesiones_dict["CATEGORIA"].append(categoria)
         sesiones_dict["ÚLTIMA SESIÓN"].append(datos_jugador["FECHA REGISTRO"].max().strftime("%d/%m/%Y"))
 
         for test, columnas in test_categorias.items():
@@ -792,15 +850,29 @@ def sesiones_por_test(df_joined, test_categorias):
             else:
                 sesiones_dict[test].append(0)
 
-    # Crear DataFrame final ordenado por jugador
+    # Crear DataFrame final y ordenar
     sesiones_df = pd.DataFrame(sesiones_dict)
-    #sesiones_df = sesiones_df.sort_values(by=["JUGADOR"]).reset_index(drop=True)
-
     sesiones_df["ÚLTIMA SESIÓN"] = pd.to_datetime(sesiones_df["ÚLTIMA SESIÓN"], format="%d/%m/%Y")
-    sesiones_df = sesiones_df.sort_values(by=["ÚLTIMA SESIÓN"], ascending=False).reset_index(drop=True)
+    sesiones_df = sesiones_df.sort_values(by="ÚLTIMA SESIÓN", ascending=False).reset_index(drop=True)
     sesiones_df["ÚLTIMA SESIÓN"] = sesiones_df["ÚLTIMA SESIÓN"].dt.strftime('%d/%m/%Y').astype(str)
-    
+
     return sesiones_df
+
+def obtener_columnas_unidas(test_cat, clave, columnas_fecha_registro):
+    """
+    Combina la columna 'FECHA REGISTRO' con las columnas de la lista asociada
+    a 'clave' dentro del diccionario 'test_cat', evitando duplicados.
+
+    Parámetros:
+    - test_cat (dict): Diccionario que contiene listas de columnas por clave.
+    - clave (str): Clave de la lista a extraer y unir con 'FECHA REGISTRO'.
+
+    Retorna:
+    - list: Lista de columnas con 'FECHA REGISTRO' al principio y sin duplicados.
+    """
+    lista_test_cat = list(test_cat.get(clave, []))
+    columnas_unidas = columnas_fecha_registro + [col for col in lista_test_cat if col != "FECHA REGISTRO"]
+    return columnas_unidas
 
 
 def construir_diccionario_test_categorias(df_columnas_raw):
@@ -816,6 +888,12 @@ def construir_diccionario_test_categorias(df_columnas_raw):
 
     return test_categorias
 
+
+def get_diccionario_test_categorias(conn):
+    test = get_test(conn)
+    test_cat = construir_diccionario_test_categorias(test)
+
+    return test_cat
 
 def obtener_bandera(pais):
     # Diccionario de códigos de país ISO 3166-1 alfa-2
@@ -863,7 +941,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     figan =  figs_dict.get("Peso y Grasa")
     figcmj = figs_dict.get("CMJ")
     figsp05 = figs_dict.get("SPRINT 0-5")
-    figsp2040 = figs_dict.get("SPRINT 20-40")
+    figsp040 = figs_dict.get("SPRINT 0-40")
     figyoyo = figs_dict.get("YO-YO")
     figag = figs_dict.get("AGILIDAD")
     #figagnd = figs_dict.get("Agilidad ND")
@@ -917,7 +995,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         pdf.add_plotly_figure(figsp05,"")
 
         pdf.section_title("TIEMPO EN SPRINT (20-40M)")
-        pdf.add_plotly_figure(figsp2040,"")
+        pdf.add_plotly_figure(figsp040,"")
 
     if figyoyo is not None or figag is not None: 
         pdf.add_page()

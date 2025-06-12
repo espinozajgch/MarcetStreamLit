@@ -132,18 +132,18 @@ class PDF(FPDF):
         self.set_x(50)
         self.cell(35, 6, "CATEGORIA:", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 6, data["CATEGORIA"].upper(), ln=True)
+        self.cell(50, 6, data["CATEGORIA"].capitalize(), ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
         self.cell(35, 6, "EQUIPO:", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 6, data["EQUIPO"].upper(), ln=True)
+        self.cell(50, 6, data["EQUIPO"].capitalize(), ln=True)
 
         # Imagen del campo (derecha)
         #self.image("assets/images/test/505.jpg", 130, 50, 70)
 
-        demarcacion_larga = data.get("DEMARCACION", "").upper()
+        demarcacion_larga = data.get("DEMARCACION", "").capitalize()
         MAPA_DEMARCACIONES = util.get_demarcaciones()
         codigo = MAPA_DEMARCACIONES.get(demarcacion_larga)
 

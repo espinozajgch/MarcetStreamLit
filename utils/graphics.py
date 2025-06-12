@@ -443,16 +443,16 @@ def _render_agility_graph(df_agility, df_promedios, categoria, equipo, metrica, 
 
     return fig
 
-def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
+def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro):
     df = pd.DataFrame(df_cmj)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
-    df = df.sort_values(by="FECHA REGISTRO")
+    #st.dataframe(df)
+    df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
+    df = df.sort_values(by=columna_fecha_registro)
 
-    metricas = ["CMJ (CM)"]
-    df = df[["FECHA REGISTRO"] + metricas]
+    #df = df[["FECHA REGISTRO"] + metricas]
 
-    color_linea = {"CMJ (CM)": "#163B5B"}
-    color_promedio = {"CMJ (CM)": "green"}
+    color_linea = {metricas[0]: "#163B5B"}
+    color_promedio = {metricas[0]: "green"}
 
     promedio_row = df_promedios_cmj[
         (df_promedios_cmj["CATEGORIA"] == categoria) &
@@ -469,7 +469,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     else:
         st.warning("No se encontraron promedios de CMJ para la categoría y equipo especificados.")
 
-    df_melted = df.melt(id_vars=["FECHA REGISTRO"], value_vars=metricas,
+    df_melted = df.melt(id_vars=[columna_fecha_registro], value_vars=metricas,
                         var_name="MÉTRICA", value_name="VALOR").dropna()
 
     fig = go.Figure()
@@ -480,8 +480,8 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
         valores.append(prom)
 
     ymin, ymax = 0, 0  # inicializar
-    if promedios and "CMJ (CM)" in promedios:
-        prom = promedios["CMJ (CM)"]
+    if promedios and metricas[0] in promedios:
+        prom = promedios[metricas[0]]
         data_min = min(valores)
         data_max = max(valores)
 
@@ -587,9 +587,9 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
         ))
 
     # ➕ Barra de color (semaforo)
-    if "CMJ (CM)" in df.columns and not df["CMJ (CM)"].isnull().all():
-        if promedios and "CMJ (CM)" in promedios:
-            valor_prom = promedios["CMJ (CM)"]
+    if metricas[0] in df.columns and not df[metricas[0]].isnull().all():
+        if promedios and metricas[0] in promedios:
+            valor_prom = promedios[metricas[0]]
             rel_promedio = (valor_prom - ymin) / (ymax - ymin)
             colorscale = [
                 [0.0, "red"],
@@ -657,26 +657,18 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo):
     st.plotly_chart(fig, use_container_width=True)
     return fig
 
-def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
-    col1, col2 = st.columns([1, 3])
-
-    with col1:
-        # Selector de Tipo de Test
-        test_type_list = df_yoyo["TEST"].dropna().unique()
-        test_type_list.sort()
-        selected_test = st.selectbox("Selecciona el tipo de test:", test_type_list)
-
+def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro):
+    
     df = pd.DataFrame(df_yoyo)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors='coerce')
-    df = df[df["TEST"] == selected_test]
-
-    metrica = "ACCUMULATED SHUTTLE DISTANCE (M)"
+    df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y", errors='coerce')
+    
+    #metrica = "ACCUMULATED SHUTTLE DISTANCE (M)"
     if metrica not in df.columns:
         st.warning("No hay datos de distancia acumulada para mostrar.")
         return
 
-    df = df[["FECHA REGISTRO", metrica]].dropna()
-    df = df.sort_values("FECHA REGISTRO")
+    df = df[[columna_fecha_registro, metrica]].dropna()
+    df = df.sort_values(columna_fecha_registro)
 
     # Obtener promedio
     promedio_row = df_promedios_yoyo[
@@ -694,7 +686,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
     ymax = max(valores) + (max(valores) - min(valores)) * 0.1
 
     # Etiquetas personalizadas del eje X
-    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    df_fechas_unicas = df[columna_fecha_registro].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
 
     if len(años_unicos) == 1:
@@ -723,16 +715,16 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
 
     # Línea principal
     fig.add_trace(go.Scatter(
-        x=df["FECHA REGISTRO"],
+        x=df[columna_fecha_registro],
         y=df[metrica],
         mode="lines",
-        name="DISTANCIA ACUMULADA (M)",
+        name=metrica,
         line=dict(color="#1f77b4", width=3)
     ))
 
     # Puntos
     fig.add_trace(go.Scatter(
-        x=df["FECHA REGISTRO"],
+        x=df[columna_fecha_registro],
         y=df[metrica],
         mode="markers",
         name="",
@@ -760,9 +752,9 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
     # Máximo (más reciente)
     if not df.empty:
         max_valor = df[metrica].max()
-        fila_max = df[df[metrica] == max_valor].sort_values("FECHA REGISTRO", ascending=False).iloc[0]
+        fila_max = df[df[metrica] == max_valor].sort_values(columna_fecha_registro, ascending=False).iloc[0]
         fig.add_annotation(
-            x=fila_max["FECHA REGISTRO"],
+            x=fila_max[columna_fecha_registro],
             y=fila_max[metrica],
             text=f"Max: {fila_max[metrica]:.0f} (M)",
             showarrow=True,
@@ -827,7 +819,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo):
             ticktext=ticktext
         ),
         yaxis=dict(
-            title="DISTANCIA ACUMULADA (M)",
+            title=metrica,
             range=[ymin, ymax]
         ),
         template="plotly_white",
@@ -1097,12 +1089,13 @@ def get_sprint_graph(
     categoria,
     equipo,
     metrica_tiempo,
-    metrica_velocidad
+    metrica_velocidad,
+    columnas_fecha_registro
 ):
 
     df = df_sprint.copy()
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors='coerce')
-    df = df.sort_values(by="FECHA REGISTRO")
+    df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors='coerce')
+    df = df.sort_values(by=columnas_fecha_registro)
 
     color_barra = "#66c2ff"
     color_linea = "#1f77b4"
@@ -1111,7 +1104,7 @@ def get_sprint_graph(
     fig = go.Figure()
 
     # Etiquetas del eje X
-    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    df_fechas_unicas = df[columnas_fecha_registro].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
     if len(años_unicos) == 1:
         tickvals = df_fechas_unicas
@@ -1134,7 +1127,7 @@ def get_sprint_graph(
     # --- Velocidad (barra) ---
     vel_min, vel_max = 0, 10  # valores por defecto
     if metrica_velocidad in df.columns:
-        df_metric_vel = df[["FECHA REGISTRO", metrica_velocidad]].dropna()
+        df_metric_vel = df[[columnas_fecha_registro, metrica_velocidad]].dropna()
         if not df_metric_vel.empty:
             data_min = df_metric_vel[metrica_velocidad].min()
             data_max = df_metric_vel[metrica_velocidad].max()
@@ -1163,7 +1156,7 @@ def get_sprint_graph(
                 vel_max = data_max * 1.05
 
             fig.add_trace(go.Bar(
-                x=df_metric_vel["FECHA REGISTRO"],
+                x=df_metric_vel[columnas_fecha_registro],
                 y=df_metric_vel[metrica_velocidad],
                 name=metrica_velocidad,
                 marker_color=color_barra,
@@ -1175,9 +1168,9 @@ def get_sprint_graph(
 
             # Anotación del mejor registro
             max_val = df_metric_vel[metrica_velocidad].max()
-            fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == max_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+            fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == max_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
             fig.add_annotation(
-                x=fila_max["FECHA REGISTRO"],
+                x=fila_max[columnas_fecha_registro],
                 y=fila_max[metrica_velocidad],
                 yref="y1",
                 text=f"Mejor: {fila_max[metrica_velocidad]:.2f} km/h",
@@ -1209,10 +1202,10 @@ def get_sprint_graph(
 
     # --- Tiempo (línea) ---
     if metrica_tiempo in df.columns:
-        df_metric_time = df[["FECHA REGISTRO", metrica_tiempo]].dropna()
+        df_metric_time = df[[columnas_fecha_registro, metrica_tiempo]].dropna()
         if not df_metric_time.empty:
             fig.add_trace(go.Scatter(
-                x=df_metric_time["FECHA REGISTRO"],
+                x=df_metric_time[columnas_fecha_registro],
                 y=df_metric_time[metrica_tiempo],
                 mode="lines+markers",
                 name=metrica_tiempo.replace(" (SEG)", ""),
@@ -1223,16 +1216,16 @@ def get_sprint_graph(
             ))
 
             min_val = df_metric_time[metrica_tiempo].min()
-            fila_min = df_metric_time[df_metric_time[metrica_tiempo] == min_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+            fila_min = df_metric_time[df_metric_time[metrica_tiempo] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
             fig.add_annotation(
-                x=fila_min["FECHA REGISTRO"],
+                x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica_tiempo],
                 yref="y2",
                 text=f"Mejor: {fila_min[metrica_tiempo]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
-                ay=-30,
+                ay=30,
                 bgcolor=color_linea,
                 font=dict(color="white")
             )
@@ -1307,13 +1300,13 @@ def get_sprint_graph(
     st.plotly_chart(fig, use_container_width=True)
     return fig
 
-def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
+def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna_fecha_registro):
     df = pd.DataFrame(df_rsa)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
-    df = df.sort_values(by="FECHA REGISTRO")
+    df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
+    df = df.sort_values(by=columna_fecha_registro)
 
-    metricas = ["MEDIDA EN TIEMPO (SEG)", "VELOCIDAD (M*SEG)"]
-    df = df[["FECHA REGISTRO"] + metricas]
+    #metricas = ["MEDIDA EN TIEMPO (SEG)", "VELOCIDAD (M*SEG)"]
+    #df = df[[columna_fecha_registro] + metricas]
 
     # Obtener promedios
     promedio_row = df_promedios_rsa[
@@ -1334,11 +1327,11 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     # 1️⃣ GRÁFICO DE LÍNEAS PARA TIEMPO
     fig_tiempo = go.Figure()
 
-    y_vals = df["MEDIDA EN TIEMPO (SEG)"].tolist()
-    x_vals = df["FECHA REGISTRO"].tolist()
+    y_vals = df[metricas[0]].tolist()
+    x_vals = df[columna_fecha_registro].tolist()
 
     color_linea = "#1f77b4"
-    prom = promedios.get("MEDIDA EN TIEMPO (SEG)", None)
+    prom = promedios.get(metricas[0], None)
     tolerancia = 1.5
     colores_puntos = []
 
@@ -1362,7 +1355,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)
 
     # Etiquetas personalizadas del eje X
-    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    df_fechas_unicas = df[columna_fecha_registro].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
 
     if len(años_unicos) == 1:
@@ -1409,12 +1402,12 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         ))
 
     # Anotación de mejor registro (menor tiempo)
-    df_max = df[df["MEDIDA EN TIEMPO (SEG)"] == min(y_vals)].sort_values(by="FECHA REGISTRO", ascending=False)
+    df_max = df[df[metricas[0]] == min(y_vals)].sort_values(by=columna_fecha_registro, ascending=False)
     if not df_max.empty:
         fila = df_max.iloc[0]
         fig_tiempo.add_annotation(
-            x=fila["FECHA REGISTRO"],
-            y=fila["MEDIDA EN TIEMPO (SEG)"],
+            x=fila[columna_fecha_registro],
+            y=fila[metricas[0]],
             text=f"Mejor Registro: {fila['MEDIDA EN TIEMPO (SEG)']:.2f} seg",
             showarrow=True,
             arrowhead=2,
@@ -1756,17 +1749,17 @@ def mostrar_percentiles_coloreados(jugador: dict, percentiles: dict):
 
     st.dataframe(df)
 
-def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
+def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro):
 
     df = pd.DataFrame(df_agility)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors="coerce")
-    df = df.sort_values(by="FECHA REGISTRO")
+    df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors="coerce")
+    df = df.sort_values(by=columnas_fecha_registro)
 
-    metricas = ["PIERNA IZQ (SEG)", "PIERNA DER (SEG)"]
+    #metricas = ["PIERNA IZQ (SEG)", "PIERNA DER (SEG)"]
 
     color_linea_dom = "#1f77b4"   # azul
     color_linea_nd = "#66c2ff"    # celeste
-    color_promedio = "green"
+    #color_promedio = "green"
 
     fig = go.Figure()
 
@@ -1798,10 +1791,10 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
 
     # --- Trazas de las piernas ---
     for metrica, color, dash in zip(
-        ["PIERNA DER (SEG)", "PIERNA IZQ (SEG)"], [color_linea_nd, color_linea_dom], ["solid", "dash"]
+        metricas, [color_linea_nd, color_linea_dom], ["solid", "dash"]
     ):
-        df_metric = df[["FECHA REGISTRO", metrica]].dropna()
-        x_vals = df_metric["FECHA REGISTRO"].tolist()
+        df_metric = df[[columnas_fecha_registro, metrica]].dropna()
+        x_vals = df_metric[columnas_fecha_registro].tolist()
         y_vals = df_metric[metrica].tolist()
 
         fig.add_trace(go.Scatter(
@@ -1817,11 +1810,11 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
         # Mejor registro
         if not df_metric.empty:
             min_val = df_metric[metrica].min()
-            fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+            fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
 
-            offset_y = -40 if metrica == "PIERNA DER (SEG)" else -90
+            offset_y = -40 if metrica == metricas[1] else -90
             fig.add_annotation(
-                x=fila_min["FECHA REGISTRO"],
+                x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica],
                 text=f"Mejor: {fila_min[metrica]:.2f} seg",
                 showarrow=True,
@@ -1835,9 +1828,9 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
     # --- Calcular y marcar % diferencia (DOM vs ND) ---
     added_to_legend = False  # solo la primera vez
     for idx, row in df.iterrows():
-        fecha = row["FECHA REGISTRO"]
-        dom = row.get("PIERNA IZQ (SEG)")
-        nd = row.get("PIERNA DER (SEG)")
+        fecha = row[columnas_fecha_registro]
+        dom = row.get(metricas[0], None)
+        nd = row.get(metricas[1], None)
         if pd.notna(dom) and pd.notna(nd) and nd != 0:
             diferencia = ((dom - nd) / nd) * 100
             fig.add_trace(go.Scatter(
@@ -1855,7 +1848,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
 
     # --- Barra de colores a la derecha ---
     if valores:
-        prom_dom = promedios.get("PIERNA IZQ (SEG)", (ymin + ymax) / 2)
+        prom_dom = promedios.get(metricas[0], (ymin + ymax) / 2)
         fig.add_trace(go.Scatter(
             x=[None],
             y=[None],
@@ -1891,7 +1884,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo):
         ))
 
     # --- Etiquetas personalizadas del eje X ---
-    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    df_fechas_unicas = df[columnas_fecha_registro].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
 
     if len(años_unicos) == 1:
