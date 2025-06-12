@@ -69,7 +69,6 @@ if on:
     df_filtrado = df_datos[df_datos["JUGADOR"].isin(df_sesiones["JUGADOR"])]
     
     df_datos_filtrado = util.get_filters(df_filtrado)
-    #st.dataframe(df_joined)
 else:
     df_datos_filtrado = util.get_filters(df_datos)
 
@@ -78,7 +77,7 @@ columnas_excluidas_promedio = ['FECHA REGISTRO', 'ID', "CATEGORIA", "EQUIPO"]
 datatest_columns = util.get_dataframe_columns(df_data_test)
 columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
 
-#st.dataframe(df_datos_filtrado)
+#st.dataframe(df_sesiones)
 
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
@@ -139,6 +138,10 @@ else:
             
         # Mostrar DataFrame principal
         #st.dataframe(df_joined)
+        #st.badge("New")
+        #st.badge("Success", icon=":material/check:", color="green")
+
+        #st.markdown(":violet-badge[:material/star: Favorite] :orange-badge[⚠️ Needs review] :gray-badge[Deprecated]")
 
         st.markdown(f"## {nombre} ")
         st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera}")
@@ -175,7 +178,8 @@ else:
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
         antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
         
-        figan = None
+        figalt = None
+        figant = None
         figcmj = None
         figag = None
         figagd = None
@@ -188,6 +192,8 @@ else:
         figrsav = None
         equipo_promedio = "A"
 
+        #st.balloons()
+        #st.snow()
         with antropometria:
             if len(df_joined_filtrado) > 0:
 

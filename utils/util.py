@@ -123,20 +123,22 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
     
     return df_final
 
-
 def get_test_data(conn, hoja):
     df = conn.read(worksheet=hoja, ttl=get_ttl())
     df = df.reset_index(drop=True)  # Reinicia los índices
 
     if "ID" in df.columns:
-        df = df.astype({ "ID": str })  # o ajusta a tus columnas específicas
+        df = df.astype({"ID": str})  # o ajusta a tus columnas específicas
     else:
         df.columns = df.iloc[0]  # Usa la primera fila como nombres de columna
         df = df[1:]  # Elimina la fila de encabezado original
-        df = df.reset_index(drop=True)  # Reinicia los índices
-        df["CATEGORIA"] = "Check in"  # Asigna una categoría por defecto si no existe
-        df = df.fillna(0).replace("None", 0)
+        df = df.reset_index(drop=True)
+        df["CATEGORIA"] = "Check in"
 
+        # ✅ Reemplazo sin advertencia futura
+        df = df.replace("None", 0)
+        df = df.fillna(0)
+        df = df.infer_objects(copy=False)
 
     return df
 
@@ -508,13 +510,18 @@ def get_filters(df):
         "JUGADOR": default_option
     }
 
+    #st.dataframe(filters)
+
     # Layout en 5 columnas
     category_col, team_col, position_col, nationality_col, player_col = st.columns(5)
 
     with category_col:
         category_list = get_filtered_list(df, "CATEGORIA", {})
-        filters["CATEGORIA"] = st.selectbox("CATEGORÍA:", options=[default_option] + category_list)
-
+        #options=[default_option] + category_list
+        cat = st.selectbox("CATEGORÍA:", options=[default_option] + category_list, index=0, key="categoria")
+        #st.text(cat)
+        filters["CATEGORIA"] = cat
+        #st.dataframe(filters)
     with team_col:
         team_list = get_filtered_list(df, "EQUIPO", {"CATEGORIA": filters["CATEGORIA"]})
         filters["EQUIPO"] = st.selectbox("EQUIPO:", options=[default_option] + team_list)
@@ -543,79 +550,17 @@ def get_filters(df):
         })
         filters["JUGADOR"] = st.selectbox("JUGADOR:", options=[default_option] + player_list)
 
+   
     # Verificar si se aplicó al menos un filtro (distinto de "Todos")
     if any(value != default_option for value in filters.values()):
-        df_filtrado = df.copy()
-        for col, val in filters.items():
-            if val != default_option:
-                df_filtrado = df_filtrado[df_filtrado[col] == val]
-        return df_filtrado
-
+         df_filtrado = df.copy()
+         for col, val in filters.items():
+             if val != default_option:
+                 df_filtrado = df_filtrado[df_filtrado[col] == val]
+         return df_filtrado
+    
     # Si no se seleccionó ningún filtro, retornar el original
     return df
-
-
-
-def generateFilters(df):
-    default_option = "Todos"
-    df_filtrado = pd.DataFrame()
-
-    # Inicializar session_state solo para el filtro de JUGADOR
-    if "JUGADOR" not in st.session_state:
-        st.session_state["JUGADOR"] = default_option
-
-    # Columnas de layout
-    category_col, team_col, position_col, nationality_col, player_col = st.columns(5)
-
-    # Filtro: CATEGORIA
-    with category_col:
-        category_list = sorted(df["CATEGORIA"].dropna().astype(str).str.strip().unique().tolist())
-        category = st.selectbox("CATEGORIA:", [default_option] + category_list)
-
-    # Filtro: EQUIPO
-    team_df = df if category == default_option else df[df["CATEGORIA"] == category]
-    with team_col:
-        team_list = sorted(team_df["EQUIPO"].dropna().astype(str).str.strip().unique().tolist())
-        team = st.selectbox("EQUIPO:", [default_option] + team_list)
-
-    # Filtro: DEMARCACION
-    pos_df = team_df if team == default_option else team_df[team_df["EQUIPO"] == team]
-    with position_col:
-        position_list = sorted(pos_df["DEMARCACION"].dropna().astype(str).str.strip().unique().tolist())
-        position = st.selectbox("DEMARCACION", [default_option] + position_list)
-
-    # Filtro: NACIONALIDAD
-    nat_df = pos_df if position == default_option else pos_df[pos_df["DEMARCACION"] == position]
-    with nationality_col:
-        nationality_list = sorted(nat_df["NACIONALIDAD"].dropna().astype(str).str.strip().unique().tolist())
-        nationality = st.selectbox("NACIONALIDAD:", [default_option] + nationality_list)
-
-    # Filtro: JUGADOR (manteniendo el control con session_state)
-    player_df = nat_df if nationality == default_option else nat_df[nat_df["NACIONALIDAD"] == nationality]
-    with player_col:
-        player_list = sorted(player_df["JUGADOR"].dropna().astype(str).str.strip().unique().tolist())
-        player_options = [default_option] + player_list
-
-        # Validar si la opción previa sigue disponible
-        if st.session_state["JUGADOR"] not in player_options:
-            st.session_state["JUGADOR"] = default_option
-
-        selected_player = st.selectbox(
-            "JUGADOR:",
-            options=player_options,
-            #index=player_options.index(st.session_state["JUGADOR"]),
-            key="selected_player"
-        )
-
-        if selected_player != st.session_state["JUGADOR"]:
-            st.session_state["JUGADOR"] = selected_player
-
-    # Aplicar el filtro final solo si hay un jugador seleccionado
-    if st.session_state["JUGADOR"] != default_option:
-        df_filtrado = df[df["JUGADOR"].astype(str).str.strip() == st.session_state["JUGADOR"]]
-
-    return df_filtrado
-
 
 def get_photo(url):
     try:
