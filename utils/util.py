@@ -878,6 +878,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     pdf = PDF()
     pdf.add_page()
 
+    
     # Bloque de datos personales
     pdf.add_player_block(df_jugador)
 
@@ -909,6 +910,8 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             ("RSA Velocidad", figs_dict.get("RSA Velocidad"))
         ])
     ]
+
+    #st.dataframe(secciones)
 
     # Comprobar si "COMPOSICIÓN CORPORAL" está en los gráficos seleccionados
     tiene_composicion = any(
