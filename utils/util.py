@@ -510,18 +510,12 @@ def get_filters(df):
         "JUGADOR": default_option
     }
 
-    #st.dataframe(filters)
-
     # Layout en 5 columnas
     category_col, team_col, position_col, nationality_col, player_col = st.columns(5)
 
     with category_col:
         category_list = get_filtered_list(df, "CATEGORIA", {})
-        #options=[default_option] + category_list
-        cat = st.selectbox("CATEGORÍA:", options=[default_option] + category_list, index=0, key="categoria")
-        #st.text(cat)
-        filters["CATEGORIA"] = cat
-        #st.dataframe(filters)
+        filters["CATEGORIA"] = st.selectbox("CATEGORÍA:", options=[default_option] + category_list, index=0, key="categoria")
     with team_col:
         team_list = get_filtered_list(df, "EQUIPO", {"CATEGORIA": filters["CATEGORIA"]})
         filters["EQUIPO"] = st.selectbox("EQUIPO:", options=[default_option] + team_list)

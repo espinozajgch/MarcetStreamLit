@@ -267,8 +267,8 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             zmax=cmax,
             showscale=True,
             colorbar=dict(
-                title="% Grasa",
-                titleside="right",
+                title=dict(text="% Grasa", side="right"),
+                #titleside="right",
                 orientation="v",
                 y=-0.02,
                 yanchor="bottom",
@@ -279,7 +279,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 thickness=20,
                 #showticklabels=False,
                 tickfont=dict(color="white"),
-                titlefont=dict(color="gray")
+                #titlefont=dict(color="gray")
             ),
             hoverinfo="skip"
         ))
@@ -616,10 +616,10 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 cmin=ymin,
                 cmax=ymax,
                 colorbar=dict(
-                    titleside="right",
+                    #titleside="right",
                     ticks="outside",
                     tickfont=dict(color="black"),
-                    titlefont=dict(color="black"),
+                    #titlefont=dict(color="black"),
                     thickness=20,
                     len=1,
                     lenmode="fraction",
@@ -793,10 +793,10 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
-                titleside="right",
+                #titleside="right",
                 ticks="outside",
                 tickfont=dict(color="black"),
-                titlefont=dict(color="black"),
+                #titlefont=dict(color="black"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -1189,7 +1189,7 @@ def get_sprint_graph(
                     line=dict(color=color_promedio, dash="dash", width=2),
                     annotation_text=f"{prom_vel:.2f} km/h",
                     annotation_position="top right",
-                    annotation=dict(font=dict(color=color_promedio, size=12, family="Arial")),
+                    annotation=dict(font=dict(color="black", size=12, family="Arial")),
                     layer="above"
                 )
                 fig.add_trace(go.Scatter(
@@ -1248,10 +1248,10 @@ def get_sprint_graph(
                 cmax=vel_max,
                 colorbar=dict(
                     title="",
-                    titleside="right",
+                    #titleside="right",
                     ticks="outside",
                     tickfont=dict(color="black"),
-                    titlefont=dict(color="black"),
+                    #titlefont=dict(color="black"),
                     thickness=20,
                     len=1,
                     lenmode="fraction",
@@ -1445,10 +1445,10 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
-                titleside="right",
+                #titleside="right",
                 ticks="outside",
                 tickfont=dict(color="black"),
-                titlefont=dict(color="black"),
+                #titlefont=dict(color="black"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -1632,10 +1632,10 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
-                titleside="right",
+                #titleside="right",
                 ticks="outside",
                 tickfont=dict(color="black"),
-                titlefont=dict(color="black"),
+                #titlefont=dict(color="black"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -1865,10 +1865,10 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
                 cmax=ymax,
                 colorbar=dict(
                     title="Tiempo (seg)",
-                    titleside="right",
+                    #titleside="right",
                     ticks="outside",
                     tickfont=dict(color="black"),
-                    titlefont=dict(color="black"),
+                    #titlefont=dict(color="black"),
                     thickness=20,
                     len=1,
                     lenmode="fraction",

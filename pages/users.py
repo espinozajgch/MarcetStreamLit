@@ -27,13 +27,8 @@ st.header(":blue[Usuarios] :material/groups:", divider=True)
 
 # 📥 Cargar datos y eliminar columna innecesaria
 dfUsuario = util.get_usuarios(conn)
-#df_jugadores.drop(columns=["EDAD"], inplace=True, errors="ignore")
 
-# 🔎 Aplicar filtros definidos
-#df_filtrado = util.get_filters(df_jugadores)
-#st.dataframe(dfUsuario)
 # ✏️ Editor de datos filtrados
-#st.divider()
 df_editado = st.data_editor(dfUsuario.reset_index(drop=True), num_rows="dynamic", hide_index=True)
 
 # 💾 Diálogo para guardar cambios

@@ -64,10 +64,8 @@ df_final = util.merge_by_nombre_categoria(df_joined, df_checkin)
 
 on = st.toggle("Solo Jugadores con Test Realizados")
 if on:
-    
     df_sesiones = util.sesiones_por_test(df_final, test_cat)
     df_filtrado = df_datos[df_datos["JUGADOR"].isin(df_sesiones["JUGADOR"])]
-    
     df_datos_filtrado = util.get_filters(df_filtrado)
 else:
     df_datos_filtrado = util.get_filters(df_datos)
@@ -141,8 +139,6 @@ else:
         #st.badge("New")
         #st.badge("Success", icon=":material/check:", color="green")
 
-        #st.markdown(":violet-badge[:material/star: Favorite] :orange-badge[⚠️ Needs review] :gray-badge[Deprecated]")
-
         st.markdown(f"## {nombre} ")
         st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera}")
 
@@ -169,11 +165,14 @@ else:
         with col3:
             st.metric(label="Posición", value=f"{demarcacion.capitalize()}", border=True)
             st.metric(label="Edad", value=edad, border=True)
+
+        #st.markdown(":green-badge[:material/check: Antropometria] :red-badge[:material/dangerous: CMJ] :gray-badge[Deprecated]")
+
     else:
         st.warning("⚠️ No se encontró ningún ID válido en los datos filtrados.")
 
 ###################################################
-
+    
     if not df_datos_filtrado.empty:
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
         antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["ANTROPOMETRIA", "CMJ", "SPRINT LINEAL", "YO-YO", "AGILIDAD", "RSA", "REPORTE"])
