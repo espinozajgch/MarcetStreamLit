@@ -35,7 +35,7 @@ else:
     df_datos, df_data_test, df_checkin = util.getData(conn)
     df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
 
-    test_cat = util.get_diccionario_test_categorias(conn)
+    test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
 
     #st.dataframe(test)
 

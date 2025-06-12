@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_height_graph(df_altura):
+def get_height_graph(df_altura, idioma="es"):
     df = pd.DataFrame(df_altura)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
     df = df.sort_values(by="FECHA REGISTRO")
@@ -60,9 +60,9 @@ def get_height_graph(df_altura):
         )
 
     fig.update_layout(
-        title="📏 Evolución de la Altura (cm)",
+        title=util.traducir("Evolución de la Altura (cm)", idioma),
         xaxis_title=None,
-        yaxis_title="Altura (cm)",
+        yaxis_title=util.traducir("ALTURA (CM)", idioma),
         template="plotly_white",
         xaxis=dict(
             tickmode="array",
@@ -82,7 +82,7 @@ def get_height_graph(df_altura):
 
     return fig
 
-def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max):
+def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es"):
 
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -142,7 +142,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         fig.add_trace(go.Bar(
             x=df["FECHA REGISTRO"],
             y=df["PESO (KG)"],
-            name="PESO (KG)",
+            name=util.traducir("PESO (KG)",idioma),
             marker_color=color_lineas["PESO (KG)"],
             text=df["PESO (KG)"].round(1),
             textposition="inside",
@@ -171,7 +171,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             x=x_vals,
             y=y_vals,
             mode="lines+markers",
-            name="GRASA (%)",
+            name=util.traducir("GRASA (%)", idioma),
             line=dict(color="gray", width=3),
             marker=dict(color=colores_puntos, size=10),
             yaxis="y2",
@@ -241,11 +241,13 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 yanchor="bottom"
             )
 
+            categoria = util.traducir(categoria.upper(), idioma)
+            name = util.traducir("Zona % Grasa Promedio", idioma)
             # Línea discontinua visible en leyenda
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"Zona %Grasa Promedio {categoria} A".upper(),
+                name=f"{name} {categoria} A".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
@@ -267,7 +269,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             zmax=cmax,
             showscale=True,
             colorbar=dict(
-                title=dict(text="% Grasa", side="right"),
+                title=dict(text=util.traducir("GRASA (%)", idioma), side="right"),
                 #titleside="right",
                 orientation="v",
                 y=-0.02,
@@ -286,7 +288,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     # --- Layout final con dos ejes ---
     fig.update_layout(
-        title="⚖️ Evolución del Peso y % Grasa",
+        title=util.traducir("Evolución del Peso y % Grasa",idioma),
         xaxis=dict(
             tickformat="%b",     # Mantén esto si quieres seguir usando el formato base (mes)
             dtick="M1",          # Mantén esto si quieres controlar cada mes
@@ -295,7 +297,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             ticktext=ticktext
         ),
         yaxis=dict(
-            title="Peso (kg)",
+            title=util.traducir("PESO (KG)", idioma),
             side="left"
         ),
         yaxis2=dict(
@@ -443,7 +445,7 @@ def _render_agility_graph(df_agility, df_promedios, categoria, equipo, metrica, 
 
     return fig
 
-def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro):
+def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro, idioma="es"):
     df = pd.DataFrame(df_cmj)
     #st.dataframe(df)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
@@ -523,7 +525,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             x=x_vals,
             y=y_vals,
             mode="lines",
-            name=metrica,
+            name=util.traducir(metrica,idioma),
             line=dict(color=color_linea[metrica], width=3),
             hoverinfo="skip"
         ))
@@ -560,7 +562,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["VALOR"],
-                text=f"Max: {fila_max['VALOR']:.2f} {metrica}",
+                text=f"Max: {fila_max['VALOR']:.2f} cm",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -579,10 +581,15 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             annotation=dict(font=dict(color="black", size=12, family="Arial")),
             layer="above"
         )
+
+        title= util.traducir("ALTURA DE SALTO (CM)", idioma)
+        promedio = util.traducir("PROMEDIO", idioma)
+        categoria = util.traducir(categoria.upper(), idioma)
+
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"ALTURA DE SALTO (CM) Promedio ({categoria} {equipo})".upper(),
+            name=f"{title} {promedio} ({categoria} {equipo})".upper(),
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
@@ -634,14 +641,14 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         ))
 
     fig.update_layout(
-        title="📈 Evolución de la Potencia Muscular de Salto (CMJ)",
+        title=util.traducir("Evolución de la Potencia Muscular de Salto (CMJ)", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title="ALTURA DE SALTO (CM)",
+            title=title,
             range=[ymin, ymax]
         ),
         template="plotly_white",
@@ -657,7 +664,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     st.plotly_chart(fig, use_container_width=True)
     return fig
 
-def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro):
+def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro, idioma="es"):
     
     df = pd.DataFrame(df_yoyo)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y", errors='coerce')
@@ -718,7 +725,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         x=df[columna_fecha_registro],
         y=df[metrica],
         mode="lines",
-        name=metrica,
+        name=util.traducir(metrica, idioma),
         line=dict(color="#1f77b4", width=3)
     ))
 
@@ -742,10 +749,14 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
         )
+        title = util.traducir("DISTANCIA ACUMULADA (M)", idioma)
+        promedio = util.traducir("PROMEDIO", idioma)
+        categoria = util.traducir(categoria.upper(), idioma)
+
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"DISTANCIA PROMEDIO (M) ({categoria} {equipo})".upper(),
+            name=f"{title} {promedio} ({categoria} {equipo})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
@@ -812,14 +823,14 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
 
     # Layout final
     fig.update_layout(
-        title="📈 Evolución de la Distancia Acumulada",
+        title=util.traducir("Evolución de la Distancia Acumulada", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title=metrica,
+            title=util.traducir(metrica, idioma),
             range=[ymin, ymax]
         ),
         template="plotly_white",
@@ -956,133 +967,6 @@ def get_sprint_time_graph(df_sprint, df_promedios, categoria, equipo):
 
     return fig
 
-def get_sprint_velocity_graph(df_sprint, df_promedios, categoria, equipo):
-    df = df_sprint.copy()
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors='coerce')
-    df = df.sort_values(by="FECHA REGISTRO")
-
-    metricas_originales = ["VEL 0-5M (M/S)", "VEL 20-40M (M/S)"]
-    metricas_convertidas = ["VEL 0-5M (KM/H)", "VEL 20-40M (KM/H)"]
-    colores_lineas = {
-        "VEL 0-5M (KM/H)": "#1f77b4",
-        "VEL 20-40M (KM/H)": "#66c2ff"
-    }
-    colores_promedios = {
-        "VEL 0-5M (KM/H)": "orange",
-        "VEL 20-40M (KM/H)": "purple"
-    }
-    tolerancia = 0.5
-
-    # Obtener promedios
-    promedio_row = df_promedios[
-        (df_promedios["CATEGORIA"] == categoria) &
-        (df_promedios["EQUIPO"] == equipo)
-    ]
-    promedios = {}
-    if not promedio_row.empty:
-        for original, nueva in zip(metricas_originales, metricas_convertidas):
-            if original in promedio_row.columns:
-                valor = promedio_row[original].values[0]
-                if pd.notna(valor):
-                    promedios[nueva] = valor * 3.6
-
-    fig = go.Figure()
-
-    for metrica in metricas_convertidas:
-        df_metric = df[["FECHA REGISTRO", metrica]].dropna()
-        x_vals = df_metric["FECHA REGISTRO"].tolist()
-        y_vals = df_metric[metrica].tolist()
-        color_linea = colores_lineas.get(metrica, "gray")
-        color_prom = colores_promedios.get(metrica, "gray")
-        nombre_legenda = metrica.replace(" (KM/H)", "")
-
-        # Puntos coloreados
-        colores_puntos = []
-        for valor in y_vals:
-            if metrica in promedios:
-                prom = promedios[metrica]
-                if abs(valor - prom) <= tolerancia:
-                    colores_puntos.append("rgba(255, 215, 0, 0.9)")
-                elif valor > prom:
-                    colores_puntos.append("rgba(0, 200, 0, 0.8)")
-                else:
-                    colores_puntos.append("rgba(255, 0, 0, 0.8)")
-            else:
-                colores_puntos.append(color_linea)
-
-        # Línea base
-        fig.add_trace(go.Scatter(
-            x=x_vals,
-            y=y_vals,
-            mode="lines",
-            name=nombre_legenda,
-            line=dict(color=color_linea, width=3),
-            showlegend=True
-        ))
-
-        # Puntos
-        fig.add_trace(go.Scatter(
-            x=x_vals,
-            y=y_vals,
-            mode="markers",
-            name=nombre_legenda,
-            showlegend=False,
-            marker=dict(size=10, color=colores_puntos),
-            hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{nombre_legenda}:</b> %{{y:.2f}} km/h<extra></extra>"
-        ))
-
-        # Anotar máximo
-        if not df_metric.empty:
-            max_val = df_metric[metrica].max()
-            fila_max = df_metric[df_metric[metrica] == max_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-            fig.add_annotation(
-                x=fila_max["FECHA REGISTRO"],
-                y=fila_max[metrica],
-                text=f"Mejor Registro: {fila_max[metrica]:.2f} km/h",
-                showarrow=True,
-                arrowhead=2,
-                ax=0,
-                ay=-30,
-                bgcolor=color_linea,
-                font=dict(color="white")
-            )
-
-        # Línea de promedio
-        if metrica in promedios:
-            prom = promedios[metrica]
-            fig.add_hline(
-                y=prom,
-                line=dict(color=color_prom, dash="dash"),
-                annotation_text=f"Promedio ({categoria} {equipo}): {prom:.2f} km/h",
-                annotation_position="top right",
-                annotation=dict(font=dict(color="black", size=12, family="Arial"))
-            )
-            fig.add_trace(go.Scatter(
-                x=[None], y=[None],
-                mode="lines",
-                name=f"{nombre_legenda} PROMEDIO".upper(),
-                line=dict(color=color_prom, dash="dash")
-            ))
-
-    fig.update_layout(
-        title="📈 Evolución de la Velocidad del Sprint 40m (KM/H)",
-        xaxis_title=None,
-        yaxis_title="Velocidad (km/h)",
-        xaxis=dict(tickformat="%b", dtick="M1"),
-        template="plotly_white",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.3,
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    return fig
-
 def get_sprint_graph(
     df_sprint,
     df_promedios,
@@ -1090,7 +974,8 @@ def get_sprint_graph(
     equipo,
     metrica_tiempo,
     metrica_velocidad,
-    columnas_fecha_registro
+    columnas_fecha_registro,
+    idioma="es"
 ):
 
     df = df_sprint.copy()
@@ -1158,12 +1043,12 @@ def get_sprint_graph(
             fig.add_trace(go.Bar(
                 x=df_metric_vel[columnas_fecha_registro],
                 y=df_metric_vel[metrica_velocidad],
-                name=metrica_velocidad,
+                name=util.traducir(metrica_velocidad, idioma),
                 marker_color=color_barra,
                 yaxis="y1",
                 text=df_metric_vel[metrica_velocidad].round(2),
                 textposition="inside",
-                hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica_velocidad}:</b> %{{y:.2f}} km/h<extra></extra>"
+                hovertemplate=f"<b>DATE:</b> %{{x|%d-%m-%Y}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 
             # Anotación del mejor registro
@@ -1173,7 +1058,7 @@ def get_sprint_graph(
                 x=fila_max[columnas_fecha_registro],
                 y=fila_max[metrica_velocidad],
                 yref="y1",
-                text=f"Mejor: {fila_max[metrica_velocidad]:.2f} km/h",
+                text=f"Max: {fila_max[metrica_velocidad]:.2f} m/s",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -1187,15 +1072,19 @@ def get_sprint_graph(
                 fig.add_hline(
                     y=prom_vel,
                     line=dict(color=color_promedio, dash="dash", width=2),
-                    annotation_text=f"{prom_vel:.2f} km/h",
+                    annotation_text=f"{prom_vel:.2f} m/s",
                     annotation_position="top right",
                     annotation=dict(font=dict(color="black", size=12, family="Arial")),
                     layer="above"
                 )
+
+                promedio = util.traducir("PROMEDIO", idioma)
+                categoria = util.traducir(categoria.upper(), idioma)
+
                 fig.add_trace(go.Scatter(
                     x=[None], y=[None],
                     mode="lines",
-                    name=f"{metrica_velocidad} Promedio ({categoria} {equipo})".upper(),
+                    name=f"{metrica_velocidad} {promedio} ({categoria} {equipo})".upper(),
                     line=dict(color=color_promedio, dash="dash", width=2),
                     showlegend=True
                 ))
@@ -1208,11 +1097,11 @@ def get_sprint_graph(
                 x=df_metric_time[columnas_fecha_registro],
                 y=df_metric_time[metrica_tiempo],
                 mode="lines+markers",
-                name=metrica_tiempo.replace(" (SEG)", ""),
+                name=util.traducir(metrica_tiempo, idioma),
                 line=dict(color=color_linea, width=3),
                 marker=dict(size=8, color=color_linea),
                 yaxis="y2",
-                hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica_tiempo}:</b> %{{y:.2f}} seg<extra></extra>"
+                hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
 
             min_val = df_metric_time[metrica_tiempo].min()
@@ -1221,7 +1110,7 @@ def get_sprint_graph(
                 x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica_tiempo],
                 yref="y2",
-                text=f"Mejor: {fila_min[metrica_tiempo]:.2f} seg",
+                text=f"Max: {fila_min[metrica_tiempo]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -1266,22 +1155,24 @@ def get_sprint_graph(
             hoverinfo="skip"
         ))
 
+    title = util.traducir("Evolución del Sprint", idioma)
+    #metrica_tiempo = util.traducir(metrica_tiempo, idioma)
     # --- Layout final ---
     fig.update_layout(
-        title=f"📈 Evolución del Sprint ({metrica_tiempo.replace(' (SEG)','')} y {metrica_velocidad.replace(' (KM/H)','')})",
+        title=f"{title} ({util.traducir(metrica_tiempo, idioma)} y {util.traducir(metrica_velocidad, idioma)})",
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title="Velocidad (km/h)",
+            title=util.traducir("VELOCIDAD (M/S)",idioma),
             side="left",
             showgrid=True,
             range=[vel_min, vel_max]
         ),
         yaxis2=dict(
-            title="Tiempo (seg)",
+            title=util.traducir("TIEMPO (SEG)",idioma),
             overlaying="y",
             side="right",
             showgrid=False
@@ -1300,7 +1191,7 @@ def get_sprint_graph(
     st.plotly_chart(fig, use_container_width=True)
     return fig
 
-def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna_fecha_registro):
+def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna_fecha_registro, idioma="es"):
     df = pd.DataFrame(df_rsa)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
     df = df.sort_values(by=columna_fecha_registro)
@@ -1370,7 +1261,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
         x=x_vals,
         y=y_vals,
         mode="lines",
-        name="TIEMPO (SEG)",
+        name=util.traducir("TIEMPO (SEG)", idioma),
         line=dict(color=color_linea, width=3)
     ))
 
@@ -1394,10 +1285,14 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12))
         )
+        title = util.traducir("TIEMPO (SEG)", idioma)
+        promedio = util.traducir("PROMEDIO", idioma)
+        categoria = util.traducir(categoria.upper(), idioma)
+
         fig_tiempo.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"TIEMPO PROMEDIO (SEG) ({categoria} {equipo})".upper(),
+            name=f"{title} {promedio} ({categoria} {equipo})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
@@ -1408,7 +1303,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
         fig_tiempo.add_annotation(
             x=fila[columna_fecha_registro],
             y=fila[metricas[0]],
-            text=f"Mejor Registro: {fila['MEDIDA EN TIEMPO (SEG)']:.2f} seg",
+            text=f"Max: {fila['MEDIDA EN TIEMPO (SEG)']:.2f} seg",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -1464,14 +1359,14 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
 
     # Layout final
     fig_tiempo.update_layout(
-        title="📈 Evolución del Tiempo Total en Repeticiones de Sprint",
+        title=util.traducir("Evolución del Tiempo Total en Repeticiones de Sprint", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title="Tiempo (Seg)",
+            title=title,
             range=[ymin, ymax]
         ),
         template="plotly_white",
@@ -1488,24 +1383,24 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
 
     return fig_tiempo
 
-def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
+def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, fecha_registro, idioma="es"):
     df = df_rsa.copy()
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y", errors="coerce")
-    df = df.sort_values(by="FECHA REGISTRO")
-
+    df[fecha_registro] = pd.to_datetime(df[fecha_registro], format="%d/%m/%Y", errors="coerce")
+    df = df.sort_values(by=fecha_registro)
+    title = util.traducir("VELOCIDAD (M/S)", idioma)
     # Convertir m/seg a km/h
-    df["VELOCIDAD (KM/H)"] = df["VELOCIDAD (M*SEG)"] * 3.6
-    metric = "VELOCIDAD (KM/H)"
-
-    # Obtener promedio y convertir a km/h también
+    #df["VELOCIDAD (KM/H)"] = df["VELOCIDAD (M*SEG)"] * 3.6
+    #metric = "VELOCIDAD (KM/H)"
+    #st.text(metric)
+    # Obtener promedio y convertir a m/s también
     promedio_row = df_promedios_rsa[
         (df_promedios_rsa["CATEGORIA"] == categoria) &
         (df_promedios_rsa["EQUIPO"] == equipo)
     ]
 
     prom = None
-    if not promedio_row.empty and "VELOCIDAD (M*SEG)" in promedio_row.columns:
-        prom = promedio_row["VELOCIDAD (M*SEG)"].values[0] * 3.6
+    if not promedio_row.empty and metric in promedio_row.columns:
+        prom = promedio_row[metric].values[0] * 3.6
     else:
         st.warning("No se encontraron promedios de Velocidad para esta categoría y equipo.")
 
@@ -1517,7 +1412,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     color_promedio = "green"
 
     y_vals = df[metric].tolist()
-    x_vals = df["FECHA REGISTRO"].tolist()
+    x_vals = df[fecha_registro].tolist()
 
     # Colorear puntos
     colores_puntos = []
@@ -1540,7 +1435,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
     ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)
 
     # Etiquetas personalizadas del eje X
-    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    df_fechas_unicas = df[fecha_registro].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
 
     if len(años_unicos) == 1:
@@ -1555,7 +1450,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         x=x_vals,
         y=y_vals,
         mode="lines",
-        name=metric,
+        name=title,
         line=dict(color=color_linea, width=3),
         showlegend=True
     ))
@@ -1566,9 +1461,9 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         y=y_vals,
         mode="markers",
         marker=dict(size=10, color=colores_puntos, line=dict(width=0)),
-        name=metric,
+        name=title,
         showlegend=False,
-        hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Velocidad:</b> %{y:.2f} km/h<extra></extra>"
+        hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Velocidad:</b> %{y:.2f} m/s<extra></extra>"
     ))
 
     # Línea de promedio
@@ -1576,26 +1471,29 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
         fig.add_hline(
             y=prom,
             line=dict(color=color_promedio, dash="dash"),
-            annotation_text=f"{prom:.2f} km/h",
+            annotation_text=f"{prom:.2f} m/s",
             annotation=dict(font=dict(color="black", size=12))
         )
+        
+        promedio = util.traducir("PROMEDIO", idioma)
+        categoria = util.traducir(categoria.upper(), idioma)
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"VELOCIDAD PROMEDIO (KM/H) ({categoria} {equipo})".upper(),
+            name=f"{title} {promedio} ({categoria} {equipo})".upper(),
             line=dict(color=color_promedio, dash="dash")
         ))
 
     # Anotación del máximo
-    df_filtro = df[["FECHA REGISTRO", metric]].dropna()
+    df_filtro = df[[fecha_registro, metric]].dropna()
     if not df_filtro.empty:
         max_valor = df_filtro[metric].max()
-        fila_max = df_filtro[df_filtro[metric] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+        fila_max = df_filtro[df_filtro[metric] == max_valor].sort_values(by=fecha_registro, ascending=False).iloc[0]
 
         fig.add_annotation(
-            x=fila_max["FECHA REGISTRO"],
+            x=fila_max[fecha_registro],
             y=fila_max[metric],
-            text=f"Mejor Registro: {fila_max[metric]:.2f} km/h",
+            text=f"Max: {fila_max[metric]:.2f} m/s",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -1651,9 +1549,9 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo):
 
     # Layout final
     fig.update_layout(
-        title="📈 Evolución de la Velocidad en Repeticiones de Sprint",
+        title=util.traducir("Evolución de la Velocidad en Repeticiones de Sprint", idioma),
         yaxis=dict(
-            title="Velocidad (km/h)",
+            title=title,
             range=[ymin, ymax]
         ),
         xaxis=dict(
@@ -1749,7 +1647,7 @@ def mostrar_percentiles_coloreados(jugador: dict, percentiles: dict):
 
     st.dataframe(df)
 
-def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro):
+def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es"):
 
     df = pd.DataFrame(df_agility)
     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors="coerce")
@@ -1801,7 +1699,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
             x=x_vals,
             y=y_vals,
             mode="lines+markers",
-            name=metrica,
+            name=util.traducir(metrica,idioma),
             line=dict(color=color, width=3, dash=dash),
             marker=dict(size=8, color=color),
             hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
@@ -1816,7 +1714,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
             fig.add_annotation(
                 x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica],
-                text=f"Mejor: {fila_min[metrica]:.2f} seg",
+                text=f"Max: {fila_min[metrica]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=80,
@@ -1841,7 +1739,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
                 text=f"{diferencia:.1f}%",
                 textposition="top center",
                 showlegend=not added_to_legend,  # solo la primera vez
-                name="Diferencia %",
+                name=util.traducir("DIFERENCIA %",idioma),
                 hoverinfo="skip"
             ))
             added_to_legend = True
@@ -1864,7 +1762,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
                 cmin=ymin,
                 cmax=ymax,
                 colorbar=dict(
-                    title="Tiempo (seg)",
+                    title= "",
                     #titleside="right",
                     ticks="outside",
                     tickfont=dict(color="black"),
@@ -1874,7 +1772,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
                     lenmode="fraction",
                     y=0,
                     yanchor="bottom",
-                    x=1.08,
+                    x=1.05,
                     xanchor="left"
                 ),
                 showscale=True
@@ -1896,14 +1794,14 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
 
     # --- Layout final ---
     fig.update_layout(
-        title="📈 Evolución de la Agilidad (IZQ y DER)",
+        title="Evolución de la Agilidad (IZQ y DER)",
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title="Tiempo (Seg)",
+            title=util.traducir("TIEMPO (SEG)", idioma),
             range=[ymin, ymax],
             side="left"
         ),

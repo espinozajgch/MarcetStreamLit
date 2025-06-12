@@ -1,10 +1,10 @@
-import streamlit as st
-from utils import util
-from utils import graphics
-from datetime import datetime
-
 from streamlit_gsheets import GSheetsConnection
 
+import streamlit as st
+from utils import util
+from utils import player
+from utils import graphics
+from datetime import datetime
 import pandas as pd
 import plotly.express as px
 import numpy as np
@@ -34,13 +34,17 @@ if "usuario" not in st.session_state:
 unavailable = "No Disponible"
 fecha_registro = "FECHA REGISTRO"
 mensaje_no_data = "El Jugador seleccionado no cuenta con datos suficientes para mostrar esta sección"
+equipo_promedio = "A"
+columnas_excluidas_promedio = ['FECHA REGISTRO', 'ID', "CATEGORIA", "EQUIPO"]
 
 st.header(" :blue[Player Hub] :material/contacts:", divider=True)
 #st.subheader("Datos individuales, historicos y alertas")
 
 df_datos, df_data_test, df_checkin = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
-test_cat = util.get_diccionario_test_categorias(conn)
+test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
+
+#st.text(lista_columnas[0])
 
 # 1. Extraer solo columnas necesarias del check-in
 df_nuevos = df_checkin[["JUGADOR", "CATEGORIA"]].drop_duplicates()
@@ -60,7 +64,19 @@ df_datos = df_resultado.dropna(how="all").reset_index(drop=True)
 # 6. Merge df_checkin con df_joined
 df_final = util.merge_by_nombre_categoria(df_joined, df_checkin)
 
-#st.dataframe(df_datos)
+idiomas = ["Español", "Inglés", "Francés", "Italiano", "Alemán", "Catalán"]
+idioma_map = {
+    "Español": "es",
+    "Inglés": "en",
+    "Francés": "fr",
+    "Italiano": "it",
+    "Alemán": "de",
+    "Catalán": "ca"
+}
+
+seleccion = st.radio("Selecciona un idioma:", idiomas, horizontal=True)
+idioma = idioma_map[seleccion]
+
 
 on = st.toggle("Solo Jugadores con Test Realizados")
 if on:
@@ -69,8 +85,6 @@ if on:
     df_datos_filtrado = util.get_filters(df_filtrado)
 else:
     df_datos_filtrado = util.get_filters(df_datos)
-
-columnas_excluidas_promedio = ['FECHA REGISTRO', 'ID', "CATEGORIA", "EQUIPO"]
 
 datatest_columns = util.get_dataframe_columns(df_data_test)
 columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
@@ -87,96 +101,17 @@ st.divider()
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
     st.warning("No se ha encontrado información o aun no ha seleccionado a un jugador.")
 else:
-    
-    # Obtener ID del jugador seleccionado (único y limpio)
-    ids_disponibles = df_datos_filtrado["ID"].dropna().astype(str).str.strip().unique().tolist()
-    #st.dataframe(ids_disponibles)
-    if not ids_disponibles or any(isinstance(id, str) and id.strip().lower() == 'nan' for id in ids_disponibles):
-        names_disponibles = df_datos_filtrado["JUGADOR"].dropna().astype(str).str.strip().unique().tolist()
-        jugador_id = names_disponibles[0]
-        # Filtrar los DataFrames por el ID seleccionado
-        df_jugador = df_datos[df_datos["JUGADOR"].astype(str).str.strip() == jugador_id]
-        df_joined_filtrado = df_final[df_final["JUGADOR"].astype(str).str.strip() == jugador_id]
-        id = unavailable
-
-        df_jugador = df_jugador.fillna(unavailable)
-    else:
-        jugador_id = ids_disponibles[0]
-        # Filtrar los DataFrames por el ID seleccionado
-        df_jugador = df_datos[df_datos["ID"].astype(str).str.strip() == jugador_id]
-        df_joined_filtrado = df_final[df_final["ID"].astype(str).str.strip() == jugador_id]
-        id = df_jugador['ID'].iloc[0]
-
-    # Validar que exista al menos un registro para el jugador seleccionado
-    if ids_disponibles or names_disponibles:
-        
-        jugador = df_jugador.iloc[0]
-        
-        response = util.get_photo(df_jugador['FOTO PERFIL'].iloc[0])
-
-        nombre = df_jugador['JUGADOR'].iloc[0]
-        nacionalidad = df_jugador['NACIONALIDAD'].iloc[0]
-        categoria = df_jugador['CATEGORIA'].iloc[0]
-        equipo = df_jugador['EQUIPO'].iloc[0]
-        fnacimiento = df_jugador['FECHA DE NACIMIENTO'].iloc[0]
-        edad = df_jugador['EDAD'].iloc[0]
-        demarcacion = df_jugador['DEMARCACION'].iloc[0]
-        
-        if edad != unavailable:
-            edad = f"{edad:,.0f} años"
-
-        if nacionalidad == unavailable:
-            bandera = ""
-        else:
-            bandera = util.obtener_bandera(str(nacionalidad).replace(",", "."))
-
-        #referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
-        #referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
-            
-        # Mostrar DataFrame principal
-        #st.dataframe(df_joined)
-        #st.badge("New")
-        #st.badge("Success", icon=":material/check:", color="green")
-
-        st.markdown(f"## {nombre} ")
-        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera}")
-
-        col1, col2, col3 = st.columns([1, 2, 2])
-
-        with col1:
-            if response:
-                st.image(response.content, width=150)
-            else:
-                #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
-                st.image("assets/images/profile.png", width=180)
-        with col2:
-
-            if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):
-                st.metric(label="Categoria", value=f" {categoria}", border=True)
-                st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
-                
-                categoria = "Juvenil"
-                equipo = "A"
-
-            else:
-                st.metric(label="Categoria - Equipo", value=f" {categoria} {equipo}", border=True)
-                st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
-
-        with col3:
-            st.metric(label="Posición", value=f"{demarcacion.capitalize()}", border=True)
-            st.metric(label="Edad", value=edad, border=True)
-
-        #st.markdown(":green-badge[:material/check: Antropometria] :red-badge[:material/dangerous: CMJ] :gray-badge[Deprecated]")
-
-    else:
-        st.warning("⚠️ No se encontró ningún ID válido en los datos filtrados.")
+    df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos, df_final, unavailable, idioma)
 
 ###################################################
+    #st.dataframe(df_datos_filtrado)
     
     if not df_datos_filtrado.empty:
+
+        traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
-        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(["1.ANTROPOMETRIA", "2.CMJ", "3.SPRINT LINEAL", "4.YO-YO", "5.AGILIDAD", "6.RSA", "7.REPORTE"])
-        
+        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(traducidas)
+        #st.text(lista_columnas)
         figalt = None
         figant = None
         figcmj = None
@@ -189,7 +124,7 @@ else:
         figyoyo = None
         figrsat = None
         figrsav = None
-        equipo_promedio = "A"
+
 
         with antropometria:
             if len(df_joined_filtrado) > 0:
@@ -197,12 +132,14 @@ else:
                 ###################################################
                 ###################################################
                 ## ANTROPOMETRIA
-                columns = list(test_cat.get("ANTROPOMETRIA", []))
+                columns = list(test_cat.get(lista_columnas[0], []))
                 
                 df_anthropometrics = df_joined_filtrado[[fecha_registro] + columns]
                 df_anthropometrics = df_anthropometrics.reset_index(drop=True)
     
                 if not util.columnas_sin_datos_utiles(df_anthropometrics, [fecha_registro]):
+                    
+                    # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
                     df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columns] == 0).all(axis=1)]
                     #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
                    
@@ -216,13 +153,13 @@ else:
                         act = df_anthropometrics[columns[0]].iloc[0]
                         ant = df_anthropometrics[columns[0]].iloc[1] if len(df_anthropometrics) > 1 else 0
                         variacion = float(act) - float(ant)
-                        st.metric(columns[1].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+                        st.metric(columns[0].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}')
 
                     with col2:
                         act = df_anthropometrics[columns[1]].iloc[0]
                         ant = df_anthropometrics[columns[1]].iloc[1] if len(df_anthropometrics) > 1 else 0
                         variacion = act - ant
-                        st.metric(columns[2].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}')
+                        st.metric(columns[1].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}')
 
                     with col3:
                         gact = df_anthropometrics[columns[2]].iloc[0]
@@ -239,10 +176,10 @@ else:
                     else:
                         st.success(f"El porcentaje de grasa corporal ({gact:.2f}%) está dentro de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%)", icon="✅")
                     
-                    figalt = graphics.get_height_graph(df_anthropometrics)
+                    figalt = graphics.get_height_graph(df_anthropometrics, idioma)
 
                     df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max)
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max, idioma)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -284,7 +221,7 @@ else:
         with cmj:
             if len(df_joined_filtrado) > 0:
 
-                columns = list(test_cat.get("CMJ", []))
+                columns = list(test_cat.get(lista_columnas[1], []))
                 df_cmj = df_joined_filtrado[[fecha_registro] + columns]
                 df_cmj = df_cmj.reset_index(drop=True)
 
@@ -305,13 +242,14 @@ else:
                         cactc = df_cmj[columns[0]].iloc[0]
                         cantc = df_cmj[columns[0]].iloc[1] if len(df_cmj) > 1 else 0
                         variacion = cactc - cantc
-                        st.metric(columns[0].capitalize(),f'{cactc:,.2f}', f'{variacion:,.2f}')
+                        metrica_cmj = columns[0].replace("-", " ").capitalize()
+                        st.metric(metrica_cmj,f'{cactc:,.2f}', f'{variacion:,.2f}')
 
                     with col2:
                         cactw = df_cmj[columns[1]].iloc[0]
                         cantw = df_cmj[columns[1]].iloc[1] if len(df_cmj) > 1 else 0
                         variacion = cactw - cantw
-                        st.metric(columns[1].capitalize(),f'{cactw:,.2f}', f'{variacion:,.2f}')
+                        st.metric(columns[1].replace("-", " ").capitalize(),f'{cactw:,.2f}', f'{variacion:,.2f}')
 
                     with col3:
                         act = df_cmj[fecha_registro].iloc[0]
@@ -325,16 +263,16 @@ else:
                     
                     if promedio_cmj is not None:
                         if(cactc < promedio_cmj):
-                            st.warning(f"{columns[0]} ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
+                            st.warning(f"{metrica_cmj} ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
                         else:
-                            st.success(f"{columns[0]} ({cactc:.2f} cm) está por encima del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="✅")
+                            st.success(f"{metrica_cmj} ({cactc:.2f} cm) está por encima del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="✅")
                     #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
                     #st.divider()
                     cola, colb = st.columns([2.5,1])
 
                     with cola:
-                        figcmj = graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio, [columns[0]], fecha_registro)
+                        figcmj = graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma)
                     with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
@@ -352,7 +290,7 @@ else:
         with sprint:
             if len(df_joined_filtrado) > 0:
 
-                columns = list(test_cat.get("SPRINT", []))
+                columns = list(test_cat.get(lista_columnas[2], []))
                 df_sprint = df_joined_filtrado[[fecha_registro] + columns]
                 
                 df_sprint = df_sprint.reset_index(drop=True)
@@ -401,13 +339,12 @@ else:
                     #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
                     if(act05t != 0) or (act05v != 0):
-                        figsp05 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro)
+                        figsp05 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma)
 
                     if(act040t != 0) or (act040v != 0):
-                        figsp040 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro)
+                        figsp040 = graphics.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma)
                 
                     st.divider()
-
                     st.markdown("📊 **Históricos**")
                     st.dataframe(df_sprint)   
                     
@@ -425,7 +362,7 @@ else:
 
             if len(df_joined_filtrado) > 0:
 
-                columns = list(test_cat.get("YO-YO", []))
+                columns = list(test_cat.get(lista_columnas[3], []))
                 df_yoyo = df_joined_filtrado[[fecha_registro] + columns]
                 df_yoyo = df_yoyo.reset_index(drop=True)
 
@@ -462,7 +399,7 @@ else:
                     cola, colb = st.columns([2.5,1.5])
 
                     with cola:
-                        figyoyo = graphics.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro)
+                        figyoyo = graphics.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma)
                     with colb:   
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_yoyo)
@@ -479,7 +416,7 @@ else:
         with agilidad:
             #st.dataframe(df_joined_filtrado)
             if len(df_joined_filtrado) > 0: 
-                columns = list(test_cat.get("AGILIDAD", []))
+                columns = list(test_cat.get(lista_columnas[4], []))
                 df_agilty = df_joined_filtrado[[fecha_registro] + columns]
 
                 df_agilty = df_agilty.loc[~(df_agilty[columns].fillna(0) == 0).all(axis=1)]
@@ -510,7 +447,7 @@ else:
                         act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
                         st.metric(f"Último Registro",act)
 
-                    figag = graphics.get_agility_graph_combined(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro)
+                    figag = graphics.get_agility_graph_combined(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma)
                     st.divider()
                     
                     st.markdown("📊 **Históricos**")
@@ -525,7 +462,7 @@ else:
                             
         with rsa:
             if len(df_joined_filtrado) > 0:
-                columns = list(test_cat.get("RSA", []))
+                columns = list(test_cat.get(lista_columnas[5], []))
                 df_rsa = df_joined_filtrado[[fecha_registro] + columns]
                 df_rsa = df_rsa.reset_index(drop=True)
                 
@@ -562,7 +499,7 @@ else:
 
                     cola, colb = st.columns([2.5,1])
                     with cola:
-                        figrsat = graphics.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro)
+                        figrsat = graphics.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma)
                     with colb:    
                         st.markdown("📊 **Históricos**")
                         st.dataframe(df_rsa[[fecha_registro] + [columns[0]]]) 
@@ -570,7 +507,7 @@ else:
                     styled_dfb = util.aplicar_semaforo(df_rsa[[fecha_registro] + columns])
                     colc, cold = st.columns([2.5,1])
                     with colc:
-                        figrsav = graphics.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio)
+                        figrsav = graphics.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma)
                     with cold:    
                         st.markdown("📊 **Históricos**")
                         st.dataframe(df_rsa[[fecha_registro] + [columns[1]]]) 
@@ -625,12 +562,16 @@ else:
                     graficos_pdf.append("RSA")
 
                 # Multiselect para tests
-                tests_seleccionados = st.multiselect(
-                    "Gráficos:",
-                    options=graficos_pdf,
-                    default=graficos_pdf,  # Por defecto, todos los gráficos están seleccionados
-                    placeholder="Seleccione una opción"
-                )
+                @st.fragment
+                def seleccionar_graficos(graficos_pdf):
+                    return st.multiselect(
+                        "Gráficos:",
+                        options=graficos_pdf,
+                        default=graficos_pdf,
+                        placeholder="Seleccione una opción"
+                    )
+
+                tests_seleccionados = seleccionar_graficos(graficos_pdf)
 
                 # Generar figs_filtrados según tests seleccionados
                 figs_filtrados = {}
@@ -650,8 +591,6 @@ else:
                             if test in k:
                                 figs_filtrados[k] = graficos_disponibles[k]
 
-                #st.dataframe(df_jugador)
-
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)
@@ -660,7 +599,7 @@ else:
                         # 1. Generar PDF como bytes (puede tardar)
                         pdf_bytes = util.generate_pdf(
                             df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                            df_cmj, df_yoyo, df_rsa, figs_filtrados)
+                            df_cmj, df_yoyo, df_rsa, figs_filtrados, idioma)
 
                         # 2. Codificar y preparar para mostrar
                         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
@@ -668,7 +607,7 @@ else:
 
                         # Enlace de descarga con nombre específico
                         st.markdown(f'''
-                            <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{nombre}.pdf" target="_blank">
+                            <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{df_jugador['JUGADOR'].iloc[0]}.pdf" target="_blank">
                                 📥 Descargar PDF
                             </a>
                         ''', unsafe_allow_html=True)

@@ -8,7 +8,10 @@ import tempfile
 import plotly.io as pio
 
 class PDF(FPDF):
-
+    def __init__(self, idioma="es"):
+        super().__init__()
+        self.idioma = idioma  # Idioma predeterminado para traducciones
+       
     def header(self):
 
         # Dibujar solo el borde inferior del header
@@ -23,8 +26,6 @@ class PDF(FPDF):
         # Línea inferior → de (x, y+h) a (x+w, y+h)
         self.line(x, y + h, x + w, y + h)
 
-
-        
         # Color de fondo azul oscuro
         #self.set_fill_color(13, 27, 62)  # #0d1b3e
         #self.rect(0, 0, 210, 40, 'F')  # Rectángulo superior
@@ -36,17 +37,17 @@ class PDF(FPDF):
         self.set_text_color(0, 0, 0)
         self.set_font("Arial", "I", 8)
         self.set_xy(120, 8)
-        self.cell(80, 5, "DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", align="R")
+        self.cell(80, 5, util.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
 
         # Título central
         self.set_font("Arial", "B", 14)
         self.set_text_color(249, 178, 51)  # amarillo
         self.set_xy(0, 20)
-        self.cell(210, 10, "INFORME INDIVIDUAL - INFORME FÍSICO", align="C")
+        self.cell(210, 10, util.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
 
         #self.ln(5)
 
-    def add_player_block(self, df):
+    def add_player_block(self, df, idioma="es"):
         # === Borde alrededor del bloque ===
         pdf_x = 5
         pdf_y = 43
@@ -106,37 +107,37 @@ class PDF(FPDF):
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, "NACIONALIDAD:", 0)
+        self.cell(35, 6, util.traducir("NACIONALIDAD", idioma)+":", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 6, data["NACIONALIDAD"], ln=True)
+        self.cell(50, 6, data["NACIONALIDAD"].capitalize(), ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, "F. DE NACIMIENTO:", 0)
+        self.cell(35, 6, util.traducir("F. DE NACIMIENTO", idioma)+":", 0)
         self.set_font("Arial", "", 10)
         self.cell(50, 6, data["FECHA DE NACIMIENTO"], ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, "EDAD:", 0)
+        self.cell(35, 6, util.traducir("EDAD", idioma)+":", 0)
         self.set_font("Arial", "", 10)
         self.cell(50, 6, str(data.get("EDAD", "")), ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, "DEMARCACIÓN:", 0)
+        self.cell(35, 6, util.traducir("DEMARCACIÓN", idioma)+":", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 6, data["DEMARCACION"], ln=True)
+        self.cell(50, 6, util.traducir(data["DEMARCACION"], idioma).capitalize(), ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, "CATEGORIA:", 0)
+        self.cell(35, 6, util.traducir("CATEGORIA", idioma)+":", 0)
         self.set_font("Arial", "", 10)
-        self.cell(50, 6, data["CATEGORIA"].capitalize(), ln=True)
+        self.cell(50, 6, util.traducir(data["CATEGORIA"].upper(), idioma).capitalize(), ln=True)
 
         self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, "EQUIPO:", 0)
+        self.cell(35, 6, util.traducir("EQUIPO", idioma)+":", 0)
         self.set_font("Arial", "", 10)
         self.cell(50, 6, data["EQUIPO"].capitalize(), ln=True)
 
@@ -343,7 +344,7 @@ class PDF(FPDF):
         self.set_font("Arial", "I", 8)
         self.multi_cell(0, 5, "Índices calculados a partir de las mediciones antropométricas.")
 
-    def draw_gradient_scale(self, x=10, y=None, width=190, height=6, steps=100, invertido=False):
+    def draw_gradient_scale(self, x=10, y=None, width=190, height=6, steps=100, invertido=False, idioma="es"):
         if y is None:
             y = self.get_y()
 
@@ -364,7 +365,7 @@ class PDF(FPDF):
         self.set_xy(x - 1, y - height - 1.5)
         self.set_font("Arial", "B", 10)
         self.set_text_color(0, 51, 102)
-        self.cell(0, 6, "Escala de valoración", ln=True)
+        self.cell(0, 6, util.traducir("Escala de valoración", idioma), ln=True)
         self.set_text_color(0, 0, 0)
         self.ln(1)
 
@@ -372,18 +373,22 @@ class PDF(FPDF):
         self.set_xy(x, y + height + 1.5)
         self.set_font("Arial", "", 8)
 
+        optimo = util.traducir("Óptimo", idioma)
+        promedio = util.traducir("Promedio", idioma)
+        critico = util.traducir("Crítico", idioma)
+
         if invertido:
-            self.cell(30, 5, "Óptimo", 0, 0, 'L')
+            self.cell(30, 5, optimo, 0, 0, 'L')
             self.set_x(x + width/2 - 15)
-            self.cell(30, 5, "Promedio", 0, 0, 'C')
+            self.cell(30, 5, promedio, 0, 0, 'C')
             self.set_x(x + width - 30)
-            self.cell(30, 5, "Crítico", 0, 1, 'R')
+            self.cell(30, 5, critico, 0, 1, 'R')
         else:
-            self.cell(30, 5, "Crítico", 0, 0, 'L')
+            self.cell(30, 5, critico, 0, 0, 'L')
             self.set_x(x + width/2 - 15)
-            self.cell(30, 5, "Promedio", 0, 0, 'C')
+            self.cell(30, 5, promedio, 0, 0, 'C')
             self.set_x(x + width - 30)
-            self.cell(30, 5, "Óptimo", 0, 1, 'R')
+            self.cell(30, 5, optimo, 0, 1, 'R')
 
     def get_height(self):
         return self.h
@@ -412,7 +417,7 @@ class PDF(FPDF):
         import os
         os.remove(tmpfile_path)
 
-    def add_last_measurements(self, altura, peso, grasa, icon_path=None):
+    def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es"):
         self.set_font("Helvetica", "B", 14)
         if icon_path:
             self.image(icon_path, x=self.get_x(), y=self.get_y(), w=6)
@@ -444,9 +449,9 @@ class PDF(FPDF):
         x2 = x1 + col_width + 5
         x3 = x2 + col_width + 5
 
-        add_metric("Altura (cm)", altura, x1)
-        add_metric("Peso (Kg)", peso, x2)
-        add_metric("Grasa (%)", grasa, x3)
+        add_metric(util.traducir("ALTURA (CM)",idioma), altura, x1)
+        add_metric(util.traducir("PESO (KG)",idioma), peso, x2)
+        add_metric(util.traducir("GRASA (%)",idioma), grasa, x3)
 
         self.ln(20)  # salto tras bloque
 

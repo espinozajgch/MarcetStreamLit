@@ -8,6 +8,7 @@ from utils.pdf import PDF
 from scipy.stats import percentileofscore
 from functools import reduce
 
+
 def get_ttl():
     if st.session_state.get("reload_data", False):
         default_reload_time = "0m"  # Forzar recarga
@@ -831,8 +832,9 @@ def construir_diccionario_test_categorias(df_columnas_raw):
 def get_diccionario_test_categorias(conn):
     test = get_test(conn)
     test_cat = construir_diccionario_test_categorias(test)
+    lista_columnas = test.columns.tolist()
 
-    return test_cat
+    return test, test_cat, lista_columnas
 
 def obtener_bandera(pais):
     # Diccionario de códigos de país ISO 3166-1 alfa-2
@@ -868,19 +870,19 @@ def obtener_bandera(pais):
     else:
         return ""
     
-def add_footer(pdf, invertido=False):
+def add_footer(pdf, invertido=False, idioma="es"):
     page_height = pdf.get_height()
     margen_inferior = 33
     y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True)
+    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True, idioma=idioma)
 
-def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict):
-    pdf = PDF()
+def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, idioma="es"):
+    pdf = PDF(idioma=idioma)
     pdf.add_page()
+    pdf.header()
 
-    
     # Bloque de datos personales
-    pdf.add_player_block(df_jugador)
+    pdf.add_player_block(df_jugador, idioma=idioma)
 
     seccion_ya_impresa = set()
 
@@ -890,7 +892,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
             ("Altura", figs_dict.get("Altura")),
             ("Peso y Grasa", figs_dict.get("Peso y Grasa"))
         ]),
-        ("POTENCIA MUSCULAR (COUNTER MOVEMENT JUMP)", df_cmj, [
+        ("POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)", df_cmj, [
             ("CMJ", figs_dict.get("CMJ"))
         ]),
         ("EVOLUCIÓN DEL SPRINT (0-5M)", df_sprint, [
@@ -924,8 +926,9 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-        pdf.section_title("COMPOSICIÓN CORPORAL")
-        pdf.add_last_measurements(altura, peso, grasa)
+        #pdf.section_title("COMPOSICIÓN CORPORAL")
+        pdf.section_title(traducir("COMPOSICIÓN CORPORAL", idioma))
+        pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
 
     # Inicializar contador de gráficos y sección actual
     contador_graficos = 0
@@ -938,10 +941,11 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
                 if fig is not None:
                     if not primer_grafico_insertado:
                         if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
-                            pdf.section_title(nombre_seccion)
+                            #pdf.section_title(nombre_seccion)
+                            pdf.section_title(traducir(nombre_seccion, idioma))
                             seccion_ya_impresa.add(nombre_seccion)
                         pdf.add_plotly_figure(fig, "")
-                        add_footer(pdf)
+                        add_footer(pdf, idioma=idioma)
                         primer_grafico_insertado = True
                         continue
 
@@ -950,17 +954,18 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
                         pdf.ln(20)
 
                     if nombre_seccion not in seccion_ya_impresa:
-                        pdf.section_title(nombre_seccion)
+                        #pdf.section_title(nombre_seccion)
+                        pdf.section_title(traducir(nombre_seccion, idioma))
                         seccion_ya_impresa.add(nombre_seccion)
 
                     pdf.add_plotly_figure(fig, "")
                     contador_graficos += 1
 
                     if contador_graficos % 2 == 0:
-                        add_footer(pdf)
+                        add_footer(pdf, idioma=idioma)
 
     if contador_graficos % 2 == 1:
-        add_footer(pdf)
+        add_footer(pdf, idioma=idioma)
 
     return pdf.output(dest='S').encode('latin1')
 
@@ -1080,3 +1085,369 @@ def calcular_promedios_filtrados(df, columnas_a_verificar):
     df_promedios = df_promedios.round(2)
 
     return df_promedios
+
+TRADUCCIONES = {
+    "Evolución del Tiempo Total en Repeticiones de Sprint": {
+        "en": "Evolution of Total Time in Sprint Repetitions",
+        "it": "Evoluzione del Tempo Totale nelle Ripetizioni di Sprint",
+        "de": "Entwicklung der Gesamtzeit bei Sprintwiederholungen",
+        "fr": "Évolution du Temps Total lors des Répétitions de Sprint",
+        "ca": "Evolució del Temps Total en Repeticions d'Esprint"
+    },
+    "Evolución de la Velocidad en Repeticiones de Sprint": {
+        "en": "Evolution of Speed in Sprint Repetitions",
+        "it": "Evoluzione della Velocità nelle Ripetizioni di Sprint",
+        "de": "Entwicklung der Geschwindigkeit bei Sprintwiederholungen",
+        "fr": "Évolution de la Vitesse lors des Répétitions de Sprint",
+        "ca": "Evolució de la Velocitat en Repeticions d'Esprint"
+    },
+    "Evolución de la Agilidad (IZQ y DER)": {
+        "en": "Agility Evolution (LEFT & RIGHT)",
+        "it": "Evoluzione dell'Agilità (SIN & DES)",
+        "de": "Agilitätsentwicklung (LI & RE)",
+        "fr": "Évolution de l'Agilité (GAUCHE & DROITE)",
+        "ca": "Evolució de l'Agilitat (ESQ i DRE)"
+    },
+    "DIFERENCIA %": {
+        "en": "DIFFERENCE %",
+        "it": "DIFFERENZA %",
+        "de": "DIFFERENZ %",
+        "fr": "DIFFÉRENCE %",
+        "ca": "DIFERÈNCIA %"
+    },
+    "505-IZQ (SEG)": {
+        "en": "505-LEFT (SEC)",
+        "it": "505-SIN (SEC)",
+        "de": "505-LI (SEK)",
+        "fr": "505-GAUCHE (SEC)",
+        "ca": "505-ESQ (SEG)"
+    },
+    "505-DER (SEG)": {
+        "en": "505-RIGHT (SEC)",
+        "it": "505-DES (SEC)",
+        "de": "505-RE (SEK)",
+        "fr": "505-DROITE (SEC)",
+        "ca": "505-DRE (SEG)"
+    },
+    "VELOCIDAD (M/S)": {
+        "en": "SPEED (M/S)",
+        "it": "VELOCITÀ (M/S)",
+        "de": "GESCHWINDIGKEIT (M/S)",
+        "fr": "VITESSE (M/S)",
+        "ca": "VELOCITAT (M/S)"
+    },
+    "TIEMPO (SEG)": {
+        "en": "TIME (SEC)",
+        "it": "TEMPO (SEC)",
+        "de": "ZEIT (SEK)",
+        "fr": "TEMPS (SEC)",
+        "ca": "TEMPS (SEG)"
+    },
+    "Evolución del Sprint": {
+        "en": "Sprint Evolution",
+        "it": "Evoluzione dello Sprint",
+        "de": "Sprint-Entwicklung",
+        "fr": "Évolution du Sprint",
+        "ca": "Evolució de l'Sprint"
+    },
+    "TIEMPO 0-5M (SEG)": {
+        "en": "TIME 0-5M (SEC)",
+        "it": "TEMPO 0-5M (SEC)",
+        "de": "ZEIT 0-5M (SEK)",
+        "fr": "TEMPS 0-5M (SEC)",
+        "ca": "TEMPS 0-5M (SEG)"
+    },
+    "TIEMPO 0-40M (SEG)": {
+        "en": "TIME 0-40M (SEC)",
+        "it": "TEMPO 0-40M (SEC)",
+        "de": "ZEIT 0-40M (SEK)",
+        "fr": "TEMPS 0-40M (SEC)",
+        "ca": "TEMPS 0-40M (SEG)"
+    },
+    "VEL 0-5M (M/S)": {
+        "en": "SPEED 0-5M (M/S)",
+        "it": "VEL 0-5M (M/S)",
+        "de": "GESCHW 0-5M (M/S)",
+        "fr": "VIT 0-5M (M/S)",
+        "ca": "VEL 0-5M (M/S)"
+    },
+    "VEL 0-40M (M/S)": {
+        "en": "SPEED 0-40M (M/S)",
+        "it": "VEL 0-40M (M/S)",
+        "de": "GESCHW 0-40M (M/S)",
+        "fr": "VIT 0-40M (M/S)",
+        "ca": "VEL 0-40M (M/S)"
+    },
+    "Evolución de la Distancia Acumulada": {
+        "en": "Evolution of Accumulated Distance",
+        "it": "Evoluzione della Distanza Accumulata",
+        "de": "Entwicklung der Zurückgelegten Distanz",
+        "fr": "Évolution de la Distance Accumulée",
+        "ca": "Evolució de la Distància Acumulada"
+    },
+    "DISTANCIA ACUMULADA (M)": {
+        "en": "ACCUMULATED DISTANCE (M)",
+        "it": "DISTANZA ACCUMULATA (M)",
+        "de": "ZURÜCKGELEGTE DISTANZ (M)",
+        "fr": "DISTANCE ACCUMULÉE (M)",
+        "ca": "DISTÀNCIA ACUMULADA (M)"
+    },
+    "Evolución de la Potencia Muscular de Salto (CMJ)": {
+        "en": "Evolution of Jump Muscle Power (CMJ)",
+        "it": "Evoluzione della Potenza Muscolare del Salto (CMJ)",
+        "de": "Entwicklung der Sprungkraft (CMJ)",
+        "fr": "Évolution de la Puissance Musculaire de Saut (CMJ)",
+        "ca": "Evolució de la Potència Muscular del Salt (CMJ)"
+    },
+    "ALTURA DE SALTO (CM)": {
+        "en": "JUMP HEIGHT (CM)",
+        "it": "ALTEZZA DEL SALTO (CM)",
+        "de": "SPRUNGHÖHE (CM)",
+        "fr": "HAUTEUR DE SAUT (CM)",
+        "ca": "ALÇADA DEL SALT (CM)"
+    },
+    "PROMEDIO": {
+        "en": "AVERAGE",
+        "it": "MEDIA",
+        "de": "DURCHSCHNITT",
+        "fr": "MOYENNE",
+        "ca": "MITJANA"
+    },
+    "Evolución del Peso y % Grasa": {
+        "en": "Evolution of Weight and Fat %",
+        "it": "Evoluzione del Peso e Grasso %",
+        "de": "Entwicklung von Gewicht und Fett %",
+        "fr": "Évolution du Poids et de la Graisse %",
+        "ca": "Evolució del Pes i del Greix %"
+    },
+    "Zona % Grasa Promedio": {
+        "en": "Average Fat % Zone",
+        "it": "Zona Media di Grasso %",
+        "de": "Durchschnittlicher Fettanteil %",
+        "fr": "Zone Moyenne de Graisse %",
+        "ca": "Zona Mitjana de Greix %"
+    },
+    "Evolución de la Altura (cm)": {
+        "en": "Height Evolution (cm)",
+        "it": "Evoluzione dell'Altezza (cm)",
+        "de": "Größenentwicklung (cm)",
+        "fr": "Évolution de la Taille (cm)",
+        "ca": "Evolució de l'Alçada (cm)"
+    },
+    # Secciones
+    "COMPOSICIÓN CORPORAL": {
+        "en": "BODY COMPOSITION",
+        "it": "COMPOSIZIONE CORPOREA",
+        "de": "KÖRPERZUSAMMENSETZUNG",
+        "fr": "COMPOSITION CORPORELLE",
+        "ca": "COMPOSICIÓ CORPORAL"
+    },
+    "POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)": {
+        "en": "MUSCULAR POWER (COUNTER MOVEMENT JUMP)",
+        "it": "POTENZA MUSCOLARE (SALTO CONTRO MOVIMENTO)",
+        "de": "MUSKELKRAFT (GEGENBEWEGUNGSSPRUNG)",
+        "fr": "PUISSANCE MUSCULAIRE (SAUT À CONTRE-MOUVEMENT)",
+        "ca": "POTÈNCIA MUSCULAR (SALT AMB CONTRAMOVIMENT)"
+    },
+    "EVOLUCIÓN DEL SPRINT (0-5M)": {
+        "en": "SPRINT EVOLUTION (0-5M)",
+        "it": "EVOLUZIONE DELLO SPRINT (0-5M)",
+        "de": "SPRINT-ENTWICKLUNG (0-5M)",
+        "fr": "ÉVOLUTION DU SPRINT (0-5M)",
+        "ca": "EVOLUCIÓ DE L'SPRINT (0-5M)"
+    },
+    "EVOLUCIÓN DEL SPRINT (0-40M)": {
+        "en": "SPRINT EVOLUTION (0-40M)",
+        "it": "EVOLUZIONE DELLO SPRINT (0-40M)",
+        "de": "SPRINT-ENTWICKLUNG (0-40M)",
+        "fr": "ÉVOLUTION DU SPRINT (0-40M)",
+        "ca": "EVOLUCIÓ DE L'SPRINT (0-40M)"
+    },
+    "VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)": {
+        "en": "CHANGE OF DIRECTION SPEED (AGILITY 505)",
+        "it": "VELOCITÀ DI CAMBIO DIREZIONE (AGILITÀ 505)",
+        "de": "RICHTUNGSWECHSELGESCHWINDIGKEIT (AGILITÄT 505)",
+        "fr": "VITESSE DE CHANGEMENT DE DIRECTION (AGILITÉ 505)",
+        "ca": "VELOCITAT EN EL CANVI DE DIRECCIÓ (AGILITAT 505)"
+    },
+    "RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)": {
+        "en": "HIGH-INTENSITY INTERMITTENT ENDURANCE (YO-YO TEST)",
+        "it": "RESISTENZA INTERMITTENTE AD ALTA INTENSITÀ (YO-YO TEST)",
+        "de": "HOCHINTENSIVES INTERMITTIERENDES AUSDAUERTRAINING (YO-YO TEST)",
+        "fr": "ENDURANCE INTERMITTENTE À HAUTE INTENSITÉ (YO-YO TEST)",
+        "ca": "RESISTÈNCIA INTERMITENT D'ALTA INTENSITAT (TEST YO-YO)"
+    },
+    "CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)": {
+        "en": "REPEATED SPRINT ABILITY (RSA)",
+        "it": "CAPACITÀ DI SPRINT RIPETUTI (RSA)",
+        "de": "WIEDERHOLTE SPRINTFÄHIGKEIT (RSA)",
+        "fr": "CAPACITÉ DE SPRINTS RÉPÉTÉS (RSA)",
+        "ca": "CAPACITAT DE REALITZAR ESPRINTS REPETITS (RSA)"
+    },
+
+    # Métricas con unidades
+    "ALTURA-(CM)": {
+        "en": "JUMP HEIGHT (CM)",
+        "it": "ALTEZZA DEL SALTO (CM)",
+        "de": "SPRUNGHÖHE (CM)",
+        "fr": "HAUTEUR DE SAUT (CM)",
+        "ca": "ALÇADA DEL SALT (CM)"
+    },
+    "ALTURA (CM)": {
+        "en": "HEIGHT (CM)",
+        "it": "ALTEZZA (CM)",
+        "de": "KÖRPERGRÖSSE (CM)",
+        "fr": "TAILLE (CM)",
+        "ca": "ALÇADA (CM)"
+    },
+    "PESO (KG)": {
+        "en": "WEIGHT (KG)",
+        "it": "PESO (KG)",
+        "de": "GEWICHT (KG)",
+        "fr": "POIDS (KG)",
+        "ca": "PES (KG)"
+    },
+    "GRASA (%)": {
+        "en": "FAT (%)",
+        "it": "GRASSO (%)",
+        "de": "FETT (%)",
+        "fr": "GRAISSE (%)",
+        "ca": "GREIX (%)"
+    },
+
+    # Datos personales
+    "NACIONALIDAD": {
+        "en": "NATIONALITY",
+        "it": "NAZIONALITÀ",
+        "de": "NATIONALITÄT",
+        "fr": "NATIONALITÉ",
+        "ca": "NACIONALITAT"
+    },
+    "F. DE NACIMIENTO": {
+        "en": "BIRTH DATE",
+        "it": "D. DI NASCITA",
+        "de": "GEBURTSDATUM",
+        "fr": "D. DE NAISSANCE",
+        "ca": "D. DE NAIXEMENT"
+    },
+    "EDAD": {
+        "en": "AGE",
+        "it": "ETÀ",
+        "de": "ALTER",
+        "fr": "ÂGE",
+        "ca": "EDAT"
+    },
+    "DEMARCACIÓN": {
+        "en": "POSITION",
+        "it": "RUOLO",
+        "de": "POSITION",
+        "fr": "POSTE",
+        "ca": "DEMARCACIÓ"
+    },
+    "CATEGORIA": {
+        "en": "CATEGORY",
+        "it": "CATEGORIA",
+        "de": "KATEGORIE",
+        "fr": "CATÉGORIE",
+        "ca": "CATEGORIA"
+    },
+    "EQUIPO": {
+        "en": "TEAM",
+        "it": "SQUADRA",
+        "de": "MANNSCHAFT",
+        "fr": "ÉQUIPE",
+        "ca": "EQUIP"
+    },
+
+    # Escala visual
+    "Escala de valoración": {
+        "en": "Assessment Scale",
+        "it": "Scala di valutazione",
+        "de": "Bewertungsskala",
+        "fr": "Échelle d'évaluation",
+        "ca": "Escala de valoració"
+    },
+    "Óptimo": {
+        "en": "Optimal",
+        "it": "Ottimale",
+        "de": "Optimal",
+        "fr": "Optimal",
+        "ca": "Òptim"
+    },
+    "Promedio": {
+        "en": "Average",
+        "it": "Media",
+        "de": "Durchschnitt",
+        "fr": "Moyenne",
+        "ca": "Promig"
+    },
+    "Crítico": {
+        "en": "Critical",
+        "it": "Critico",
+        "de": "Kritisch",
+        "fr": "Critique",
+        "ca": "Crític"
+    },
+    "DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO": {
+        "en": "DEPARTMENT OF SPORTS PERFORMANCE OPTIMIZATION",
+        "it": "DIPARTIMENTO DI OTTIMIZZAZIONE DELLE PRESTAZIONI SPORTIVE",
+        "de": "ABTEILUNG FÜR OPTIMIERUNG DER SPORTLICHEN LEISTUNG",
+        "fr": "DÉPARTEMENT D'OPTIMISATION DE LA PERFORMANCE SPORTIVE",
+        "ca": "DEPARTAMENT D'OPTIMITZACIÓ DEL RENDIMENT ESPORTIU"
+    },
+    "INFORME INDIVIDUAL - INFORME FÍSICO": {
+        "en": "INDIVIDUAL REPORT - PHYSICAL REPORT",
+        "it": "RAPPORTO INDIVIDUALE - RAPPORTO FISICO",
+        "de": "EINZELBERICHT - PHYSISCHER BERICHT",
+        "fr": "RAPPORT INDIVIDUEL - RAPPORT PHYSIQUE",
+        "ca": "INFORME INDIVIDUAL - INFORME FÍSIC"
+    },
+
+    # Demarcaciones
+    "PORTERO": {"en": "GOALKEEPER", "it": "PORTIERE", "de": "TORWART", "fr": "GARDIEN", "ca": "PORTER"},
+    "LATERAL DERECHO": {"en": "RIGHT BACK", "it": "TERZINO DESTRO", "de": "RECHTER VERTEIDIGER", "fr": "LATÉRAL DROIT", "ca": "LATERAL DRET"},
+    "LATERAL IZQUIERDO": {"en": "LEFT BACK", "it": "TERZINO SINISTRO", "de": "LINKER VERTEIDIGER", "fr": "LATÉRAL GAUCHE", "ca": "LATERAL ESQUERRE"},
+    "DEFENSA CENTRAL": {"en": "CENTER BACK", "it": "DIFENSORE CENTRALE", "de": "INNENVERTEIDIGER", "fr": "DÉFENSEUR CENTRAL", "ca": "DEFENSA CENTRAL"},
+    "MEDIOCENTRO DEFENSIVO": {"en": "DEFENSIVE MIDFIELDER", "it": "CENTROCAMPISTA DIFENSIVO", "de": "DEFENSIVER MITTELFELDSPIELER", "fr": "MILIEU DÉFENSIF", "ca": "PIVOT DEFENSIU"},
+    "MEDIOCENTRO": {"en": "MIDFIELDER", "it": "CENTROCAMPISTA", "de": "MITTELFELDSPIELER", "fr": "MILIEU", "ca": "CENTRECAMPISTA"},
+    "MEDIAPUNTA": {"en": "ATTACKING MIDFIELDER", "it": "TREQUARTISTA", "de": "OFFENSIVER MITTELFELDSPIELER", "fr": "MILIEU OFFENSIF", "ca": "MITJAPUNTA"},
+    "EXTREMO": {"en": "WINGER", "it": "ALA", "de": "FLÜGELSPIELER", "fr": "AILIER", "ca": "EXTREM"},
+    "DELANTERO": {"en": "FORWARD", "it": "ATTACCANTE", "de": "STÜRMER", "fr": "ATTAQUANT", "ca": "DAVANTER"},
+
+    # Categorías
+    "CADETE": {"en": "CADET", "it": "CADETTO", "de": "KADETTE", "fr": "CADET", "ca": "CADET"},
+    "JUVENIL": {"en": "YOUTH", "it": "GIOVANILE", "de": "JUGEND", "fr": "JEUNE", "ca": "JUVENIL"},
+    "CHECK-IN": {"en": "CHECK-IN", "it": "CHECK-IN", "de": "CHECK-IN", "fr": "CHECK-IN", "ca": "CHECK-IN"},
+
+    "ANTROPOMETRIA": {
+        "en": "ANTHROPOMETRY",
+        "it": "ANTROPOMETRIA",
+        "de": "ANTHROPOMETRIE",
+        "fr": "ANTHROPOMÉTRIE",
+        "ca": "ANTROPOMETRIA"
+    },
+    "AGILIDAD": {
+        "en": "AGILITY",
+        "it": "AGILITÀ",
+        "de": "AGILITÄT",
+        "fr": "AGILITÉ",
+        "ca": "AGILITAT"
+    },
+    "REPORTE": {
+        "en": "REPORT",
+        "it": "RAPPORTO",
+        "de": "BERICHT",
+        "fr": "RAPPORT",
+        "ca": "INFORME"
+    }
+}
+
+def traducir(texto, idioma="es"):
+    return TRADUCCIONES.get(texto, {}).get(idioma, texto)
+
+def traducir_lista(palabras, idioma_destino="en"):
+    palabras_traducidas = []
+    for palabra in palabras:
+        traduccion = TRADUCCIONES.get(palabra, {}).get(idioma_destino, palabra)
+        palabras_traducidas.append(traduccion)
+    return palabras_traducidas
