@@ -1198,7 +1198,8 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
 
     #metricas = ["MEDIDA EN TIEMPO (SEG)", "VELOCIDAD (M*SEG)"]
     #df = df[[columna_fecha_registro] + metricas]
-
+    title = util.traducir("TIEMPO (SEG)", idioma)
+    
     # Obtener promedios
     promedio_row = df_promedios_rsa[
         (df_promedios_rsa["CATEGORIA"] == categoria) &
@@ -1285,7 +1286,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12))
         )
-        title = util.traducir("TIEMPO (SEG)", idioma)
+        
         promedio = util.traducir("PROMEDIO", idioma)
         categoria = util.traducir(categoria.upper(), idioma)
 
