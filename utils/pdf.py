@@ -11,9 +11,15 @@ class PDF(FPDF):
     def __init__(self, idioma="es"):
         super().__init__()
         self.idioma = idioma  # Idioma predeterminado para traducciones
+
+        if(idioma == "ar"):
+            self.add_font("Amiri", "", "assets/fonts/Amiri-0.111/Amiri-Regular.ttf", uni=True)  # Añadir fuente Unicode
+            self.add_font("Amiri", "B", "assets/fonts/Amiri-0.111/Amiri-Bold.ttf", uni=True)
+            self.add_font("Amiri", "I", "assets/fonts/Amiri-0.111/Amiri-Slanted.ttf", uni=True)
+            self.set_font("Amiri", "", 12)
        
     def header(self):
-
+        
         # Dibujar solo el borde inferior del header
         self.set_draw_color(0, 0, 0)     # Color del borde: negro
         self.set_line_width(0.5)         # Grosor de la línea
@@ -35,19 +41,29 @@ class PDF(FPDF):
 
         # Texto cabecera derecha
         self.set_text_color(0, 0, 0)
-        self.set_font("Arial", "I", 8)
+        if(self.idioma == "ar"):
+            self.set_font("Amiri", "I", 8)
+        else:
+            self.set_font("Arial", "I", 8)
         self.set_xy(120, 8)
         self.cell(80, 5, util.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
 
         # Título central
-        self.set_font("Arial", "B", 14)
+        if(self.idioma == "ar"):
+            self.set_font("Amiri", "B", 14)
+        else:
+            self.set_font("Arial", "B", 14)
         self.set_text_color(249, 178, 51)  # amarillo
         self.set_xy(0, 20)
         self.cell(210, 10, util.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
+        
+        #self.set_xy(0, 25)
+        #self.cell(210, 10, self.idioma, align="C")
 
         #self.ln(5)
 
     def add_player_block(self, df, idioma="es"):
+
         # === Borde alrededor del bloque ===
         pdf_x = 5
         pdf_y = 43
@@ -91,7 +107,10 @@ class PDF(FPDF):
             self.image("assets/images/profile.png", 8, 55, 40)
             
         # Nombre
-        self.set_font("Arial", "B", 18)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 18)
         #self.set_fill_color(0, 51, 102)
         self.set_text_color(0, 0, 0)
         self.set_xy(10, 40)
@@ -99,47 +118,101 @@ class PDF(FPDF):
         #self.cell(0, 8, title, ln=True, fill=True)
 
         # Datos personales
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
         self.set_xy(50, 55)
-        self.cell(35, 6, "ID:", 0)
-        self.set_font("Arial", "", 10)
-        self.cell(50, 6, str(data["ID"]), ln=True)
+        self.cell(37, 6, util.traducir("ID", idioma)+":", 0)
+        
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Arial", "", 10)
+        self.cell(50, 6, str(util.traducir(data["ID"], idioma)), ln=True)
 
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, util.traducir("NACIONALIDAD", idioma)+":", 0)
-        self.set_font("Arial", "", 10)
+        
+        self.cell(37, 6, util.traducir("NACIONALIDAD", idioma)+":", 0)
+        
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Arial", "", 10)
+        
         self.cell(50, 6, data["NACIONALIDAD"].capitalize(), ln=True)
 
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
+        
         self.set_x(50)
-        self.cell(35, 6, util.traducir("F. DE NACIMIENTO", idioma)+":", 0)
-        self.set_font("Arial", "", 10)
+        self.cell(37, 6, util.traducir("F. DE NACIMIENTO", idioma)+":", 0)
+        
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Arial", "", 10)
+        
         self.cell(50, 6, data["FECHA DE NACIMIENTO"], ln=True)
 
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, util.traducir("EDAD", idioma)+":", 0)
-        self.set_font("Arial", "", 10)
+        self.cell(37, 6, util.traducir("EDAD", idioma)+":", 0)
+
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:        
+            self.set_font("Arial", "", 10)
         self.cell(50, 6, str(data.get("EDAD", "")), ln=True)
 
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(35, 6, util.traducir("DEMARCACIÓN", idioma)+":", 0)
-        self.set_font("Arial", "", 10)
+        self.cell(37, 6, util.traducir("DEMARCACIÓN", idioma)+":", 0)
+        
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Arial", "", 10)
         self.cell(50, 6, util.traducir(data["DEMARCACION"], idioma).capitalize(), ln=True)
 
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
+        
         self.set_x(50)
-        self.cell(35, 6, util.traducir("CATEGORIA", idioma)+":", 0)
-        self.set_font("Arial", "", 10)
+        self.cell(37, 6, util.traducir("CATEGORIA", idioma)+":", 0)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Arial", "", 10)
         self.cell(50, 6, util.traducir(data["CATEGORIA"].upper(), idioma).capitalize(), ln=True)
 
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
+        
         self.set_x(50)
-        self.cell(35, 6, util.traducir("EQUIPO", idioma)+":", 0)
-        self.set_font("Arial", "", 10)
-        self.cell(50, 6, data["EQUIPO"].capitalize(), ln=True)
+        self.cell(37, 6, util.traducir("EQUIPO", idioma)+":", 0)
+        
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Arial", "", 10)
+        self.cell(50, 6, util.traducir(data["EQUIPO"], idioma).capitalize(), ln=True)
 
         # Imagen del campo (derecha)
         #self.image("assets/images/test/505.jpg", 130, 50, 70)
@@ -162,16 +235,26 @@ class PDF(FPDF):
     def add_img(self, img_path, x, y, w):
         self.image(img_path, x, y, w)
 
-    def section_title(self, title):
+    def section_title(self, title, idioma="es"):
+        
         self.set_fill_color(0, 51, 102)
         self.set_text_color(255, 255, 255)
-        self.set_font("Arial", "B", 11)
+        
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 11)
+        else:
+            self.set_font("Arial", "B", 11)
+        
         self.cell(0, 8, title, ln=True, fill=True)
         self.set_text_color(0, 0, 0)
         self.ln(2)
 
-    def section_subtitle(self, subtitle):
-        self.set_font("Arial", "B", 10)
+    def section_subtitle(self, subtitle, idioma="es"):
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
+        
         self.set_text_color(0, 51, 102)  # Azul oscuro para continuidad visual
         self.cell(0, 6, subtitle, ln=True)
         self.set_text_color(0, 0, 0)
@@ -345,6 +428,7 @@ class PDF(FPDF):
         self.multi_cell(0, 5, "Índices calculados a partir de las mediciones antropométricas.")
 
     def draw_gradient_scale(self, x=10, y=None, width=190, height=6, steps=100, invertido=False, idioma="es"):
+        
         if y is None:
             y = self.get_y()
 
@@ -363,7 +447,10 @@ class PDF(FPDF):
             self.rect(x + i * step_width, y, step_width, height, 'F')
 
         self.set_xy(x - 1, y - height - 1.5)
-        self.set_font("Arial", "B", 10)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", 10)
+        else:
+            self.set_font("Arial", "B", 10)
         self.set_text_color(0, 51, 102)
         self.cell(0, 6, util.traducir("Escala de valoración", idioma), ln=True)
         self.set_text_color(0, 0, 0)
@@ -371,7 +458,11 @@ class PDF(FPDF):
 
         # Etiquetas
         self.set_xy(x, y + height + 1.5)
-        self.set_font("Arial", "", 8)
+
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 8)
+        else:
+            self.set_font("Arial", "", 8)
 
         optimo = util.traducir("Óptimo", idioma)
         promedio = util.traducir("Promedio", idioma)
@@ -396,9 +487,13 @@ class PDF(FPDF):
     def get_altura(self):
         return self.get_y()
     
-    def add_plotly_figure(self, fig, title=None, w=190):
+    def add_plotly_figure(self, fig, title=None, w=190, idioma="es"):
         if title:
-            self.set_font("Arial", "B", 12)
+            if(idioma == "ar"):
+                self.set_font("Amiri", "", 10)
+            else:
+                self.set_font("Arial", "B", 12)
+            
             self.cell(0, 10, title, ln=True)
 
         # Convertir la figura a imagen en memoria
@@ -418,7 +513,11 @@ class PDF(FPDF):
         os.remove(tmpfile_path)
 
     def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es"):
-        self.set_font("Helvetica", "B", 14)
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Helvetica", "B", 14)
+
         if icon_path:
             self.image(icon_path, x=self.get_x(), y=self.get_y(), w=6)
             self.cell(8)
@@ -426,7 +525,11 @@ class PDF(FPDF):
         #self.cell(0, 10, "Últimas Mediciones", ln=1)
 
         self.ln(2)
-        self.set_font("Helvetica", "", 10)
+
+        if(idioma == "ar"):
+            self.set_font("Amiri", "", 10)
+        else:
+            self.set_font("Helvetica", "", 10)
 
         # Posiciones base
         x_start = self.get_x()
@@ -434,13 +537,22 @@ class PDF(FPDF):
 
         col_width = 60  # ajustable
 
-        def add_metric(label, value, x):
+        def add_metric(label, value, x, idioma="es"):
             self.set_xy(x, y_start)
-            self.set_font("Helvetica", "", 10)
+            if(idioma == "ar"):
+                self.set_font("Amiri", "", 10)
+            else:
+                self.set_font("Helvetica", "", 10)
+            
             self.set_text_color(0, 0, 0)
             self.cell(col_width, 6, label, align="C")
             self.set_xy(x, y_start + 6)
-            self.set_font("Helvetica", "B", 18)
+
+            if(idioma == "ar"):
+                self.set_font("Amiri", "B", 18)
+            else:
+                self.set_font("Helvetica", "B", 18)
+
             self.set_text_color(0, 51, 102) # Azul oscuro
             self.cell(col_width, 10, f"{value:.2f}", align="C")
             
@@ -449,9 +561,9 @@ class PDF(FPDF):
         x2 = x1 + col_width + 5
         x3 = x2 + col_width + 5
 
-        add_metric(util.traducir("ALTURA (CM)",idioma), altura, x1)
-        add_metric(util.traducir("PESO (KG)",idioma), peso, x2)
-        add_metric(util.traducir("GRASA (%)",idioma), grasa, x3)
+        add_metric(util.traducir("ALTURA (CM)",idioma), altura, x1, idioma)
+        add_metric(util.traducir("PESO (KG)",idioma), peso, x2, idioma)
+        add_metric(util.traducir("GRASA (%)",idioma), grasa, x3, idioma)
 
         self.ln(20)  # salto tras bloque
 

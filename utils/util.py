@@ -871,6 +871,7 @@ def obtener_bandera(pais):
         return ""
     
 def add_footer(pdf, invertido=False, idioma="es"):
+
     page_height = pdf.get_height()
     margen_inferior = 33
     y_final = page_height - margen_inferior
@@ -880,6 +881,9 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     pdf = PDF(idioma=idioma)
     pdf.add_page()
     pdf.header()
+    
+    #pdf.add_font("ArialUnicode", "", "assets/fonts/Amiri-0.111/Amiri-Regular.ttf", uni=True)
+    #pdf.set_font("ArialUnicode", "", 12)
 
     # Bloque de datos personales
     pdf.add_player_block(df_jugador, idioma=idioma)
@@ -927,7 +931,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
         #pdf.section_title("COMPOSICIÓN CORPORAL")
-        pdf.section_title(traducir("COMPOSICIÓN CORPORAL", idioma))
+        pdf.section_title(traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
 
     # Inicializar contador de gráficos y sección actual
@@ -942,9 +946,9 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
                     if not primer_grafico_insertado:
                         if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
                             #pdf.section_title(nombre_seccion)
-                            pdf.section_title(traducir(nombre_seccion, idioma))
+                            pdf.section_title(traducir(nombre_seccion, idioma), idioma)
                             seccion_ya_impresa.add(nombre_seccion)
-                        pdf.add_plotly_figure(fig, "")
+                        pdf.add_plotly_figure(fig, "", idioma=idioma)
                         add_footer(pdf, idioma=idioma)
                         primer_grafico_insertado = True
                         continue
@@ -955,10 +959,10 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
 
                     if nombre_seccion not in seccion_ya_impresa:
                         #pdf.section_title(nombre_seccion)
-                        pdf.section_title(traducir(nombre_seccion, idioma))
+                        pdf.section_title(traducir(nombre_seccion, idioma), idioma)
                         seccion_ya_impresa.add(nombre_seccion)
 
-                    pdf.add_plotly_figure(fig, "")
+                    pdf.add_plotly_figure(fig, "", idioma=idioma)
                     contador_graficos += 1
 
                     if contador_graficos % 2 == 0:
@@ -967,8 +971,7 @@ def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, d
     if contador_graficos % 2 == 1:
         add_footer(pdf, idioma=idioma)
 
-    return pdf.output(dest='S').encode('latin1')
-
+    return pdf.output(dest='S') #.encode('utf-8')
 
 def calcular_percentiles(jugador, referencia, columnas_estructura):
     percentiles = {}
@@ -1092,147 +1095,189 @@ TRADUCCIONES = {
         "it": "Evoluzione del Tempo Totale nelle Ripetizioni di Sprint",
         "de": "Entwicklung der Gesamtzeit bei Sprintwiederholungen",
         "fr": "Évolution du Temps Total lors des Répétitions de Sprint",
-        "ca": "Evolució del Temps Total en Repeticions d'Esprint"
+        "ca": "Evolució del Temps Total en Repeticions d'Esprint",
+        "pt": "Evolução do Tempo Total em Repetições de Sprint",
+        "ar": "تطور الوقت الإجمالي في تكرارات العدو"
     },
     "Evolución de la Velocidad en Repeticiones de Sprint": {
         "en": "Evolution of Speed in Sprint Repetitions",
         "it": "Evoluzione della Velocità nelle Ripetizioni di Sprint",
         "de": "Entwicklung der Geschwindigkeit bei Sprintwiederholungen",
         "fr": "Évolution de la Vitesse lors des Répétitions de Sprint",
-        "ca": "Evolució de la Velocitat en Repeticions d'Esprint"
+        "ca": "Evolució de la Velocitat en Repeticions d'Esprint",
+        "pt": "Evolução da Velocidade nas Repetições de Sprint",
+        "ar": "تطور السرعة في تكرارات العدو السريع"
     },
     "Evolución de la Agilidad (IZQ y DER)": {
         "en": "Agility Evolution (LEFT & RIGHT)",
         "it": "Evoluzione dell'Agilità (SIN & DES)",
         "de": "Agilitätsentwicklung (LI & RE)",
         "fr": "Évolution de l'Agilité (GAUCHE & DROITE)",
-        "ca": "Evolució de l'Agilitat (ESQ i DRE)"
+        "ca": "Evolució de l'Agilitat (ESQ i DRE)",
+        "pt": "Evolução da Agilidade (ESQ e DIR)",
+        "ar": "تطور الرشاقة (يسار ويمين)"
     },
     "DIFERENCIA %": {
         "en": "DIFFERENCE %",
         "it": "DIFFERENZA %",
         "de": "DIFFERENZ %",
         "fr": "DIFFÉRENCE %",
-        "ca": "DIFERÈNCIA %"
+        "ca": "DIFERÈNCIA %",
+        "pt": "DIFERENÇA %",
+        "ar": "النسبة المئوية للاختلاف"
     },
     "505-IZQ (SEG)": {
         "en": "505-LEFT (SEC)",
         "it": "505-SIN (SEC)",
         "de": "505-LI (SEK)",
         "fr": "505-GAUCHE (SEC)",
-        "ca": "505-ESQ (SEG)"
+        "ca": "505-ESQ (SEG)",
+        "pt": "505-ESQ (SEG)",
+        "ar": "505-يسار (ثانية)"
     },
     "505-DER (SEG)": {
         "en": "505-RIGHT (SEC)",
         "it": "505-DES (SEC)",
         "de": "505-RE (SEK)",
         "fr": "505-DROITE (SEC)",
-        "ca": "505-DRE (SEG)"
+        "ca": "505-DRE (SEG)",
+        "pt": "505-DIR (SEG)",
+        "ar": "505-يمين (ثانية)"
     },
     "VELOCIDAD (M/S)": {
         "en": "SPEED (M/S)",
         "it": "VELOCITÀ (M/S)",
         "de": "GESCHWINDIGKEIT (M/S)",
         "fr": "VITESSE (M/S)",
-        "ca": "VELOCITAT (M/S)"
+        "ca": "VELOCITAT (M/S)",
+        "pt": "VELOCIDADE (M/S)",
+        "ar": "السرعة (م/ث)"
     },
     "TIEMPO (SEG)": {
         "en": "TIME (SEC)",
         "it": "TEMPO (SEC)",
         "de": "ZEIT (SEK)",
         "fr": "TEMPS (SEC)",
-        "ca": "TEMPS (SEG)"
+        "ca": "TEMPS (SEG)",
+        "pt": "TEMPO (SEG)",
+        "ar": "الوقت (ثانية)"
     },
     "Evolución del Sprint": {
         "en": "Sprint Evolution",
         "it": "Evoluzione dello Sprint",
         "de": "Sprint-Entwicklung",
         "fr": "Évolution du Sprint",
-        "ca": "Evolució de l'Sprint"
+        "ca": "Evolució de l'Sprint",
+        "pt": "Evolução do Sprint",
+        "ar": "تطور العدو السريع"
     },
     "TIEMPO 0-5M (SEG)": {
         "en": "TIME 0-5M (SEC)",
         "it": "TEMPO 0-5M (SEC)",
         "de": "ZEIT 0-5M (SEK)",
         "fr": "TEMPS 0-5M (SEC)",
-        "ca": "TEMPS 0-5M (SEG)"
+        "ca": "TEMPS 0-5M (SEG)",
+        "pt": "TEMPO 0-5M (SEG)",
+        "ar": "الوقت 0-5م (ثانية)"
     },
     "TIEMPO 0-40M (SEG)": {
         "en": "TIME 0-40M (SEC)",
         "it": "TEMPO 0-40M (SEC)",
         "de": "ZEIT 0-40M (SEK)",
         "fr": "TEMPS 0-40M (SEC)",
-        "ca": "TEMPS 0-40M (SEG)"
+        "ca": "TEMPS 0-40M (SEG)",
+        "pt": "TEMPO 0-40M (SEG)",
+        "ar": "الوقت 0-40م (ثانية)"
     },
     "VEL 0-5M (M/S)": {
         "en": "SPEED 0-5M (M/S)",
         "it": "VEL 0-5M (M/S)",
         "de": "GESCHW 0-5M (M/S)",
         "fr": "VIT 0-5M (M/S)",
-        "ca": "VEL 0-5M (M/S)"
+        "ca": "VEL 0-5M (M/S)",
+        "pt": "VEL 0-5M (M/S)",
+        "ar": "السرعة 0-5م (م/ث)"
     },
     "VEL 0-40M (M/S)": {
         "en": "SPEED 0-40M (M/S)",
         "it": "VEL 0-40M (M/S)",
         "de": "GESCHW 0-40M (M/S)",
         "fr": "VIT 0-40M (M/S)",
-        "ca": "VEL 0-40M (M/S)"
+        "ca": "VEL 0-40M (M/S)",
+        "pt": "VEL 0-40M (M/S)",
+        "ar": "السرعة 0-40م (م/ث)"
     },
     "Evolución de la Distancia Acumulada": {
         "en": "Evolution of Accumulated Distance",
         "it": "Evoluzione della Distanza Accumulata",
         "de": "Entwicklung der Zurückgelegten Distanz",
         "fr": "Évolution de la Distance Accumulée",
-        "ca": "Evolució de la Distància Acumulada"
+        "ca": "Evolució de la Distància Acumulada",
+        "pt": "Evolução da Distância Acumulada",
+        "ar": "تطور المسافة التراكمية"
     },
     "DISTANCIA ACUMULADA (M)": {
         "en": "ACCUMULATED DISTANCE (M)",
         "it": "DISTANZA ACCUMULATA (M)",
         "de": "ZURÜCKGELEGTE DISTANZ (M)",
         "fr": "DISTANCE ACCUMULÉE (M)",
-        "ca": "DISTÀNCIA ACUMULADA (M)"
+        "ca": "DISTÀNCIA ACUMULADA (M)",
+        "pt": "DISTÂNCIA ACUMULADA (M)",
+        "ar": "المسافة التراكمية (متر)"
     },
     "Evolución de la Potencia Muscular de Salto (CMJ)": {
         "en": "Evolution of Jump Muscle Power (CMJ)",
         "it": "Evoluzione della Potenza Muscolare del Salto (CMJ)",
         "de": "Entwicklung der Sprungkraft (CMJ)",
         "fr": "Évolution de la Puissance Musculaire de Saut (CMJ)",
-        "ca": "Evolució de la Potència Muscular del Salt (CMJ)"
+        "ca": "Evolució de la Potència Muscular del Salt (CMJ)",
+        "pt": "Evolução da Potência Muscular do Salto (CMJ)",
+        "ar": "تطور القوة العضلية للقفز (CMJ)"
     },
     "ALTURA DE SALTO (CM)": {
         "en": "JUMP HEIGHT (CM)",
         "it": "ALTEZZA DEL SALTO (CM)",
         "de": "SPRUNGHÖHE (CM)",
         "fr": "HAUTEUR DE SAUT (CM)",
-        "ca": "ALÇADA DEL SALT (CM)"
+        "ca": "ALÇADA DEL SALT (CM)",
+        "pt": "ALTURA DO SALTO (CM)",
+        "ar": "ارتفاع القفزة (سم)"
     },
     "PROMEDIO": {
         "en": "AVERAGE",
         "it": "MEDIA",
         "de": "DURCHSCHNITT",
         "fr": "MOYENNE",
-        "ca": "MITJANA"
+        "ca": "MITJANA",
+        "pt": "MÉDIA",
+        "ar": "المتوسط"
     },
     "Evolución del Peso y % Grasa": {
         "en": "Evolution of Weight and Fat %",
         "it": "Evoluzione del Peso e Grasso %",
         "de": "Entwicklung von Gewicht und Fett %",
         "fr": "Évolution du Poids et de la Graisse %",
-        "ca": "Evolució del Pes i del Greix %"
+        "ca": "Evolució del Pes i del Greix %",
+        "pt": "Evolução do Peso e % de Gordura",
+        "ar": "تطور الوزن ونسبة الدهون (%)"
     },
     "Zona % Grasa Promedio": {
         "en": "Average Fat % Zone",
         "it": "Zona Media di Grasso %",
         "de": "Durchschnittlicher Fettanteil %",
         "fr": "Zone Moyenne de Graisse %",
-        "ca": "Zona Mitjana de Greix %"
+        "ca": "Zona Mitjana de Greix %",
+        "pt": "Zona Média de Gordura %",
+        "ar": "منطقة متوسط نسبة الدهون (%)"
     },
     "Evolución de la Altura (cm)": {
         "en": "Height Evolution (cm)",
         "it": "Evoluzione dell'Altezza (cm)",
         "de": "Größenentwicklung (cm)",
         "fr": "Évolution de la Taille (cm)",
-        "ca": "Evolució de l'Alçada (cm)"
+        "ca": "Evolució de l'Alçada (cm)",
+        "pt": "Evolução da Altura (cm)",
+        "ar": "تطور الطول (سم)"
     },
     # Secciones
     "COMPOSICIÓN CORPORAL": {
@@ -1240,49 +1285,63 @@ TRADUCCIONES = {
         "it": "COMPOSIZIONE CORPOREA",
         "de": "KÖRPERZUSAMMENSETZUNG",
         "fr": "COMPOSITION CORPORELLE",
-        "ca": "COMPOSICIÓ CORPORAL"
+        "ca": "COMPOSICIÓ CORPORAL",
+        "pt": "COMPOSIÇÃO CORPORAL",
+        "ar": "تركيب الجسم"
     },
     "POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)": {
         "en": "MUSCULAR POWER (COUNTER MOVEMENT JUMP)",
         "it": "POTENZA MUSCOLARE (SALTO CONTRO MOVIMENTO)",
         "de": "MUSKELKRAFT (GEGENBEWEGUNGSSPRUNG)",
         "fr": "PUISSANCE MUSCULAIRE (SAUT À CONTRE-MOUVEMENT)",
-        "ca": "POTÈNCIA MUSCULAR (SALT AMB CONTRAMOVIMENT)"
+        "ca": "POTÈNCIA MUSCULAR (SALT AMB CONTRAMOVIMENT)",
+        "pt": "POTÊNCIA MUSCULAR (SALTO COM CONTRAMOVIMENTO)",
+        "ar": "القدرة العضلية (قفزة مع حركة عكسية)"
     },
     "EVOLUCIÓN DEL SPRINT (0-5M)": {
         "en": "SPRINT EVOLUTION (0-5M)",
         "it": "EVOLUZIONE DELLO SPRINT (0-5M)",
         "de": "SPRINT-ENTWICKLUNG (0-5M)",
         "fr": "ÉVOLUTION DU SPRINT (0-5M)",
-        "ca": "EVOLUCIÓ DE L'SPRINT (0-5M)"
+        "ca": "EVOLUCIÓ DE L'SPRINT (0-5M)",
+        "pt": "EVOLUÇÃO DO SPRINT (0-5M)",
+        "ar": "تطور السرعة (0-5م)"
     },
     "EVOLUCIÓN DEL SPRINT (0-40M)": {
         "en": "SPRINT EVOLUTION (0-40M)",
         "it": "EVOLUZIONE DELLO SPRINT (0-40M)",
         "de": "SPRINT-ENTWICKLUNG (0-40M)",
         "fr": "ÉVOLUTION DU SPRINT (0-40M)",
-        "ca": "EVOLUCIÓ DE L'SPRINT (0-40M)"
+        "ca": "EVOLUCIÓ DE L'SPRINT (0-40M)",
+        "pt": "EVOLUÇÃO DO SPRINT (0-40M)",
+        "ar": "تطور السرعة (0-40م)"
     },
     "VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)": {
         "en": "CHANGE OF DIRECTION SPEED (AGILITY 505)",
         "it": "VELOCITÀ DI CAMBIO DIREZIONE (AGILITÀ 505)",
         "de": "RICHTUNGSWECHSELGESCHWINDIGKEIT (AGILITÄT 505)",
         "fr": "VITESSE DE CHANGEMENT DE DIRECTION (AGILITÉ 505)",
-        "ca": "VELOCITAT EN EL CANVI DE DIRECCIÓ (AGILITAT 505)"
+        "ca": "VELOCITAT EN EL CANVI DE DIRECCIÓ (AGILITAT 505)",
+        "pt": "VELOCIDADE NA MUDANÇA DE DIREÇÃO (AGILIDADE 505)",
+        "ar": "السرعة في تغيير الاتجاه (رشاقة 505)"
     },
     "RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)": {
         "en": "HIGH-INTENSITY INTERMITTENT ENDURANCE (YO-YO TEST)",
         "it": "RESISTENZA INTERMITTENTE AD ALTA INTENSITÀ (YO-YO TEST)",
         "de": "HOCHINTENSIVES INTERMITTIERENDES AUSDAUERTRAINING (YO-YO TEST)",
         "fr": "ENDURANCE INTERMITTENTE À HAUTE INTENSITÉ (YO-YO TEST)",
-        "ca": "RESISTÈNCIA INTERMITENT D'ALTA INTENSITAT (TEST YO-YO)"
+        "ca": "RESISTÈNCIA INTERMITENT D'ALTA INTENSITAT (TEST YO-YO)",
+        "pt": "RESISTÊNCIA INTERMITENTE DE ALTA INTENSIDADE (TESTE YO-YO)",
+        "ar": "التحمل المتقطع عالي الشدة (اختبار يو-يو)"
     },
     "CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)": {
         "en": "REPEATED SPRINT ABILITY (RSA)",
         "it": "CAPACITÀ DI SPRINT RIPETUTI (RSA)",
         "de": "WIEDERHOLTE SPRINTFÄHIGKEIT (RSA)",
         "fr": "CAPACITÉ DE SPRINTS RÉPÉTÉS (RSA)",
-        "ca": "CAPACITAT DE REALITZAR ESPRINTS REPETITS (RSA)"
+        "ca": "CAPACITAT DE REALITZAR ESPRINTS REPETITS (RSA)",
+        "pt": "CAPACIDADE DE REALIZAR SPRINTS REPETIDOS (RSA)",
+        "ar": "القدرة على تكرار العدو السريع (RSA)"
     },
 
     # Métricas con unidades
@@ -1291,28 +1350,36 @@ TRADUCCIONES = {
         "it": "ALTEZZA DEL SALTO (CM)",
         "de": "SPRUNGHÖHE (CM)",
         "fr": "HAUTEUR DE SAUT (CM)",
-        "ca": "ALÇADA DEL SALT (CM)"
+        "ca": "ALÇADA DEL SALT (CM)",
+        "pt": "ALTURA (CM)",
+        "ar": "الطول (سم)"
     },
     "ALTURA (CM)": {
         "en": "HEIGHT (CM)",
         "it": "ALTEZZA (CM)",
         "de": "KÖRPERGRÖSSE (CM)",
         "fr": "TAILLE (CM)",
-        "ca": "ALÇADA (CM)"
+        "ca": "ALÇADA (CM)",
+        "pt": "ALTURA (CM)",
+        "ar": "الطول (سم)"
     },
     "PESO (KG)": {
         "en": "WEIGHT (KG)",
         "it": "PESO (KG)",
         "de": "GEWICHT (KG)",
         "fr": "POIDS (KG)",
-        "ca": "PES (KG)"
+        "ca": "PES (KG)",
+        "pt": "PESO (KG)",
+        "ar": "الوزن (كغ)"
     },
     "GRASA (%)": {
         "en": "FAT (%)",
         "it": "GRASSO (%)",
         "de": "FETT (%)",
         "fr": "GRAISSE (%)",
-        "ca": "GREIX (%)"
+        "ca": "GREIX (%)",
+        "pt": "GORDURA (%)",
+        "ar": "الدهون (%)"
     },
 
     # Datos personales
@@ -1321,42 +1388,54 @@ TRADUCCIONES = {
         "it": "NAZIONALITÀ",
         "de": "NATIONALITÄT",
         "fr": "NATIONALITÉ",
-        "ca": "NACIONALITAT"
+        "ca": "NACIONALITAT",
+        "pt": "NACIONALIDADE",
+        "ar": "الجنسية"
     },
     "F. DE NACIMIENTO": {
         "en": "BIRTH DATE",
         "it": "D. DI NASCITA",
         "de": "GEBURTSDATUM",
         "fr": "D. DE NAISSANCE",
-        "ca": "D. DE NAIXEMENT"
+        "ca": "D. DE NAIXEMENT",
+        "pt": "D. DE NASCIMENTO",
+        "ar": "تاريخ الميلاد"
     },
     "EDAD": {
         "en": "AGE",
         "it": "ETÀ",
         "de": "ALTER",
         "fr": "ÂGE",
-        "ca": "EDAT"
+        "ca": "EDAT",
+        "pt": "IDADE",
+        "ar": "العمر"
     },
     "DEMARCACIÓN": {
         "en": "POSITION",
         "it": "RUOLO",
         "de": "POSITION",
         "fr": "POSTE",
-        "ca": "DEMARCACIÓ"
+        "ca": "DEMARCACIÓ",
+        "pt": "POSIÇÃO",
+        "ar": "المركز"
     },
     "CATEGORIA": {
         "en": "CATEGORY",
         "it": "CATEGORIA",
         "de": "KATEGORIE",
         "fr": "CATÉGORIE",
-        "ca": "CATEGORIA"
+        "ca": "CATEGORIA",
+        "pt": "CATEGORIA",
+        "ar": "الفئة"
     },
     "EQUIPO": {
         "en": "TEAM",
         "it": "SQUADRA",
         "de": "MANNSCHAFT",
         "fr": "ÉQUIPE",
-        "ca": "EQUIP"
+        "ca": "EQUIP",
+        "pt": "EQUIPE",
+        "ar": "الفريق"
     },
 
     # Escala visual
@@ -1365,81 +1444,184 @@ TRADUCCIONES = {
         "it": "Scala di valutazione",
         "de": "Bewertungsskala",
         "fr": "Échelle d'évaluation",
-        "ca": "Escala de valoració"
+        "ca": "Escala de valoració",
+        "pt": "Escala de Avaliação",
+        "ar": "مقياس التقييم"
     },
     "Óptimo": {
         "en": "Optimal",
         "it": "Ottimale",
         "de": "Optimal",
         "fr": "Optimal",
-        "ca": "Òptim"
+        "ca": "Òptim",
+        "pt": "Ótimo",
+        "ar": "مثالي"
     },
     "Promedio": {
         "en": "Average",
         "it": "Media",
         "de": "Durchschnitt",
         "fr": "Moyenne",
-        "ca": "Promig"
+        "ca": "Promig",
+        "pt": "Média",
+        "ar": "متوسط"
     },
     "Crítico": {
         "en": "Critical",
         "it": "Critico",
         "de": "Kritisch",
         "fr": "Critique",
-        "ca": "Crític"
+        "ca": "Crític",
+        "pt": "Crítico",
+        "ar": "حرج"
     },
     "DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO": {
         "en": "DEPARTMENT OF SPORTS PERFORMANCE OPTIMIZATION",
         "it": "DIPARTIMENTO DI OTTIMIZZAZIONE DELLE PRESTAZIONI SPORTIVE",
         "de": "ABTEILUNG FÜR OPTIMIERUNG DER SPORTLICHEN LEISTUNG",
         "fr": "DÉPARTEMENT D'OPTIMISATION DE LA PERFORMANCE SPORTIVE",
-        "ca": "DEPARTAMENT D'OPTIMITZACIÓ DEL RENDIMENT ESPORTIU"
+        "ca": "DEPARTAMENT D'OPTIMITZACIÓ DEL RENDIMENT ESPORTIU",
+        "pt": "DEPARTAMENTO DE OTIMIZAÇÃO DO DESEMPENHO ESPORTIVO",
+        "ar": "قسم تحسين الأداء الرياضي"
     },
     "INFORME INDIVIDUAL - INFORME FÍSICO": {
         "en": "INDIVIDUAL REPORT - PHYSICAL REPORT",
         "it": "RAPPORTO INDIVIDUALE - RAPPORTO FISICO",
         "de": "EINZELBERICHT - PHYSISCHER BERICHT",
         "fr": "RAPPORT INDIVIDUEL - RAPPORT PHYSIQUE",
-        "ca": "INFORME INDIVIDUAL - INFORME FÍSIC"
+        "ca": "INFORME INDIVIDUAL - INFORME FÍSIC",
+        "pt": "RELATÓRIO INDIVIDUAL - RELATÓRIO FÍSICO",
+        "ar": "تقرير فردي - تقرير بدني"
     },
 
     # Demarcaciones
-    "PORTERO": {"en": "GOALKEEPER", "it": "PORTIERE", "de": "TORWART", "fr": "GARDIEN", "ca": "PORTER"},
-    "LATERAL DERECHO": {"en": "RIGHT BACK", "it": "TERZINO DESTRO", "de": "RECHTER VERTEIDIGER", "fr": "LATÉRAL DROIT", "ca": "LATERAL DRET"},
-    "LATERAL IZQUIERDO": {"en": "LEFT BACK", "it": "TERZINO SINISTRO", "de": "LINKER VERTEIDIGER", "fr": "LATÉRAL GAUCHE", "ca": "LATERAL ESQUERRE"},
-    "DEFENSA CENTRAL": {"en": "CENTER BACK", "it": "DIFENSORE CENTRALE", "de": "INNENVERTEIDIGER", "fr": "DÉFENSEUR CENTRAL", "ca": "DEFENSA CENTRAL"},
-    "MEDIOCENTRO DEFENSIVO": {"en": "DEFENSIVE MIDFIELDER", "it": "CENTROCAMPISTA DIFENSIVO", "de": "DEFENSIVER MITTELFELDSPIELER", "fr": "MILIEU DÉFENSIF", "ca": "PIVOT DEFENSIU"},
-    "MEDIOCENTRO": {"en": "MIDFIELDER", "it": "CENTROCAMPISTA", "de": "MITTELFELDSPIELER", "fr": "MILIEU", "ca": "CENTRECAMPISTA"},
-    "MEDIAPUNTA": {"en": "ATTACKING MIDFIELDER", "it": "TREQUARTISTA", "de": "OFFENSIVER MITTELFELDSPIELER", "fr": "MILIEU OFFENSIF", "ca": "MITJAPUNTA"},
-    "EXTREMO": {"en": "WINGER", "it": "ALA", "de": "FLÜGELSPIELER", "fr": "AILIER", "ca": "EXTREM"},
-    "DELANTERO": {"en": "FORWARD", "it": "ATTACCANTE", "de": "STÜRMER", "fr": "ATTAQUANT", "ca": "DAVANTER"},
-
+    "PORTERO": {
+        "en": "GOALKEEPER", "it": "PORTIERE", "de": "TORWART", "fr": "GARDIEN", "ca": "PORTER",
+        "pt": "GOLEIRO", "ar": "حارس مرمى"
+    },
+    "LATERAL DERECHO": {
+        "en": "RIGHT BACK", "it": "TERZINO DESTRO", "de": "RECHTER VERTEIDIGER", "fr": "LATÉRAL DROIT", "ca": "LATERAL DRET",
+        "pt": "LATERAL DIREITO", "ar": "ظهير أيمن"
+    },
+    "LATERAL IZQUIERDO": {
+        "en": "LEFT BACK", "it": "TERZINO SINISTRO", "de": "LINKER VERTEIDIGER", "fr": "LATÉRAL GAUCHE", "ca": "LATERAL ESQUERRE",
+        "pt": "LATERAL ESQUERDO", "ar": "ظهير أيسر"
+    },
+    "DEFENSA CENTRAL": {
+        "en": "CENTER BACK", "it": "DIFENSORE CENTRALE", "de": "INNENVERTEIDIGER", "fr": "DÉFENSEUR CENTRAL", "ca": "DEFENSA CENTRAL",
+        "pt": "ZAGUEIRO CENTRAL", "ar": "قلب دفاع"
+    },
+    "MEDIOCENTRO DEFENSIVO": {
+        "en": "DEFENSIVE MIDFIELDER", "it": "CENTROCAMPISTA DIFENSIVO", "de": "DEFENSIVER MITTELFELDSPIELER", "fr": "MILIEU DÉFENSIF", "ca": "PIVOT DEFENSIU",
+        "pt": "VOLANTE DEFENSIVO", "ar": "وسط مدافع"
+    },
+    "MEDIOCENTRO": {
+        "en": "MIDFIELDER", "it": "CENTROCAMPISTA", "de": "MITTELFELDSPIELER", "fr": "MILIEU", "ca": "CENTRECAMPISTA",
+        "pt": "MEIO-CAMPISTA", "ar": "وسط"
+    },
+    "MEDIAPUNTA": {
+        "en": "ATTACKING MIDFIELDER", "it": "TREQUARTISTA", "de": "OFFENSIVER MITTELFELDSPIELER", "fr": "MILIEU OFFENSIF", "ca": "MITJAPUNTA",
+        "pt": "MEIA ATACANTE", "ar": "وسط هجومي"
+    },
+    "EXTREMO": {
+        "en": "WINGER", "it": "ALA", "de": "FLÜGELSPIELER", "fr": "AILIER", "ca": "EXTREM",
+        "pt": "PONTA", "ar": "جناح"
+    },
+    "DELANTERO": {
+        "en": "FORWARD", "it": "ATTACCANTE", "de": "STÜRMER", "fr": "ATTAQUANT", "ca": "DAVANTER",
+        "pt": "ATACANTE", "ar": "مهاجم"
+    },
     # Categorías
-    "CADETE": {"en": "CADET", "it": "CADETTO", "de": "KADETTE", "fr": "CADET", "ca": "CADET"},
-    "JUVENIL": {"en": "YOUTH", "it": "GIOVANILE", "de": "JUGEND", "fr": "JEUNE", "ca": "JUVENIL"},
-    "CHECK-IN": {"en": "CHECK-IN", "it": "CHECK-IN", "de": "CHECK-IN", "fr": "CHECK-IN", "ca": "CHECK-IN"},
+    "CADETE": {
+        "en": "CADET", "it": "CADETTO", "de": "KADETTE", "fr": "CADET", "ca": "CADET",
+        "pt": "CADETE", "ar": "ناشئ"
+    },
+    "JUVENIL": {
+        "en": "YOUTH", "it": "GIOVANILE", "de": "JUGEND", "fr": "JEUNE", "ca": "JUVENIL",
+        "pt": "JUVENIL", "ar": "شباب"
+    },
+    "CHECK-IN": {
+        "en": "CHECK-IN", "it": "CHECK-IN", "de": "CHECK-IN", "fr": "CHECK-IN", "ca": "CHECK-IN",
+        "pt": "CHECK-IN", "ar": "تسجيل الدخول"
+    },
+    "CHECK IN": {
+        "en": "CHECK IN", "it": "CHECK IN", "de": "CHECK IN", "fr": "CHECK IN", "ca": "CHECK IN",
+        "pt": "CHECK IN", "ar": "تسجيل الدخول"
+    },
 
     "ANTROPOMETRIA": {
         "en": "ANTHROPOMETRY",
         "it": "ANTROPOMETRIA",
         "de": "ANTHROPOMETRIE",
         "fr": "ANTHROPOMÉTRIE",
-        "ca": "ANTROPOMETRIA"
+        "ca": "ANTROPOMETRIA",
+        "pt": "ANTROPOMETRIA",
+        "ar": "القياسات الجسمية"
     },
     "AGILIDAD": {
         "en": "AGILITY",
         "it": "AGILITÀ",
         "de": "AGILITÄT",
         "fr": "AGILITÉ",
-        "ca": "AGILITAT"
+        "ca": "AGILITAT",
+        "pt": "AGILIDADE",
+        "ar": "رشاقة"
     },
     "REPORTE": {
         "en": "REPORT",
         "it": "RAPPORTO",
         "de": "BERICHT",
         "fr": "RAPPORT",
-        "ca": "INFORME"
+        "ca": "INFORME",
+        "pt": "RELATÓRIO",
+        "ar": "تقرير"
+    },
+    "años": {
+        "en": "years old",
+        "it": "anni",
+        "de": "Jahre alt",
+        "fr": "ans",
+        "ca": "anys",
+        "pt": "anos",
+        "ar": "سنة"
+    },
+    "Max": {
+        "en": "Max",
+        "it": "Max",
+        "de": "Max",
+        "fr": "Max",
+        "ca": "Max",
+        "pt": "Max",
+        "ar": "ماكس"
+    },
+    "ID": {
+        "en": "ID",
+        "it": "ID",
+        "de": "ID",
+        "fr": "ID",
+        "ca": "ID",
+        "pt": "ID",
+        "ar": "معرّف"
+    },
+    "No Disponible": {
+        "en": "Unavailable",
+        "it": "Non disponibile",
+        "de": "Nicht verfügbar",
+        "fr": "Non disponible",
+        "ca": "No disponible",
+        "pt": "Indisponível",
+        "ar": "غير متوفر"
+    },
+    "No disponible": {
+        "en": "Unavailable",
+        "it": "Non disponibile",
+        "de": "Nicht verfügbar",
+        "fr": "Non disponible",
+        "ca": "No disponible",
+        "pt": "Indisponível",
+        "ar": "غير متوفر"
     }
+
 }
 
 def traducir(texto, idioma="es"):

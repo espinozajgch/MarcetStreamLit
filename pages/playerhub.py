@@ -64,19 +64,20 @@ df_datos = df_resultado.dropna(how="all").reset_index(drop=True)
 # 6. Merge df_checkin con df_joined
 df_final = util.merge_by_nombre_categoria(df_joined, df_checkin)
 
-idiomas = ["Español", "Inglés", "Francés", "Italiano", "Alemán", "Catalán"]
+idiomas = ["Español", "Inglés", "Francés", "Italiano", "Alemán", "Catalán", "Portugues", "Arabe"]
 idioma_map = {
     "Español": "es",
     "Inglés": "en",
     "Francés": "fr",
     "Italiano": "it",
     "Alemán": "de",
-    "Catalán": "ca"
+    "Catalán": "ca",
+    "Portugues": "pt",
+    "Arabe": "ar"
 }
 
 seleccion = st.radio("Selecciona un idioma:", idiomas, horizontal=True)
 idioma = idioma_map[seleccion]
-
 
 on = st.toggle("Solo Jugadores con Test Realizados")
 if on:
@@ -89,11 +90,11 @@ else:
 datatest_columns = util.get_dataframe_columns(df_data_test)
 columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
 
-#st.dataframe(df_sesiones)
-
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_final, columnas_a_verificar)
+
+#st.dataframe(df_promedios)
 
 st.divider()
 ###################################################
@@ -104,13 +105,11 @@ else:
     df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos, df_final, unavailable, idioma)
 
 ###################################################
-    #st.dataframe(df_datos_filtrado)
-    
     if not df_datos_filtrado.empty:
 
-        traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
+        #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
-        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(traducidas)
+        antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(lista_columnas + ["REPORTE"])
         #st.text(lista_columnas)
         figalt = None
         figant = None

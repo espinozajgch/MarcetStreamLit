@@ -47,10 +47,11 @@ def get_height_graph(df_altura, idioma="es"):
     if not df.empty:
         max_valor = df["ALTURA (CM)"].max()
         fila_max = df[df["ALTURA (CM)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+        maxl = util.traducir("Max",idioma)
         fig.add_annotation(
             x=fila_max["FECHA REGISTRO"],
             y=fila_max["ALTURA (CM)"],
-            text=f"Max: {fila_max['ALTURA (CM)']:.1f} cm",
+            text=f"{maxl}: {fila_max['ALTURA (CM)']:.1f} cm",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -183,12 +184,12 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         if not df_filtro.empty:
             max_valor = df_filtro["GRASA (%)"].max()
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-
+            maxl = util.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["GRASA (%)"],
                 yref="y2",
-                text=f"Max: {fila_max['GRASA (%)']:.1f} %",
+                text=f"{maxl}: {fila_max['GRASA (%)']:.1f} %",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -559,10 +560,11 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         if not df_filtro.empty:
             max_val = df_filtro["VALOR"].max()
             fila_max = df_filtro[df_filtro["VALOR"] == max_val].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+            maxl = util.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["VALOR"],
-                text=f"Max: {fila_max['VALOR']:.2f} cm",
+                text=f"{maxl}: {fila_max['VALOR']:.2f} cm",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -764,10 +766,11 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
     if not df.empty:
         max_valor = df[metrica].max()
         fila_max = df[df[metrica] == max_valor].sort_values(columna_fecha_registro, ascending=False).iloc[0]
+        maxl = util.traducir("Max",idioma)
         fig.add_annotation(
             x=fila_max[columna_fecha_registro],
             y=fila_max[metrica],
-            text=f"Max: {fila_max[metrica]:.0f} (M)",
+            text=f"{maxl}: {fila_max[metrica]:.0f} (M)",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -1054,11 +1057,12 @@ def get_sprint_graph(
             # Anotación del mejor registro
             max_val = df_metric_vel[metrica_velocidad].max()
             fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == max_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
+            maxl = util.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_max[columnas_fecha_registro],
                 y=fila_max[metrica_velocidad],
                 yref="y1",
-                text=f"Max: {fila_max[metrica_velocidad]:.2f} m/s",
+                text=f"{maxl}: {fila_max[metrica_velocidad]:.2f} m/s",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -1106,11 +1110,12 @@ def get_sprint_graph(
 
             min_val = df_metric_time[metrica_tiempo].min()
             fila_min = df_metric_time[df_metric_time[metrica_tiempo] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
+            maxl = util.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica_tiempo],
                 yref="y2",
-                text=f"Max: {fila_min[metrica_tiempo]:.2f} seg",
+                text=f"{maxl}: {fila_min[metrica_tiempo]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -1199,7 +1204,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     #metricas = ["MEDIDA EN TIEMPO (SEG)", "VELOCIDAD (M*SEG)"]
     #df = df[[columna_fecha_registro] + metricas]
     title = util.traducir("TIEMPO (SEG)", idioma)
-    
+
     # Obtener promedios
     promedio_row = df_promedios_rsa[
         (df_promedios_rsa["CATEGORIA"] == categoria) &
@@ -1300,11 +1305,12 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     # Anotación de mejor registro (menor tiempo)
     df_max = df[df[metricas[0]] == min(y_vals)].sort_values(by=columna_fecha_registro, ascending=False)
     if not df_max.empty:
+        maxl = util.traducir("Max",idioma)
         fila = df_max.iloc[0]
         fig_tiempo.add_annotation(
             x=fila[columna_fecha_registro],
             y=fila[metricas[0]],
-            text=f"Max: {fila['MEDIDA EN TIEMPO (SEG)']:.2f} seg",
+            text=f"{maxl}: {fila['MEDIDA EN TIEMPO (SEG)']:.2f} seg",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -1490,11 +1496,11 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
     if not df_filtro.empty:
         max_valor = df_filtro[metric].max()
         fila_max = df_filtro[df_filtro[metric] == max_valor].sort_values(by=fecha_registro, ascending=False).iloc[0]
-
+        maxl = util.traducir("Max",idioma)
         fig.add_annotation(
             x=fila_max[fecha_registro],
             y=fila_max[metric],
-            text=f"Max: {fila_max[metric]:.2f} m/s",
+            text=f"{maxl}: {fila_max[metric]:.2f} m/s",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -1710,12 +1716,12 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
         if not df_metric.empty:
             min_val = df_metric[metrica].min()
             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-
+            maxl = util.traducir("Max",idioma)
             offset_y = -40 if metrica == metricas[1] else -90
             fig.add_annotation(
                 x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica],
-                text=f"Max: {fila_min[metrica]:.2f} seg",
+                text=f"{maxl}: {fila_min[metrica]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=80,

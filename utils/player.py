@@ -15,7 +15,10 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         df_joined_filtrado = df_final[df_final["JUGADOR"].astype(str).str.strip() == jugador_id]
         id = unavailable
 
-        df_jugador = df_jugador.fillna(unavailable)
+        df_jugador = df_jugador.applymap(
+            lambda x: unavailable if pd.isna(x) or str(x).strip().lower() in ["nan", "none", ""] else x
+        )
+        #df_jugador = df_jugador.fillna(unavailable)
     else:
         jugador_id = ids_disponibles[0]
         # Filtrar los DataFrames por el ID seleccionado
@@ -38,8 +41,9 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         edad = df_jugador['EDAD'].iloc[0]
         demarcacion = df_jugador['DEMARCACION'].iloc[0]
         
+        anios = util.traducir("años",idioma)
         if edad != unavailable:
-            edad = f"{edad:,.0f} años"
+            edad = f"{edad:,.0f} {anios}"
 
         if nacionalidad == unavailable:
             bandera = ""
@@ -68,7 +72,7 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         with col2:
 
             if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):
-                st.metric(label="Categoria", value=f" {categoria}", border=True)
+                st.metric(label="Categoria", value=f" {util.traducir(categoria.upper(), idioma).capitalize()}", border=True)
                 st.metric(label="F. Nacimiento", value=f"{fnacimiento}", border=True)
                 
                 categoria = "Juvenil"
