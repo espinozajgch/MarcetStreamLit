@@ -204,7 +204,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
             fig.add_trace(go.Scatter(
                 x=[x_min, x_max],
-                y=[12.5, 12.5],
+                y=[zona_optima_max, zona_optima_max],
                 mode="lines",
                 name="",
                 line=dict(color="green", dash="dash"),
@@ -213,33 +213,33 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             ))
             fig.add_annotation(
                 x=x_min,
-                y=12.5,
+                y=zona_optima_max,
                 yref="y2",
-                text="",
-                showarrow=False,
-                font=dict(size=11, color="black"),
-                xanchor="left",
-                yanchor="top"
-            )
-
-            fig.add_trace(go.Scatter(
-                x=[x_min, x_max],
-                y=[11, 11],
-                mode="lines",
-                name="",
-                line=dict(color="green", dash="dash"),
-                yaxis="y2",
-                showlegend=False
-            ))
-            fig.add_annotation(
-                x=x_min,
-                y=11,
-                yref="y2",
-                text="",
+                text=zona_optima_max,
                 showarrow=False,
                 font=dict(size=11, color="black"),
                 xanchor="left",
                 yanchor="bottom"
+            )
+
+            fig.add_trace(go.Scatter(
+                x=[x_min, x_max],
+                y=[zona_optima_min, zona_optima_min],
+                mode="lines",
+                name="",
+                line=dict(color="green", dash="dash"),
+                yaxis="y2",
+                showlegend=False
+            ))
+            fig.add_annotation(
+                x=x_min,
+                y=zona_optima_min,
+                yref="y2",
+                text=zona_optima_min,
+                showarrow=False,
+                font=dict(size=11, color="black"),
+                xanchor="left",
+                yanchor="top"
             )
 
             categoria = util.traducir(categoria.upper(), idioma)
@@ -1801,7 +1801,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
 
     # --- Layout final ---
     fig.update_layout(
-        title="Evolución de la Agilidad (IZQ y DER)",
+        title=util.traducir("Evolución de la Agilidad (IZQ y DER)", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,

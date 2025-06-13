@@ -94,6 +94,26 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_final, columnas_a_verificar)
 
+# Promedio yoyo
+# Juvenil 2100m
+# Cadete 1700m
+
+# Promedio CMJ
+# Juvenil 41cm
+# Cadete 36 cm
+
+# Promedio Sprint 0 a 40m
+# Juvenil 5.1 seg
+# Cadete 5.7 seg
+
+df_promedios.loc[(df_promedios["CATEGORIA"] == "Cadete") & (df_promedios["EQUIPO"] == "A"), "DISTANCIA ACUMULADA (M)"] = float(1700)
+df_promedios.loc[(df_promedios["CATEGORIA"] == "Cadete") & (df_promedios["EQUIPO"] == "A"), "ALTURA-(CM)"] = float(36.00)
+df_promedios.loc[(df_promedios["CATEGORIA"] == "Cadete") & (df_promedios["EQUIPO"] == "A"), "TIEMPO 0-40M (SEG)"] = float(5.7)
+
+df_promedios.loc[(df_promedios["CATEGORIA"] == "Juvenil") & (df_promedios["EQUIPO"] == "A"), "DISTANCIA ACUMULADA (M)"] = float(2100)
+df_promedios.loc[(df_promedios["CATEGORIA"] == "Juvenil") & (df_promedios["EQUIPO"] == "A"), "ALTURA-(CM)"] = float(41.00)
+df_promedios.loc[(df_promedios["CATEGORIA"] == "Juvenil") & (df_promedios["EQUIPO"] == "A"), "TIEMPO 0-40M (SEG)"] = float(5.1)
+
 #st.dataframe(df_promedios)
 
 st.divider()
@@ -143,9 +163,14 @@ else:
                     #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
                    
                     st.markdown("📆 **Ultímas Mediciones**")
-                    
-                    zona_optima_min = 11
-                    zona_optima_max = 12.5   
+                    st.text(categoria)
+
+                    if categoria == "Juvenil":
+                        zona_optima_min = 10
+                        zona_optima_max = 12.5   
+                    elif categoria == "Cadete":
+                        zona_optima_min = 11
+                        zona_optima_max = 13  
                     
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
@@ -171,9 +196,9 @@ else:
                         st.metric(f"Último Registro",act)
 
                     if(gact < zona_optima_min) or (gact > zona_optima_max):
-                        st.warning(f"El porcentaje de grasa corporal ({gact:.2f}%) está fuera de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%)", icon="⚠️")
+                        st.warning(f"El porcentaje de grasa corporal ({gact:.2f}%) está fuera de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%) para su categoria", icon="⚠️")
                     else:
-                        st.success(f"El porcentaje de grasa corporal ({gact:.2f}%) está dentro de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%)", icon="✅")
+                        st.success(f"El porcentaje de grasa corporal ({gact:.2f}%) está dentro de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%) para su categoria", icon="✅")
                     
                     figalt = graphics.get_height_graph(df_anthropometrics, idioma)
 
@@ -259,7 +284,10 @@ else:
                     columns[0]].values[0] if not df_promedios.loc[
                     (df_promedios["CATEGORIA"] == categoria) & (df_promedios["EQUIPO"] == equipo_promedio),
                     columns[0]].empty else None
-                    
+
+                    promedio_cmj = float(promedio_cmj)
+                    cactc = float(cactc)
+
                     if promedio_cmj is not None:
                         if(cactc < promedio_cmj):
                             st.warning(f"{metrica_cmj} ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
