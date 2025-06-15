@@ -21,18 +21,15 @@ def validarUsuario(usuario,clave, conn):
     else:
         return False
 
-# def generateMenu():
-#     with st.sidebar:
-#         st.page_link('app.py', label="Inicio", icon="🏠")
-#         st.page_link('pages/player.py', label="PlayerHub", icon="⚽")
-#         #st.page_link('pages/team.py', label="StatsLab", icon="📊")
-
 def generarMenu(usuario, conn):
     """Genera el menú dependiendo del usuario
 
     Args:
         usuario (str): usuario utilizado para generar el menú
     """        
+    if 'usuario' not in st.session_state or st.session_state['usuario'] != usuario:
+        return  # No generar el menú si no hay sesión válida
+
     with st.sidebar:
         st.logo("assets/images/marcet.png", size="large")
         # Cargamos la tabla de usuarios
@@ -63,30 +60,39 @@ def generarMenu(usuario, conn):
         btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
         if btnSalir:
             cerrarSesion()
-            #st.session_state.clear()
-            # Luego de borrar el Session State reiniciamos la app para mostrar la opción de usuario y clave
-            #st.rerun()
 
 def generarLogin(conn):
-    """Genera la ventana de login o muestra el menú si el login es válido"""    
+    """
+    Muestra el formulario de login si no hay sesión activa.
+    Si hay ?user= en la URL y es válido, restaura sesión.
+    """
 
-    # 🔹 Verificamos si el usuario ya está en la URL o en session_state
-    usuario_actual = st.query_params.get("user", None)
+    # Paso 1: Restaurar sesión desde la URL si no hay sesión activa
+    if 'usuario' not in st.session_state:
+        usuario_url = st.query_params.get("user", None)
+        if usuario_url:
+            dfusuarios = util.get_usuarios(conn)
+            if usuario_url in dfusuarios['USUARIO'].values:
+                st.session_state['usuario'] = usuario_url
+                # Limpiar la URL para ocultar el ?user=... tras el login
+                st.query_params.clear()
+                st.rerun()
 
-    if usuario_actual:
-        st.session_state['usuario'] = usuario_actual
-
-    # Si ya hay usuario, mostramos el menú
+    # Paso 2: Si ya hay usuario en sesión, mostrar menú
     if 'usuario' in st.session_state:
-        generarMenu(st.session_state['usuario'], conn) 
-    else: 
+        # Nos aseguramos de que esté también en la URL
+        if st.query_params.get("user", None) != st.session_state['usuario']:
+            st.query_params["user"] = st.session_state['usuario']
+        generarMenu(st.session_state['usuario'], conn)
+
+    # Paso 3: Si no hay sesión activa, mostrar formulario de login
+    else:
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
             st.image("assets/images/marcet.png")
         
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
-            # Cargamos el formulario de login       
             with st.form('frmLogin'):
                 parUsuario = st.text_input('Usuario')
                 parPassword = st.text_input('Password', type='password')
@@ -94,9 +100,8 @@ def generarLogin(conn):
 
                 if btnLogin:
                     if validarUsuario(parUsuario, parPassword, conn):
-                        # Guardamos usuario en session_state y en la URL
                         st.session_state['usuario'] = parUsuario
-                        st.query_params.user = parUsuario  # 🔹 Persistencia en la URL
+                        st.query_params['user'] = parUsuario
                         st.rerun()
                     else:
                         st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
@@ -105,34 +110,35 @@ def generarLogin(conn):
 def cerrarSesion():
     if 'usuario' in st.session_state:
         del st.session_state['usuario']
+    
     st.query_params.clear()  # 🔹 Limpia la URL
     st.session_state.clear()
     st.rerun()
 
 
-# def generarLogin():
-    """Genera la ventana de login o muestra el menú si el login es valido
-    """    
-    # Validamos si el usuario ya fue ingresado    
-    if 'usuario' in st.session_state:
-        generarMenu(st.session_state['usuario']) # Si ya hay usuario cargamos el menu        
-    else: 
-        col1, col2, col3 = st.columns([2, 1.5, 2])
-        with col2:
-            st.image("assets/images/marcet.png")
+# # def generarLogin():
+#     """Genera la ventana de login o muestra el menú si el login es valido
+#     """    
+#     # Validamos si el usuario ya fue ingresado    
+#     if 'usuario' in st.session_state:
+#         generarMenu(st.session_state['usuario']) # Si ya hay usuario cargamos el menu        
+#     else: 
+#         col1, col2, col3 = st.columns([2, 1.5, 2])
+#         with col2:
+#             st.image("assets/images/marcet.png")
         
-        col1, col2, col3 = st.columns([2, 1.5, 2])
-        with col2:
-            # Cargamos el formulario de login       
-            with st.form('frmLogin'):
-                parUsuario = st.text_input('Usuario')
-                parPassword = st.text_input('Password',type='password')
-                btnLogin=st.form_submit_button('Ingresar',type='primary')
-                if btnLogin:
-                    if validarUsuario(parUsuario,parPassword):
-                        st.session_state['usuario'] =parUsuario
-                        # Si el usuario es correcto reiniciamos la app para que se cargue el menú
-                        st.rerun()
-                    else:
-                        # Si el usuario es invalido, mostramos el mensaje de error
-                        st.error("Usuario o clave inválidos",icon=":material/gpp_maybe:")          
+#         col1, col2, col3 = st.columns([2, 1.5, 2])
+#         with col2:
+#             # Cargamos el formulario de login       
+#             with st.form('frmLogin'):
+#                 parUsuario = st.text_input('Usuario')
+#                 parPassword = st.text_input('Password',type='password')
+#                 btnLogin=st.form_submit_button('Ingresar',type='primary')
+#                 if btnLogin:
+#                     if validarUsuario(parUsuario,parPassword):
+#                         st.session_state['usuario'] =parUsuario
+#                         # Si el usuario es correcto reiniciamos la app para que se cargue el menú
+#                         st.rerun()
+#                     else:
+#                         # Si el usuario es invalido, mostramos el mensaje de error
+#                         st.error("Usuario o clave inválidos",icon=":material/gpp_maybe:")          
