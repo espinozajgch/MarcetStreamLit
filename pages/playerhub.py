@@ -558,6 +558,7 @@ else:
                     styled_dfb = util.aplicar_semaforo(df_rsa[[fecha_registro] + columns])
                     colc, cold = st.columns([2.5,1])
                     with colc:
+                        #st.dataframe(df_promedios)
                         figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool)
                     with cold:    
                         st.markdown("📊 **Históricos**")

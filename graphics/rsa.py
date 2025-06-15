@@ -24,14 +24,20 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     ]
 
     promedios = {}
+
     if not promedio_row.empty:
         for metrica in metricas:
             if metrica in promedio_row.columns:
                 valor = promedio_row[metrica].values[0]
-                if pd.notna(valor):
+                # Validación robusta: excluye NaN, None, strings vacíos y valores claramente nulos
+                if pd.notna(valor) and valor not in ["", None, "null"]:
                     promedios[metrica] = valor
+
+        if not promedios:
+            st.warning("No se encontraron promedios para esta categoría y equipo.")
     else:
-        st.warning("No se encontraron promedios RSA para esta categoría y equipo.")
+        st.warning("No se encontraron promedios para esta categoría y equipo.")
+
 
     fig_tiempo = go.Figure()
 
@@ -212,9 +218,13 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
 
     prom = None
     if not promedio_row.empty and metric in promedio_row.columns:
-        prom = promedio_row[metric].values[0] * 3.6
+        valor_crudo = promedio_row[metric].values[0]
+        if pd.notna(valor_crudo):
+            prom = valor_crudo * 3.6
+        else:
+            st.warning("No se encontraron promedios para esta categoría y equipo.")
     else:
-        st.warning("No se encontraron promedios de Velocidad para esta categoría y equipo.")
+        st.warning("No se encontraron promedios para esta categoría y equipo.")
 
     tolerancia = 0.3 * 3.6
     color_linea = "#66c2ff"
@@ -311,13 +321,23 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             font=dict(color="white")
         )
 
-    rel_prom = (prom - ymin) / (ymax - ymin) if prom else 0.5
-    colorscale = [
-        [0.0, "red"],
-        [rel_prom * 0.7 if prom else 0.5, "orange"],
-        [rel_prom, "green"],
-        [1.0, "green"]
-    ]
+    # Calcular el punto relativo del promedio para el colorscale
+    if prom is not None and not pd.isna(prom):
+        rel_prom = (prom - ymin) / (ymax - ymin)
+        rel_prom = max(0.0, min(1.0, rel_prom))  # Clamp entre 0 y 1
+        colorscale = [
+            [0.0, "red"],
+            [rel_prom * 0.7, "orange"],
+            [rel_prom, "green"],
+            [1.0, "green"]
+        ]
+    else:
+        rel_prom = 0.5  # Punto medio si no hay promedio válido
+        colorscale = [
+            [0.0, "red"],
+            [0.5, "orange"],
+            [1.0, "green"]
+        ]
 
     fig.add_trace(go.Scatter(
         x=[None],
@@ -344,6 +364,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
         showlegend=False,
         hoverinfo="skip"
     ))
+
 
     fig.update_layout(
         title=util.traducir("Evolución de la Velocidad en Repeticiones de Sprint", idioma),
