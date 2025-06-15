@@ -36,12 +36,12 @@ st.header(" :blue[Player Hub] :material/contacts:", divider=True)
 
 unavailable = "No Disponible"
 fecha_registro = "FECHA REGISTRO"
-categoria = "CATEGORIA"
-equipo = "EQUIPO"
-jugador = "JUGADOR"
+categorial = "CATEGORIA"
+equipol = "EQUIPO"
+jugadorl = "JUGADOR"
 mensaje_no_data = "El Jugador seleccionado no cuenta con datos suficientes para mostrar esta sección"
 equipo_promedio = "A"
-columnas_excluidas_promedio = [fecha_registro, 'ID', categoria, equipo]
+columnas_excluidas_promedio = [fecha_registro, 'ID', categorial, equipol]
 fecha_actual = date.today()
 
 # Conexion, lectura y limpieza lectura de datos
@@ -61,7 +61,7 @@ df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos,
 on = st.toggle("Solo Jugadores con Test Realizados")
 if on:
     df_sesiones = util.sesiones_por_test(df_data_test_final, test_cat)
-    df_filtrado = df_datos_final[df_datos_final[jugador].isin(df_sesiones[jugador])]
+    df_filtrado = df_datos_final[df_datos_final[jugadorl].isin(df_sesiones[jugadorl])]
     df_datos_filtrado = util.get_filters(df_filtrado)
 else:
     df_datos_filtrado = util.get_filters(df_datos_final)
@@ -122,13 +122,13 @@ with st.expander("Configuración Avanzada"):
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar)
 
-df_promedios.loc[(df_promedios[categoria] == "Cadete") & (df_promedios[equipo] == equipo_promedio), "DISTANCIA ACUMULADA (M)"] = float(1700)
-df_promedios.loc[(df_promedios[categoria] == "Cadete") & (df_promedios[equipo] == equipo_promedio), "ALTURA-(CM)"] = float(36.00)
-df_promedios.loc[(df_promedios[categoria] == "Cadete") & (df_promedios[equipo] == equipo_promedio), "TIEMPO 0-40M (SEG)"] = float(5.7)
+df_promedios.loc[(df_promedios[categorial] == "Cadete") & (df_promedios[equipol] == equipo_promedio), "DISTANCIA ACUMULADA (M)"] = float(1700)
+df_promedios.loc[(df_promedios[categorial] == "Cadete") & (df_promedios[equipol] == equipo_promedio), "ALTURA-(CM)"] = float(36.00)
+df_promedios.loc[(df_promedios[categorial] == "Cadete") & (df_promedios[equipol] == equipo_promedio), "TIEMPO 0-40M (SEG)"] = float(5.7)
 
-df_promedios.loc[(df_promedios[categoria] == "Juvenil") & (df_promedios[equipo] == equipo_promedio), "DISTANCIA ACUMULADA (M)"] = float(2100)
-df_promedios.loc[(df_promedios[categoria] == "Juvenil") & (df_promedios[equipo] == equipo_promedio), "ALTURA-(CM)"] = float(41.00)
-df_promedios.loc[(df_promedios[categoria] == "Juvenil") & (df_promedios[equipo] == equipo_promedio), "TIEMPO 0-40M (SEG)"] = float(5.1)
+df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol] == equipo_promedio), "DISTANCIA ACUMULADA (M)"] = float(2100)
+df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol] == equipo_promedio), "ALTURA-(CM)"] = float(41.00)
+df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol] == equipo_promedio), "TIEMPO 0-40M (SEG)"] = float(5.1)
 ###################################################
 
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
@@ -291,9 +291,9 @@ else:
                         st.metric(f"Último Registro",act)
 
                     promedio_cmj = df_promedios.loc[
-                    (df_promedios[categoria] == categoria) & (df_promedios[equipo] == equipo_promedio),
+                    (df_promedios[categorial] == categoria) & (df_promedios[equipol] == equipo_promedio),
                     columns[0]].values[0] if not df_promedios.loc[
-                    (df_promedios[categoria] == categoria) & (df_promedios[equipo] == equipo_promedio),
+                    (df_promedios[categorial] == categoria) & (df_promedios[equipol] == equipo_promedio),
                     columns[0]].empty else None
 
                     promedio_cmj = float(promedio_cmj)
