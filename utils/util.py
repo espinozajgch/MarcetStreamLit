@@ -356,7 +356,7 @@ def get_metricas_por_test(df_estructura, tests_seleccionados):
 
     return metricas_unicas
 
-def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
+def get_new(datos_jugadores, df_existente, columnas_datos, fecha=None):
     """
     Genera un nuevo DataFrame con la estructura de 'df_existente',
     agregando datos nuevos desde 'datos_jugadores' y completando
@@ -366,23 +366,19 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
         datos_jugadores (pd.DataFrame): Nuevos registros a insertar.
         df_existente (pd.DataFrame): DataFrame original con estructura base.
         columnas_datos (list): Columnas clave a mantener desde los datos de origen.
-        fecha (str): Fecha a insertar en la columna FECHA (formato dd/mm/yyyy).
+        fecha (str, opcional): Fecha para insertar en 'FECHA REGISTRO' si se desea sobreescribir. Formato: 'dd/mm/yyyy'.
 
     Returns:
         pd.DataFrame: DataFrame combinado y ordenado por 'JUGADOR'.
     """
-    # Obtener estructura base de columnas desde el DataFrame existente
     columnas_estructura = get_dataframe_columns(df_existente)
 
-    # Asegurarse de insertar el nombre completo en la posición 2 si falta
-    columna_nombre = columnas_datos[1]  # por ejemplo "NOMBRE COMPLETO"
+    columna_nombre = columnas_datos[1]
     if columna_nombre not in columnas_estructura:
         columnas_estructura.insert(2, columna_nombre)
 
-    # Crear DataFrame base vacío con estructura completa
     df_nuevo = pd.DataFrame(columns=columnas_estructura)
 
-    # Si hay datos ya existentes, mapear nombres desde datos_jugadores
     if not df_existente.empty:
         if columna_nombre not in df_existente.columns:
             df_existente.insert(2, columna_nombre, None)
@@ -390,19 +386,21 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
         id_a_nombre = datos_jugadores.set_index("ID")["JUGADOR"].to_dict()
         df_existente[columna_nombre] = df_existente["ID"].map(id_a_nombre)
 
-        # Eliminar registros ya existentes según ID
         datos_jugadores = datos_jugadores[~datos_jugadores["ID"].isin(df_existente["ID"])]
 
-    # Copiar columnas comunes desde datos_jugadores al nuevo DataFrame
     columnas_comunes = [col for col in columnas_datos if col in df_nuevo.columns]
     for col in columnas_comunes:
         df_nuevo[col] = datos_jugadores[col]
 
-    # Agregar la fecha actual a la columna FECHA
+    # Asignar la fecha solo si se proporciona
     if "FECHA REGISTRO" in df_nuevo.columns:
-        df_nuevo["FECHA REGISTRO"] = fecha
+        if fecha:
+            df_nuevo["FECHA REGISTRO"] = fecha
+        else:
+            # En caso contrario, mantenerla vacía o gestionarla externamente
+            df_nuevo["FECHA REGISTRO"] = None
 
-    # Forzar tipos seguros
+    # Tipos seguros
     if "ID" in df_nuevo.columns:
         df_nuevo["ID"] = df_nuevo["ID"].astype(str)
     df_nuevo.columns = df_nuevo.columns.astype(str)
@@ -417,7 +415,6 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha):
     else:
         df_nuevo = df_nuevo.copy()
 
-    # Ordenar por columnas específicas si existen
     columnas_orden = ["CATEGORIA", "EQUIPO"]
     columnas_presentes = [col for col in columnas_orden if col in df_nuevo.columns]
 
@@ -485,12 +482,69 @@ def separar_dataframe_por_estructura(df_general, df_estructura, columnas_usadas)
 
 
 
-def generateMenu():
-    with st.sidebar:
-        st.page_link('app.py', label="Inicio", icon="🏠")
-        st.page_link('pages/player.py', label="PlayerHub", icon="⚽")
-        #st.page_link('pages/team.py', label="StatsLab", icon="📊")
-        #st.page_link('pages/perfil.py', label="Perfil", icon="📊")
+######################
+
+def actualizar_datos_con_checkin(df_datos, df_checkin, df_joined):
+    """
+    Actualiza el DataFrame df_datos con nuevos registros desde df_checkin,
+    manteniendo la estructura original y eliminando duplicados. Luego realiza merge con df_joined.
+
+    Parámetros:
+        df_datos (pd.DataFrame): DataFrame original con datos existentes.
+        df_checkin (pd.DataFrame): DataFrame de nuevos registros (check-in).
+        df_joined (pd.DataFrame): DataFrame a combinar tras limpieza.
+
+    Retorna:
+        pd.DataFrame: DataFrame final actualizado y combinado.
+    """
+
+    # 1. Extraer columnas necesarias y eliminar duplicados
+    df_nuevos = df_checkin[["JUGADOR", "CATEGORIA"]].drop_duplicates()
+
+    # 2. Alinear estructura de columnas
+    df_nuevos = df_nuevos.reindex(columns=df_datos.columns)
+
+    # 3. Concatenar
+    df_resultado = pd.concat([df_datos, df_nuevos], ignore_index=True)
+
+    # 4. Eliminar duplicados por jugador y categoría
+    df_resultado = df_resultado.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first").reset_index(drop=True)
+
+    # 5. Eliminar filas completamente vacías
+    df_resultado = df_resultado.dropna(how="all").reset_index(drop=True)
+
+    # 6. Realizar merge con df_joined
+    df_final = merge_by_nombre_categoria(df_joined, df_checkin)
+
+    return df_final, df_resultado
+
+def filtrar_por_rango_fechas(df, columna_fecha, fecha_inicio, fecha_fin, formato="%d/%m/%Y"):
+    """
+    Filtra un DataFrame por un rango de fechas, manteniendo la columna de fechas como string.
+    Si la fecha de inicio y fin son iguales, no se aplica filtro.
+
+    Parámetros:
+        df (pd.DataFrame): DataFrame original.
+        columna_fecha (str): Nombre de la columna que contiene fechas como string.
+        fecha_inicio (datetime.date): Fecha inicial del rango.
+        fecha_fin (datetime.date): Fecha final del rango.
+        formato (str): Formato de fecha en el DataFrame (por defecto: "%d/%m/%Y").
+
+    Retorna:
+        pd.DataFrame: DataFrame filtrado, con la columna de fecha como string y sin columnas auxiliares.
+    """
+    df_temp = df.copy()
+    df_temp["FECHA DT"] = pd.to_datetime(df_temp[columna_fecha], format=formato, errors="coerce")
+
+    if fecha_inicio == fecha_fin:
+        filtrado = df_temp  # No se filtra si ambas fechas son iguales
+    else:
+        filtrado = df_temp[
+            (df_temp["FECHA DT"].dt.date >= fecha_inicio) &
+            (df_temp["FECHA DT"].dt.date <= fecha_fin)
+        ]
+
+    return filtrado.drop(columns=["FECHA DT"])
 
 # Utilidad para obtener lista única ordenada de una columna, con filtros
 def get_filtered_list(dataframe, column, filters, default_option="Todos"):
@@ -870,108 +924,6 @@ def obtener_bandera(pais):
     else:
         return ""
     
-def add_footer(pdf, invertido=False, idioma="es"):
-
-    page_height = pdf.get_height()
-    margen_inferior = 33
-    y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True, idioma=idioma)
-
-def generate_pdf(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, idioma="es"):
-    pdf = PDF(idioma=idioma)
-    pdf.add_page()
-    pdf.header()
-    
-    #pdf.add_font("ArialUnicode", "", "assets/fonts/Amiri-0.111/Amiri-Regular.ttf", uni=True)
-    #pdf.set_font("ArialUnicode", "", 12)
-
-    # Bloque de datos personales
-    pdf.add_player_block(df_jugador, idioma=idioma)
-
-    seccion_ya_impresa = set()
-
-    # Preparar secciones
-    secciones = [
-        ("COMPOSICIÓN CORPORAL", df_anthropometrics, [
-            ("Altura", figs_dict.get("Altura")),
-            ("Peso y Grasa", figs_dict.get("Peso y Grasa"))
-        ]),
-        ("POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)", df_cmj, [
-            ("CMJ", figs_dict.get("CMJ"))
-        ]),
-        ("EVOLUCIÓN DEL SPRINT (0-5M)", df_sprint, [
-            ("SPRINT 0-5", figs_dict.get("SPRINT 0-5"))
-        ]),
-        ("EVOLUCIÓN DEL SPRINT (0-40M)", df_sprint, [
-            ("SPRINT 0-40", figs_dict.get("SPRINT 0-40"))
-        ]),
-        ("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)", df_agilty, [
-            ("AGILIDAD", figs_dict.get("AGILIDAD"))
-        ]),
-        ("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)", df_yoyo, [
-            ("YO-YO", figs_dict.get("YO-YO"))
-        ]),
-        ("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)", df_rsa, [
-            ("RSA Tiempo", figs_dict.get("RSA Tiempo")),
-            ("RSA Velocidad", figs_dict.get("RSA Velocidad"))
-        ])
-    ]
-
-    #st.dataframe(secciones)
-
-    # Comprobar si "COMPOSICIÓN CORPORAL" está en los gráficos seleccionados
-    tiene_composicion = any(
-        nombre_seccion == "COMPOSICIÓN CORPORAL" and any(fig for _, fig in figuras)
-        for nombre_seccion, _, figuras in secciones
-    )
-
-    # Agregar medidas si se seleccionó "COMPOSICIÓN CORPORAL"
-    if tiene_composicion and df_anthropometrics is not None and not df_anthropometrics.empty:
-        altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
-        peso = df_anthropometrics['PESO (KG)'].iloc[0]
-        grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-        #pdf.section_title("COMPOSICIÓN CORPORAL")
-        pdf.section_title(traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
-        pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
-
-    # Inicializar contador de gráficos y sección actual
-    contador_graficos = 0
-    primer_grafico_insertado = False
-
-    # Insertar gráficos de forma ordenada
-    for nombre_seccion, df_seccion, figuras in secciones:
-        if df_seccion is not None and not df_seccion.empty:
-            for nombre_fig, fig in figuras:
-                if fig is not None:
-                    if not primer_grafico_insertado:
-                        if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
-                            #pdf.section_title(nombre_seccion)
-                            pdf.section_title(traducir(nombre_seccion, idioma), idioma)
-                            seccion_ya_impresa.add(nombre_seccion)
-                        pdf.add_plotly_figure(fig, "", idioma=idioma)
-                        add_footer(pdf, idioma=idioma)
-                        primer_grafico_insertado = True
-                        continue
-
-                    if contador_graficos % 2 == 0:
-                        pdf.add_page()
-                        pdf.ln(20)
-
-                    if nombre_seccion not in seccion_ya_impresa:
-                        #pdf.section_title(nombre_seccion)
-                        pdf.section_title(traducir(nombre_seccion, idioma), idioma)
-                        seccion_ya_impresa.add(nombre_seccion)
-
-                    pdf.add_plotly_figure(fig, "", idioma=idioma)
-                    contador_graficos += 1
-
-                    if contador_graficos % 2 == 0:
-                        add_footer(pdf, idioma=idioma)
-
-    if contador_graficos % 2 == 1:
-        add_footer(pdf, idioma=idioma)
-
-    return pdf.output(dest='S') #.encode('utf-8')
 
 def calcular_percentiles(jugador, referencia, columnas_estructura):
     percentiles = {}

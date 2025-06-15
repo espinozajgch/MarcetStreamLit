@@ -230,22 +230,31 @@ class PDF(FPDF):
                 self.cell(0, 6, txt, ln=True)
                 print(txt)
 
-        self.ln(15)
+        self.ln(8)
 
     def add_img(self, img_path, x, y, w):
         self.image(img_path, x, y, w)
 
-    def section_title(self, title, idioma="es"):
+    def section_title(self, title, idioma="es", simple=False):
         
         self.set_fill_color(0, 51, 102)
         self.set_text_color(255, 255, 255)
         
-        if(idioma == "ar"):
-            self.set_font("Amiri", "B", 11)
+        if simple:
+            lenght = 95
+            size = 8
         else:
-            self.set_font("Arial", "B", 11)
+            lenght = 0
+            size = 11
+
+        if(idioma == "ar"):
+            self.set_font("Amiri", "B", size)
+        else:
+            self.set_font("Arial", "B", size)
         
-        self.cell(0, 8, title, ln=True, fill=True)
+
+        self.cell(lenght, 8, title, ln=True, fill=True)
+
         self.set_text_color(0, 0, 0)
         self.ln(2)
 
@@ -487,30 +496,30 @@ class PDF(FPDF):
     def get_altura(self):
         return self.get_y()
     
-    def add_plotly_figure(self, fig, title=None, w=190, idioma="es"):
-        if title:
-            if(idioma == "ar"):
-                self.set_font("Amiri", "", 10)
-            else:
-                self.set_font("Arial", "B", 12)
+    # def add_plotly_figure(self, fig, title=None, w=190, idioma="es"):
+    #     if title:
+    #         if(idioma == "ar"):
+    #             self.set_font("Amiri", "", 10)
+    #         else:
+    #             self.set_font("Arial", "B", 12)
             
-            self.cell(0, 10, title, ln=True)
+    #         self.cell(0, 10, title, ln=True)
 
-        # Convertir la figura a imagen en memoria
-        image_bytes = pio.to_image(fig, format="png", width=900, height=450, scale=2)
+    #     # Convertir la figura a imagen en memoria
+    #     image_bytes = pio.to_image(fig, format="png", width=900, height=450, scale=2)
 
-        # Crear archivo temporal
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            tmpfile.write(image_bytes)
-            tmpfile.flush()
-            tmpfile_path = tmpfile.name
+    #     # Crear archivo temporal
+    #     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+    #         tmpfile.write(image_bytes)
+    #         tmpfile.flush()
+    #         tmpfile_path = tmpfile.name
 
-        # Insertar en PDF
-        self.image(tmpfile_path, x=None, y=None, w=w)
+    #     # Insertar en PDF
+    #     self.image(tmpfile_path, x=None, y=None, w=w)
 
-        # Eliminar el archivo temporal manualmente
-        import os
-        os.remove(tmpfile_path)
+    #     # Eliminar el archivo temporal manualmente
+    #     import os
+    #     os.remove(tmpfile_path)
 
     def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es"):
         if(idioma == "ar"):
@@ -558,12 +567,43 @@ class PDF(FPDF):
             
 
         x1 = x_start
-        x2 = x1 + col_width + 5
-        x3 = x2 + col_width + 5
+        x2 = x1 + col_width + 0
+        x3 = x2 + col_width + 0
 
         add_metric(util.traducir("ALTURA (CM)",idioma), altura, x1, idioma)
         add_metric(util.traducir("PESO (KG)",idioma), peso, x2, idioma)
         add_metric(util.traducir("GRASA (%)",idioma), grasa, x3, idioma)
 
-        self.ln(20)  # salto tras bloque
+        self.ln(7)  # salto tras bloque
 
+    def add_plotly_figure(self, fig, title=None, x=None, y=None, w=190, h=100, idioma="es"):
+        #import plotly.io as pio
+        #import tempfile
+        import os
+
+        if title:
+            if idioma == "ar":
+                self.set_font("Amiri", "", 10)
+            else:
+                self.set_font("Arial", "B", 12)
+            self.cell(0, 10, title, ln=True)
+
+        # Convertir la figura a imagen PNG
+        image_bytes = pio.to_image(fig, format="png", width=900, height=450, scale=2)
+
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+            tmpfile.write(image_bytes)
+            tmpfile.flush()
+            tmpfile_path = tmpfile.name
+
+        # Insertar en PDF con posición personalizada si se proporciona
+        if x is not None and y is not None:
+            self.image(tmpfile_path, x=x, y=y, w=w, h=h)
+        elif x is not None:
+            self.image(tmpfile_path, x=x, w=w, h=h)
+        else:
+            self.image(tmpfile_path, w=w, h=h)
+
+        # Eliminar archivo temporal
+        os.remove(tmpfile_path)

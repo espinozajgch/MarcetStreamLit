@@ -1,10 +1,10 @@
+
+from streamlit_gsheets import GSheetsConnection
 import streamlit as st
 from utils import util
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import login as login
 from datetime import date
-import time
 
 st.set_page_config(
     page_title="Test Físicos",
@@ -23,7 +23,6 @@ if "usuario" not in st.session_state:
 st.header(":blue[Tests Físicos] :material/directions_run:", divider=True)
 
 fecha_actual = date.today()
-
 columnas_usadas = ["ID", "JUGADOR", "CATEGORIA", "EQUIPO"]
 
 #player_data = util.get_player_data(conn)
@@ -37,14 +36,20 @@ player_data, test_data, df_checkin = util.getData(conn)
 
 player_data_filtered = util.get_filters(player_data)
 
-col1, col2, col3 = st.columns([1,2,2])
+col1, col2, col3 = st.columns([1,1,2])
 with col1:
-	fecha_seleccionada = st.date_input(
-		"FECHA:",
+	fecha_inicio = st.date_input(
+		"FECHA INICIO:",
 		value=fecha_actual,
 		max_value=fecha_actual
 	)
 with col2:
+	fecha_fin = st.date_input(
+		"FECHA FIN:",
+		value=fecha_actual,
+		max_value=fecha_actual
+	)
+with col3:
 	default_option = "Todos"
 	# Mostrar en multiselect de Streamlit
 	tests_seleccionados = st.multiselect(
@@ -56,23 +61,43 @@ with col2:
 
 # Obtener métricas dinámicamente
 metricas = util.get_metricas_por_test(df_estructura_test, tests_seleccionados)
+
 #st.dataframe(metricas)
 
-fecha_formateada = fecha_seleccionada.strftime("%d/%m/%Y")
-test_data_filtered = test_data[test_data["FECHA REGISTRO"] == fecha_formateada]
-test_data_filtered = test_data_filtered[test_data_filtered["ID"].isin(player_data_filtered["ID"])]
-datatest_columns = util.get_dataframe_columns(test_data)
+if fecha_fin < fecha_inicio:
+	st.warning("❌ La fecha final no puede ser anterior a la fecha inicial.")
+	st.stop()
+elif fecha_fin > fecha_inicio:
 
-df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas, fecha_formateada)
+	test_data_filtered = util.filtrar_por_rango_fechas(test_data, "FECHA REGISTRO", fecha_inicio, fecha_fin)
+	test_data_filtered = test_data_filtered[test_data_filtered["ID"].isin(player_data_filtered["ID"])]
+
+	if not test_data_filtered.empty:
+		df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas)
+	else:
+		st.warning("⚠️ No existen datos de pruebas fisicas para el periodo seleccionado.")
+		st.stop()
+
+elif fecha_inicio == fecha_fin:
+	fecha_formateada = fecha_inicio.strftime("%d/%m/%Y")
+	test_data_filtered = test_data[test_data["FECHA REGISTRO"] == fecha_formateada]
+	test_data_filtered = test_data_filtered[test_data_filtered["ID"].isin(player_data_filtered["ID"])]
+	#test_data_filtered = util.filtrar_por_rango_fechas(test_data, "FECHA REGISTRO", fecha_inicio, fecha_fin)
+	
+	#if test_data_filtered.empty:
+	#	st.text("fechas iguales")
+	df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas, fecha_formateada)
+		
 
 columnas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO']
 if len(metricas) > 0:
 	df_nuevo = df_nuevo[columnas + metricas]
 
-on = st.toggle("Solo Jugadores con Datos")
-
 # Lista de columnas que quieres excluir de la validación
 columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
+datatest_columns = util.get_dataframe_columns(test_data)
+
+on = st.toggle("Solo Jugadores con Datos")
 
 if on:
 	datatest_columns = util.get_dataframe_columns(df_nuevo)
@@ -81,10 +106,14 @@ if on:
 	#st.text(columnas_a_validar)
 	# 2. Elimina las filas donde TODAS las columnas a validar son NaN o None
 	df_nuevo = df_nuevo.dropna(subset=columnas_a_validar, how="all")
-     
+
+	if df_nuevo.empty:
+		st.warning("⚠️ No existen datos de pruebas fisicas para el periodo seleccionado.")
+		st.stop()
+	
 	edited_df = util.get_data_editor(df_nuevo)
 else:
-    edited_df = util.get_data_editor(df_nuevo)
+	edited_df = util.get_data_editor(df_nuevo)
 
 st.divider()
 
@@ -121,5 +150,4 @@ def guardar_datos():
 
 # 🔘 Botón que activa el diálogo manual
 if st.button("💾 Guardar Cambios"):
-    guardar_datos()
-	
+	guardar_datos()

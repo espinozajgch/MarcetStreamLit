@@ -21,6 +21,12 @@ def validarUsuario(usuario,clave, conn):
     else:
         return False
 
+# def generateMenu():
+#     with st.sidebar:
+#         st.page_link('app.py', label="Inicio", icon="🏠")
+#         st.page_link('pages/player.py', label="PlayerHub", icon="⚽")
+#         #st.page_link('pages/team.py', label="StatsLab", icon="📊")
+
 def generarMenu(usuario, conn):
     """Genera el menú dependiendo del usuario
 
@@ -41,6 +47,7 @@ def generarMenu(usuario, conn):
         st.page_link("inicio.py", label="Inicio", icon=":material/home:")
         st.subheader("Tableros :material/dashboard:")
         st.page_link("pages/playerhub.py", label="PlayerHub", icon=":material/contacts:")
+        #st.page_link('pages/teams.py', label="StatsLab", icon=":material/query_stats:")
         st.subheader("Administrador :material/manage_accounts:")
         st.page_link("pages/players.py", label="Jugadores", icon=":material/account_circle:")  
         st.page_link("pages/tests.py", label="Test Fisicos", icon=":material/directions_run:")
