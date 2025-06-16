@@ -66,7 +66,7 @@ if on:
 else:
     df_datos_filtrado = util.get_filters(df_datos_final)
 
-st.dataframe(df_datos_filtrado)
+#st.dataframe(df_datos_filtrado)
 
 with st.expander("Configuración Avanzada"):
     col1, col2, col3 = st.columns([1,1,2])
