@@ -124,6 +124,12 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
     
     return df_final
 
+def es_numerico(val):
+    try:
+        return isinstance(val, (int, float)) and not pd.isna(val)
+    except:
+        return False
+    
 def get_test_data(conn, hoja):
     df = conn.read(worksheet=hoja, ttl=get_ttl())
     df = df.reset_index(drop=True)  # Reinicia los índices
@@ -134,12 +140,17 @@ def get_test_data(conn, hoja):
         df.columns = df.iloc[0]  # Usa la primera fila como nombres de columna
         df = df[1:]  # Elimina la fila de encabezado original
         df = df.reset_index(drop=True)
-        df["CATEGORIA"] = "Check in"
-
+        
+        mask = df.applymap(es_numerico)
+        df = df[mask.any(axis=1)]
+        
         # ✅ Reemplazo sin advertencia futura
         df = df.replace("None", 0)
         df = df.fillna(0)
         df = df.infer_objects(copy=False)
+       
+        df["CATEGORIA"] = "Check in"
+        df["JUGADOR"] = df["JUGADOR"].str.upper()
 
     return df
 
