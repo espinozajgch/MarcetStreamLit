@@ -227,7 +227,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
         st.warning("No se encontraron promedios para esta categoría y equipo.")
 
     tolerancia = 0.3 * 3.6
-    color_linea = "#66c2ff"
+    color_linea = "#f2950a"
     color_promedio = "green"
 
     # Preparar datos

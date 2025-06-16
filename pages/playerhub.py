@@ -50,14 +50,13 @@ df_datos, df_data_test, df_checkin = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
 test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
 
-#st.dataframe(df_checkin)
-
 datatest_columns = util.get_dataframe_columns(df_data_test)
 columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
 
 df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
 ###################################################
 
+#st.dataframe(df_datos_final)
 # Filtros
 ###################################################
 on = st.toggle("Solo Jugadores con Test Realizados")

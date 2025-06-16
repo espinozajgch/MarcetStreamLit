@@ -30,7 +30,7 @@ def get_sprint_graph(
     ticktext = tickvals if barras else fechas_unicas.dt.strftime(formato_fecha).tolist()
 
     color_barra = "#66c2ff"
-    color_linea = "#1f77b4"
+    color_linea = "#f2950a"
     color_promedio = "green"
 
     fig = go.Figure()
@@ -144,7 +144,6 @@ def get_sprint_graph(
                 font=dict(color="white")
             )
 
-
     if prom_tiempo is not None and 'y_min' in locals() and 'y_max' in locals():
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
@@ -169,8 +168,8 @@ def get_sprint_graph(
                     lenmode="fraction",
                     y=0,
                     yanchor="bottom",
-                    x=-0.19,
-                    xanchor="left"
+                    x=1.18 if barras else -0.19,
+                    xanchor="right" if barras else "left"
                 ),
                 showscale=True
             ),
@@ -190,13 +189,13 @@ def get_sprint_graph(
         ),
         yaxis=dict(
             title=util.traducir("TIEMPO (SEG)", idioma),
-            side="left",
+            side="left" if not barras else "right",
             showgrid=True
         ),
         yaxis2=dict(
             title=util.traducir("VELOCIDAD (M/S)", idioma),
             overlaying="y",
-            side="right",
+            side="right" if not barras else "left",
             showgrid=False
         ),
         template="plotly_white",

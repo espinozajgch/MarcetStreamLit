@@ -32,9 +32,8 @@ def get_player_data(conn):
     #st.dataframe(df)
     hoy = datetime.today()
 
-    df["JUGADOR"] = df["JUGADOR"].str.strip()
-    df["CATEGORIA"] = df["CATEGORIA"].str.strip()
-    df["EQUIPO"] = df["EQUIPO"].str.strip()
+    for col in df.select_dtypes(include=["object", "string"]):
+        df[col] = df[col].str.strip()
 
     # Convertir a tipo datetime (asegura formato día/mes/año)
     df["FECHA DE NACIMIENTO"] = pd.to_datetime(df["FECHA DE NACIMIENTO"], format="%d/%m/%Y")
@@ -515,16 +514,24 @@ def actualizar_datos_con_checkin(df_datos, df_checkin, df_joined):
     # 2. Alinear estructura de columnas
     df_nuevos = df_nuevos.reindex(columns=df_datos.columns)
 
-    # 3. Concatenar
+    # 3. Marcar el origen de cada DataFrame
+    df_datos["PRIORIDAD"] = "1"
+    df_nuevos["PRIORIDAD"] = "0"
+
+    # 4. Concatenar
     df_resultado = pd.concat([df_datos, df_nuevos], ignore_index=True)
 
-    # 4. Eliminar duplicados por jugador y categoría
-    df_resultado = df_resultado.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first").reset_index(drop=True)
+    # 5. Eliminar duplicados por JUGADOR y CATEGORIA, manteniendo solo los que vienen de df_datos
+    df_resultado = df_resultado.sort_values(by="PRIORIDAD", ascending=False)  # "datos" < "nuevos"
+    #df_resultado = df_resultado.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first")
 
-    # 5. Eliminar filas completamente vacías
+    # 6. Eliminar la columna auxiliar
+    #df_resultado = df_resultado.drop(columns="PRIORIDAD").reset_index(drop=True)
+
+    # 7. Eliminar filas completamente vacías
     df_resultado = df_resultado.dropna(how="all").reset_index(drop=True)
 
-    # 6. Realizar merge con df_joined
+    # 8. Realizar merge con df_joined
     df_final = merge_by_nombre_categoria(df_joined, df_checkin)
 
     return df_final, df_resultado
@@ -998,7 +1005,10 @@ def get_demarcaciones():
         "MEDIOCENTRO DEFENSIVO": "MC",
         "MEDIOCENTRO": "MC",
         "MEDIAPUNTA": "MC",         
-        "EXTREMO": "EX",             
+        "EXTREMO": "EX", 
+        "EXTREMO IZQUIERDO": "EI", 
+        "LATERAL DERECHO": "ED",
+        "LATERAL": "LA",             
         "DELANTERO": "DC"
     }
 

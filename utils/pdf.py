@@ -219,16 +219,15 @@ class PDF(FPDF):
 
         demarcacion_larga = data.get("DEMARCACION", "").upper()
         MAPA_DEMARCACIONES = util.get_demarcaciones()
-        codigo = MAPA_DEMARCACIONES.get(demarcacion_larga)
+        codigod = MAPA_DEMARCACIONES.get(demarcacion_larga)
 
-        if codigo:
-            img_path = f"assets/images/pitch/campo_{codigo}.png"
+        if codigod:
+            img_path = f"assets/images/pitch/campo_{codigod}.png"
             try:
                 self.image(img_path, x=140, y=50, w=55)
             except:
-                txt = f"Imagen para {codigo} no encontrada"
+                txt = f"Imagen para {codigod} no encontrada"
                 self.cell(0, 6, txt, ln=True)
-                print(txt)
 
         self.ln(8)
 
