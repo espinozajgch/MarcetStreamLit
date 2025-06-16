@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from utils import util
 
 def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro, idioma="es", barras=False):
-
     df = pd.DataFrame(df_yoyo)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y", errors='coerce')
     df = df[[columna_fecha_registro, metrica]].dropna().sort_values(columna_fecha_registro)
@@ -15,53 +14,66 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         st.warning("No hay datos válidos para mostrar.")
         return
 
-    # Determinar formato de fecha dinámico
-    fechas_unicas = pd.to_datetime(df[columna_fecha_registro].dropna().unique())
-    periodos = pd.Series(fechas_unicas).dt.to_period("M").unique()
-    fecha_formato = "%d-%b-%Y" if len(periodos) == 1 else "%b-%Y"
-
-    df["FECHA TEXTO"] = df[columna_fecha_registro].dt.strftime(fecha_formato)
+    df["FECHA TEXTO"] = df[columna_fecha_registro].dt.strftime("%b-%Y")
     columna_x = "FECHA TEXTO"
 
-    # Obtener promedio
-    promedio_row = df_promedios_yoyo[(df_promedios_yoyo["CATEGORIA"] == categoria) & (df_promedios_yoyo["EQUIPO"] == equipo)]
+    promedio_row = df_promedios_yoyo[
+        (df_promedios_yoyo["CATEGORIA"] == categoria) &
+        (df_promedios_yoyo["EQUIPO"] == equipo)
+    ]
     valor_prom = promedio_row[metrica].values[0] if not promedio_row.empty and metrica in promedio_row.columns else None
 
-    # Calcular rango del eje Y
-    valores = df[metrica].tolist() + ([valor_prom] if valor_prom is not None and not pd.isna(valor_prom) else [])
-    ymin = min(valores) - 300
-    ymax = max(valores) + (max(valores) - min(valores)) * 0.5
+    # === Rangos de semáforo ===
+    semaforo_dict = {
+        "Juvenil": [
+            (3000, "lightgreen"), (2700, "lightgreen"), (2600, "lightgreen"), (2500, "lightgreen"),
+            (2400, "lightgreen"), (2300, "lightgreen"), (2200, "lightgreen"), (2100, "lightgreen"),
+            (2000, "darkgreen"), (1900, "darkgreen"),
+            (1800, "yellow"), (1700, "yellow"),
+            (1600, "orange"), (1500, "orange"), (1400, "orange"),
+            (1300, "red"), (1200, "red"), (1100, "red"), (1000, "red"), (900, "red")
+        ],
+        "Cadete": [
+            (2500, "lightgreen"), (2400, "lightgreen"), (2300, "lightgreen"), (2200, "lightgreen"),
+            (2100, "lightgreen"), (2000, "lightgreen"), (1900, "lightgreen"), (1800, "lightgreen"),
+            (1700, "darkgreen"), (1600, "darkgreen"), (1500, "darkgreen"), (1400, "darkgreen"),
+            (1300, "yellow"), (1200, "yellow"),
+            (1100, "orange"), (1000, "orange"),
+            (900, "red"), (800, "red"), (700, "red"), (600, "red")
+        ]
+    }
 
-    # Etiquetas eje X
-    tickvals = df[columna_x].tolist()
-    ticktext = tickvals
+    semaforo = semaforo_dict.get(categoria.capitalize(), semaforo_dict["Juvenil"])
 
-    # Colorear puntos/barras
-    colores = []
-    for valor in df[metrica]:
-        if valor_prom is not None and not pd.isna(valor_prom):
-            if valor >= valor_prom:
-                colores.append("rgba(0, 200, 0, 0.8)")
-            elif abs(valor - valor_prom) <= 5:
-                colores.append("rgba(255, 215, 0, 0.9)")
-            else:
-                colores.append("rgba(255, 0, 0, 0.8)")
-        else:
-            colores.append("gray")
+    def obtener_color(valor):
+        for limite, color in semaforo:
+            if valor >= limite:
+                return color
+        return "gray"
 
+    colores = [obtener_color(v) for v in df[metrica]]
+
+    # Rango Y con márgenes dinámicos
+    base_min = min([r[0] for r in semaforo])
+    base_max = max([r[0] for r in semaforo])
+    valores_usuario = df[metrica].tolist() + ([valor_prom] if valor_prom is not None else [])
+
+    margen = 100
+    ymin = min(base_min, min(valores_usuario)) - margen
+    ymax = max(base_max, max(valores_usuario)) + margen
+
+    # === GRÁFICO ===
     fig = go.Figure()
 
     if barras:
-        ancho_barra = 0.1 if len(df) == 1 else 0.3
         fig.add_trace(go.Bar(
             x=df[columna_x],
             y=df[metrica],
             name=util.traducir(metrica, idioma),
             marker_color=colores,
-            text=[f"{v:.2f}" for v in df[metrica]],
+            text=[f"{v:.0f}" for v in df[metrica]],
             textposition="inside",
-            width=ancho_barra,
-            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>Valor:</b> %{{y:.2f}}<extra></extra>"
+            hovertemplate="<b>Fecha:</b> %{x}<br><b>Valor:</b> %{y:.0f} m<extra></extra>"
         ))
     else:
         fig.add_trace(go.Scatter(
@@ -71,32 +83,30 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             name=util.traducir(metrica, idioma),
             marker=dict(size=10, color=colores),
             line=dict(color="#1f77b4", width=3),
-            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>Valor:</b> %{{y:.2f}}<extra></extra>"
+            hovertemplate="<b>Fecha:</b> %{x}<br><b>Valor:</b> %{y:.0f} m<extra></extra>"
         ))
 
-    if valor_prom is not None and not pd.isna(valor_prom):
+    if valor_prom is not None:
         fig.add_hline(
             y=valor_prom,
             line=dict(color="green", dash="dash"),
-            annotation_text=f"{valor_prom:.2f} m",
+            annotation_text=f"{valor_prom:.0f} m",
             annotation_position="top left",
             annotation=dict(font=dict(color="black", size=12, family="Arial"))
         )
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('DISTANCIA ACUMULADA (M)', idioma)} {util.traducir('PROMEDIO', idioma)} ({util.traducir(categoria.upper(), idioma)} {equipo})",
+            name=f"{util.traducir('DISTANCIA ACUMULADA (M)', idioma)} {util.traducir('PROMEDIO', idioma)} ({categoria} {equipo})",
             line=dict(color="green", dash="dash")
         ))
 
     if len(df) > 1:
-        max_val = df[metrica].max()
-        fila_max = df[df[metrica] == max_val].sort_values(columna_fecha_registro, ascending=False).iloc[0]
-        maxl = util.traducir("Max", idioma)
+        fila_max = df.loc[df[metrica].idxmax()]
         fig.add_annotation(
             x=fila_max[columna_x],
             y=fila_max[metrica],
-            text=f"{maxl}: {fila_max[metrica]:.0f} (M)",
+            text=f"Max: {fila_max[metrica]:.0f} m",
             showarrow=True,
             arrowhead=2,
             ax=0,
@@ -105,22 +115,25 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             font=dict(color="white")
         )
 
-    rel_prom = (valor_prom - ymin) / (ymax - ymin) if valor_prom is not None else 0.5
-    colorscale = [
-        [0.0, "red"],
-        [max(rel_prom * 0.7, 0.001), "orange"],
-        [rel_prom, "green"],
-        [1.0, "green"]
-    ]
+    # === BARRA LATERAL ===
+    valores = sorted(set([v[0] for v in semaforo]))  # sin reverse
+    colores_barra = []
+    for val in valores:
+        for r, color in semaforo:
+            if val == r:
+                colores_barra.append(color)
+                break
+
+
+    escala_barra = [[i / (len(valores) - 1), colores_barra[i]] for i in range(len(valores))] if len(valores) > 1 else [[0.0, colores_barra[0]], [1.0, colores_barra[0]]]
 
     fig.add_trace(go.Scatter(
-        x=[None],
-        y=[None],
+        x=[None], y=[None],
         mode="markers",
         marker=dict(
             size=0,
             color=[(ymin + ymax) / 2],
-            colorscale=colorscale,
+            colorscale=escala_barra,
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
@@ -131,7 +144,8 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
                 lenmode="fraction",
                 y=0,
                 yanchor="bottom",
-                x=1.05
+                x=1.05,
+                title=None
             ),
             showscale=True
         ),
@@ -143,8 +157,8 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         title=util.traducir("Evolución de la Distancia Acumulada", idioma),
         xaxis=dict(
             tickmode="array",
-            tickvals=tickvals,
-            ticktext=ticktext,
+            tickvals=df[columna_x].tolist(),
+            ticktext=df[columna_x].tolist(),
             type="category"
         ),
         yaxis=dict(
@@ -163,5 +177,4 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
     return fig

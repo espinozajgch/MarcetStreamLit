@@ -50,8 +50,18 @@ def get_sprint_graph(
     if not df_metric_time.empty:
         tiempo_min = df_metric_time[metrica_tiempo].min()
         tiempo_max = df_metric_time[metrica_tiempo].max()
-        y_min = min(tiempo_min * 0.95, prom_tiempo * 0.95 if prom_tiempo else tiempo_min * 0.95)
-        y_max = max(tiempo_max * 1.05, prom_tiempo * 1.05 if prom_tiempo else tiempo_max * 1.05)
+
+        rango_categoria = {
+            "Juvenil": (4.4, 6.3),
+            "Cadete": (4.6, 6.5)
+        }
+        base_min, base_max = rango_categoria.get(categoria.capitalize(), (4.4, 6.3))
+
+        y_min = min(base_min, tiempo_min)
+        y_max = max(base_max, tiempo_max)
+        margen = (y_max - y_min) * 0.15
+        y_min -= margen
+        y_max += margen
 
         fig.add_trace(go.Bar(
             x=df_metric_time[columna_x],
@@ -98,6 +108,62 @@ def get_sprint_graph(
                 showlegend=True
             ))
 
+        # === Escala personalizada según categoría ===
+        if categoria.lower() == "juvenil":
+            escala_colores = [
+                [0.0, "#90ee90"],   # < 5.2
+                [0.35, "#006400"],  # 5.2 – 5.4
+                [0.55, "#FFD700"],  # 5.5 – 5.6
+                [0.75, "#FFA500"],  # 5.7 – 5.8
+                [1.0, "#FF4500"],   # ≥ 5.9
+            ]
+        elif categoria.lower() == "cadete":
+            escala_colores = [
+                [0.0, "#90ee90"],   # < 5.8
+                [0.35, "#006400"],  # 5.8 – 5.9
+                [0.55, "#FFD700"],  # 6.0 – 6.1
+                [0.75, "#FFA500"],  # 6.2 – 6.3
+                [1.0, "#FF4500"],   # ≥ 6.4
+            ]
+        else:
+            escala_colores = [
+                [0.0, "lightgreen"],
+                [0.25, "green"],
+                [0.5, "yellow"],
+                [0.75, "orange"],
+                [1.0, "red"]
+            ]
+
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None],
+            mode="markers",
+            marker=dict(
+                size=0,
+                color=[prom_tiempo if prom_tiempo is not None else y_min],
+                colorscale=escala_colores,
+                cmin=y_min,
+                cmax=y_max,
+                colorbar=dict(
+                    title="",
+                    ticks="outside",
+                    tickfont=dict(color="black"),
+                    thickness=20,
+                    len=1,
+                    lenmode="fraction",
+                    y=0,
+                    yanchor="bottom",
+                    x=1.18 if barras else -0.19,
+                    xanchor="right" if barras else "left"
+                ),
+                showscale=True
+            ),
+            showlegend=False,
+            hoverinfo="skip"
+        ))
+
+
+        fig.update_layout(yaxis=dict(range=[y_min, y_max]))
+
     cols_vel = [columnas_fecha_registro, metrica_velocidad]
     if columnas_fecha_registro != columna_x:
         cols_vel.insert(1, columna_x)
@@ -143,40 +209,6 @@ def get_sprint_graph(
                 bgcolor=color_linea,
                 font=dict(color="white")
             )
-
-    if prom_tiempo is not None and 'y_min' in locals() and 'y_max' in locals():
-        fig.add_trace(go.Scatter(
-            x=[None], y=[None],
-            mode="markers",
-            marker=dict(
-                size=0,
-                color=[prom_tiempo],
-                colorscale=[
-                    [0.0, "red"],
-                    [max(0.0, (prom_tiempo - y_min) / (y_max - y_min) * 0.7), "orange"],
-                    [max(0.0, (prom_tiempo - y_min) / (y_max - y_min)), "green"],
-                    [1.0, "green"]
-                ],
-                cmin=y_min,
-                cmax=y_max,
-                colorbar=dict(
-                    title="",
-                    ticks="outside",
-                    tickfont=dict(color="black"),
-                    thickness=20,
-                    len=1,
-                    lenmode="fraction",
-                    y=0,
-                    yanchor="bottom",
-                    x=1.18 if barras else -0.19,
-                    xanchor="right" if barras else "left"
-                ),
-                showscale=True
-            ),
-            showlegend=False,
-            hoverinfo="skip"
-        ))
-        fig.update_layout(yaxis=dict(range=[y_min, y_max]))
 
     title_layout = "SPRINT" if barras else "Evolución del Sprint"
     fig.update_layout(

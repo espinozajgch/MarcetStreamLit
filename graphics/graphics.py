@@ -85,7 +85,6 @@ def get_height_graph(df_altura, idioma="es", barras=False):
     return fig
 
 def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es", barras=False):
-
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
     df = df.sort_values(by="FECHA REGISTRO")
@@ -104,24 +103,15 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         tickvals = df_fechas_unicas
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
-    grasa_min = df_antropometria["GRASA (%)"].min()
-    grasa_max = df_antropometria["GRASA (%)"].max()
-    dif_zona_optima_min = zona_optima_min - grasa_min
-    dif_zona_optima_max = grasa_max - zona_optima_max
-    #st.text(f"Zona óptima: {dif_zona_optima_min} - {dif_zona_optima_max} %")
-    
-    if(dif_zona_optima_min < 2 and dif_zona_optima_max < 2):
-        cmin = zona_optima_min - 5
-        cmax = zona_optima_max + 5
-    elif(dif_zona_optima_min < 2 and dif_zona_optima_max > 2):
-        cmin = zona_optima_min - dif_zona_optima_max - 2
-        cmax = grasa_max + 2
-    elif(dif_zona_optima_min > 2 and dif_zona_optima_max < 2):
-        cmin = grasa_min - 2
-        cmax = zona_optima_max + dif_zona_optima_min + 2
-    else:
-        cmin = grasa_min - 2
-        cmax = grasa_max
+    # --- Ajuste de rango para cmin y cmax (grasa) ---
+    grasa_min = df["GRASA (%)"].min()
+    grasa_max = df["GRASA (%)"].max()
+
+    cmin = min(3, grasa_min - 1 if grasa_min < 3 else grasa_min)
+    cmax = max(25, grasa_max + 1 if grasa_max > 25 else grasa_max)
+
+    if cmax - cmin < 5:
+        cmax = cmin + 5
 
     color_lineas = {
         "PESO (KG)": "#66c2ff",
@@ -130,7 +120,6 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     fig = go.Figure()
 
-    # Asegurar que la barra de peso se vea si hay un solo registro
     if len(df) == 1:
         new_row = {
             "FECHA REGISTRO": df["FECHA REGISTRO"].iloc[0] + pd.Timedelta(days=5),
@@ -139,35 +128,38 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         }
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
-    # --- PESO como barra (eje izquierdo) ---
+    # --- PESO como barra ---
     if "PESO (KG)" in df.columns:
         fig.add_trace(go.Bar(
             x=df["FECHA REGISTRO"],
             y=df["PESO (KG)"],
-            name=util.traducir("PESO (KG)",idioma),
+            name=util.traducir("PESO (KG)", idioma),
             marker_color=color_lineas["PESO (KG)"],
             text=df["PESO (KG)"].round(1),
             textposition="inside",
             yaxis="y1",
-            hovertemplate=(
-                "<b>Fecha:</b> %{x|%d-%m-%Y}<br>"
-                "<b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
-            )
+            hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
         ))
 
-    # --- GRASA como línea con puntos coloreados (eje derecho) ---
+    # --- GRASA como línea con puntos coloreados ---
     if "GRASA (%)" in df.columns:
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
         colores_puntos = []
 
         for valor in y_vals:
-            if 11 <= valor <= 12.5:
-                colores_puntos.append("green")
-            elif 9 <= valor < 11 or 12.5 < valor <= 14:
-                colores_puntos.append("orange")
+            if valor >= 25 or 20 <= valor < 21 or 22 <= valor < 23 or 3 <= valor <= 5:
+                colores_puntos.append("#FF0000")  # Rojo
+            elif 18 <= valor < 20 or 6 <= valor < 7:
+                colores_puntos.append("#FFA500")  # Naranja
+            elif 16 <= valor < 18 or 7 <= valor < 8:
+                colores_puntos.append("#FFFF00")  # Amarillo
+            elif 14 <= valor < 16 or 8 <= valor < 10:
+                colores_puntos.append("#006400")  # Verde Oscuro
+            elif 10 <= valor < 14:
+                colores_puntos.append("#7CFC00")  # Verde Manzana
             else:
-                colores_puntos.append("red")
+                colores_puntos.append("gray")
 
         fig.add_trace(go.Scatter(
             x=x_vals,
@@ -180,17 +172,15 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f} %<extra></extra>"
         ))
 
-        # Anotar máximo
         df_filtro = df[["FECHA REGISTRO", "GRASA (%)"]].dropna()
         if not df_filtro.empty:
             max_valor = df_filtro["GRASA (%)"].max()
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-            maxl = util.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["GRASA (%)"],
                 yref="y2",
-                text=f"{maxl}: {fila_max['GRASA (%)']:.1f} %",
+                text=f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.1f} %",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -199,80 +189,50 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 font=dict(color="white")
             )
 
-            # Líneas discontinuas para zona óptima (en y2)
             x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=15)
             x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=15)
 
-            fig.add_trace(go.Scatter(
-                x=[x_min, x_max],
-                y=[zona_optima_max, zona_optima_max],
-                mode="lines",
-                name="",
-                line=dict(color="green", dash="dash"),
-                yaxis="y2",
-                showlegend=False
-            ))
-            fig.add_annotation(
-                x=x_min,
-                y=zona_optima_max,
-                yref="y2",
-                text=zona_optima_max,
-                showarrow=False,
-                font=dict(size=11, color="black"),
-                xanchor="left",
-                yanchor="bottom"
-            )
+            fig.add_trace(go.Scatter(x=[x_min, x_max], y=[zona_optima_max, zona_optima_max], mode="lines",
+                                     line=dict(color="green", dash="dash"), yaxis="y2", showlegend=False))
+            fig.add_annotation(x=x_min, y=zona_optima_max, yref="y2", text=zona_optima_max,
+                               showarrow=False, font=dict(size=11), xanchor="left", yanchor="bottom")
 
-            fig.add_trace(go.Scatter(
-                x=[x_min, x_max],
-                y=[zona_optima_min, zona_optima_min],
-                mode="lines",
-                name="",
-                line=dict(color="green", dash="dash"),
-                yaxis="y2",
-                showlegend=False
-            ))
-            fig.add_annotation(
-                x=x_min,
-                y=zona_optima_min,
-                yref="y2",
-                text=zona_optima_min,
-                showarrow=False,
-                font=dict(size=11, color="black"),
-                xanchor="left",
-                yanchor="top"
-            )
+            fig.add_trace(go.Scatter(x=[x_min, x_max], y=[zona_optima_min, zona_optima_min], mode="lines",
+                                     line=dict(color="green", dash="dash"), yaxis="y2", showlegend=False))
+            fig.add_annotation(x=x_min, y=zona_optima_min, yref="y2", text=zona_optima_min,
+                               showarrow=False, font=dict(size=11), xanchor="left", yanchor="top")
 
-            categoria = util.traducir(categoria.upper(), idioma)
-            name = util.traducir("Zona % Grasa Promedio", idioma)
-            # Línea discontinua visible en leyenda
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{name} {categoria} A".upper(),
+                name=f"{util.traducir('Zona % Grasa Promedio', idioma)} {util.traducir(categoria.upper(), idioma)} A",
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
 
-    # --- Barra de color (sin usar yaxis="y2" para evitar error de Kaleido) ---
+    # --- Barra de color para GRASA (%) ---
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
         fig.add_trace(go.Heatmap(
-            z=[[0]],  # dummy heatmap
+            z=[[0]],
             x=[df["FECHA REGISTRO"].min()],
             y=[(cmin + cmax) / 2],
             colorscale=[
-                [0.0, "red"],
-                [0.35, "orange"],
-                [0.5, "green"],
-                [0.65, "orange"],
-                [1.0, "red"]
+                [(3 - cmin)/(cmax - cmin), "#FF0000"],     # Rojo
+                [(6 - cmin)/(cmax - cmin), "#FFA500"],     # Naranja
+                [(7 - cmin)/(cmax - cmin), "#FFFF00"],     # Amarillo
+                [(8 - cmin)/(cmax - cmin), "#006400"],     # Verde Oscuro
+                [(10 - cmin)/(cmax - cmin), "#7CFC00"],    # Verde Manzana
+                [(14 - cmin)/(cmax - cmin), "#006400"],    # Verde Oscuro
+                [(16 - cmin)/(cmax - cmin), "#FFFF00"],    # Amarillo
+                [(18 - cmin)/(cmax - cmin), "#FFA500"],    # Naranja
+                [(20 - cmin)/(cmax - cmin), "#FF0000"],    # Rojo
+                [(25 - cmin)/(cmax - cmin), "#FF0000"],    # Rojo
             ],
             zmin=cmin,
             zmax=cmax,
             showscale=True,
             colorbar=dict(
                 title=dict(text=util.traducir("GRASA (%)", idioma), side="right"),
-                #titleside="right",
                 orientation="v",
                 y=-0.02,
                 yanchor="bottom",
@@ -281,22 +241,19 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 x=1.03,
                 xanchor="left",
                 thickness=20,
-                #showticklabels=False,
                 tickfont=dict(color="white"),
-                #titlefont=dict(color="gray")
             ),
             hoverinfo="skip"
         ))
 
-        title_layout = "PESO Y % GRASA" if barras else "Evolución del Peso y % Grasa"
+    title_layout = "PESO Y % GRASA" if barras else "Evolución del Peso y % Grasa"
 
-    # --- Layout final con dos ejes ---
     fig.update_layout(
-        title=util.traducir(title_layout,idioma).upper(),
+        title=util.traducir(title_layout, idioma).upper(),
         xaxis=dict(
-            tickformat="%b",     # Mantén esto si quieres seguir usando el formato base (mes)
-            dtick="M1",          # Mantén esto si quieres controlar cada mes
-            tickmode="array",    # Usamos arreglo para mostrar solo meses relevantes
+            tickformat="%b",
+            dtick="M1",
+            tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
@@ -322,7 +279,6 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             x=0.5
         )
     )
-
 
     st.plotly_chart(fig, use_container_width=True)
     return fig

@@ -5,13 +5,11 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-# Versión final de get_cmj_graph con formato de fecha adaptativo
 def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False):
     df = pd.DataFrame(df_cmj)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
     df = df.sort_values(by=columna_fecha_registro)
 
-    # --- Formato adaptativo de fecha ---
     fechas_unicas = df[columna_fecha_registro].dropna().drop_duplicates().sort_values()
     periodos = fechas_unicas.dt.to_period("M").unique()
     formato_fecha = "%d-%b-%Y" if len(periodos) == 1 else "%b-%Y"
@@ -44,52 +42,54 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     df_melted = df.melt(id_vars=id_vars, value_vars=metricas, var_name="MÉTRICA", value_name="VALOR").dropna()
 
     fig = go.Figure()
+    valores = df_melted["VALOR"].tolist() + list(promedios.values())
 
-    valores = df_melted["VALOR"].tolist()
-    for prom in promedios.values():
-        valores.append(prom)
+    # --- Rango dinámico con base entre 20-50 ---
+    cmj_min = min(valores)
+    cmj_max = max(valores)
+    cmin = min(20, cmj_min - 1 if cmj_min < 20 else cmj_min)
+    cmax = max(50, cmj_max + 1 if cmj_max > 50 else cmj_max)
+    if cmax - cmin < 10:
+        cmax = cmin + 10
 
-    if promedios and metricas[0] in promedios:
-        prom = promedios[metricas[0]]
-        data_min = min(valores)
-        data_max = max(valores)
+    tickvals = df["FECHA TEXTO"].unique().tolist() if barras else fechas_unicas
+    ticktext = tickvals if barras else fechas_unicas.dt.strftime(formato_fecha)
 
-        margen_inferior = prom - data_min + 10 if data_min < prom else max(1, prom * 0.2)
-        margen_superior = data_max - prom + 1 if data_max > prom else max(1, prom * 0.2)
+    es_cadete = "cadete" in categoria.lower()
 
-        ymin = max(0, prom - margen_inferior)
-        ymax = prom + margen_superior
-    else:
-        ymin = min(valores) - 2
-        ymax = max(valores) + ((max(valores) - min(valores)) * 0.1)
-
-    # --- Etiquetas eje X ---
-    if barras:
-        tickvals = df["FECHA TEXTO"].unique().tolist()
-        ticktext = tickvals
-    else:
-        tickvals = fechas_unicas
-        ticktext = fechas_unicas.dt.strftime(formato_fecha)
-
-    # --- Graficar ---
     for metrica in metricas:
         df_filtro = df_melted[df_melted["MÉTRICA"] == metrica]
         x_vals = df_filtro[columna_x].tolist()
         y_vals = df_filtro["VALOR"].tolist()
 
         colores_puntos = []
-        tolerancia = 5
         for valor in y_vals:
-            if metrica in promedios:
-                prom = promedios[metrica]
-                if valor >= prom:
-                    colores_puntos.append("rgba(0, 200, 0, 0.8)")
-                elif abs(valor - prom) <= tolerancia:
-                    colores_puntos.append("rgba(255, 215, 0, 0.9)")
+            if es_cadete:
+                if valor > 32:
+                    colores_puntos.append("#7CFC00")  # Verde Manzana
+                elif 30 <= valor <= 32:
+                    colores_puntos.append("#006400")  # Verde Oscuro
+                elif 27 <= valor <= 29:
+                    colores_puntos.append("#FFFF00")  # Amarillo
+                elif 25 <= valor <= 26:
+                    colores_puntos.append("#FFA500")  # Naranja
+                elif valor <= 24:
+                    colores_puntos.append("#FF0000")  # Rojo
                 else:
-                    colores_puntos.append("rgba(255, 0, 0, 0.8)")
+                    colores_puntos.append("gray")
             else:
-                colores_puntos.append("gray")
+                if valor > 40:
+                    colores_puntos.append("#7CFC00")  # Verde Manzana
+                elif 35 <= valor <= 39.99:
+                    colores_puntos.append("#006400")  # Verde Oscuro
+                elif 33 <= valor <= 34.99:
+                    colores_puntos.append("#FFFF00")  # Amarillo
+                elif 31 <= valor <= 32.99:
+                    colores_puntos.append("#FFA500")  # Naranja
+                elif valor <= 30:
+                    colores_puntos.append("#FF0000")  # Rojo
+                else:
+                    colores_puntos.append("gray")
 
         if barras:
             ancho_barra = 0.1 if len(x_vals) == 1 else 0.3
@@ -148,60 +148,65 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             annotation=dict(font=dict(color="black", size=12, family="Arial")),
             layer="above"
         )
-
-        title = util.traducir("ALTURA DE SALTO (CM)", idioma)
-        promedio = util.traducir("PROMEDIO", idioma)
-        categoria_trad = util.traducir(categoria.upper(), idioma)
-
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{title} {promedio} ({categoria_trad} {equipo})".upper(),
+            name=f"{util.traducir('ALTURA DE SALTO (CM)', idioma)} {util.traducir('PROMEDIO', idioma)} ({util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
-    if metricas[0] in df.columns and not df[metricas[0]].isnull().all():
-        if promedios and metricas[0] in promedios:
-            valor_prom = promedios[metricas[0]]
-            rel_promedio = (valor_prom - ymin) / (ymax - ymin)
-            colorscale = [
-                [0.0, "red"],
-                [max(rel_promedio * 0.7, 0.001), "orange"],
-                [rel_promedio, "green"],
-                [1.0, "green"]
-            ]
-        else:
-            colorscale = [
-                [0.0, "red"],
-                [0.5, "orange"],
-                [0.7, "yellow"],
-                [1.0, "green"]
-            ]
+    # --- Colorbar lateral según categoría ---
+    if es_cadete:
+        colorscale = [
+            [(20 - cmin) / (cmax - cmin), "#FF0000"],
+            [(24 - cmin) / (cmax - cmin), "#FF0000"],
+            [(25 - cmin) / (cmax - cmin), "#FFA500"],
+            [(26 - cmin) / (cmax - cmin), "#FFA500"],
+            [(27 - cmin) / (cmax - cmin), "#FFFF00"],
+            [(29 - cmin) / (cmax - cmin), "#FFFF00"],
+            [(30 - cmin) / (cmax - cmin), "#006400"],
+            [(32 - cmin) / (cmax - cmin), "#006400"],
+            [(33 - cmin) / (cmax - cmin), "#7CFC00"],
+            [(50 - cmin) / (cmax - cmin), "#7CFC00"]
+        ]
+    else:
+        colorscale = [
+            [(20 - cmin) / (cmax - cmin), "#FF0000"],
+            [(30 - cmin) / (cmax - cmin), "#FF0000"],
+            [(31 - cmin) / (cmax - cmin), "#FFA500"],
+            [(32 - cmin) / (cmax - cmin), "#FFA500"],
+            [(33 - cmin) / (cmax - cmin), "#FFFF00"],
+            [(34 - cmin) / (cmax - cmin), "#FFFF00"],
+            [(35 - cmin) / (cmax - cmin), "#006400"],
+            [(39 - cmin) / (cmax - cmin), "#006400"],
+            [(40 - cmin) / (cmax - cmin), "#7CFC00"],
+            [(50 - cmin) / (cmax - cmin), "#7CFC00"]
+        ]
 
-        fig.add_trace(go.Scatter(
-            x=[None], y=[None],
-            mode="markers",
-            marker=dict(
-                size=0,
-                color=[(ymin + ymax) / 2],
-                colorscale=colorscale,
-                cmin=ymin,
-                cmax=ymax,
-                colorbar=dict(
-                    ticks="outside",
-                    tickfont=dict(color="black"),
-                    thickness=20,
-                    len=1,
-                    lenmode="fraction",
-                    y=0,
-                    yanchor="bottom",
-                    x=1.05
-                ),
-                showscale=True
+    fig.add_trace(go.Scatter(
+        x=[None], y=[None],
+        mode="markers",
+        marker=dict(
+            size=0,
+            color=[(cmin + cmax) / 2],
+            colorscale=colorscale,
+            cmin=cmin,
+            cmax=cmax,
+            colorbar=dict(
+                ticks="outside",
+                tickfont=dict(color="black"),
+                thickness=20,
+                len=1,
+                lenmode="fraction",
+                y=0,
+                yanchor="bottom",
+                x=1.05
             ),
-            showlegend=False,
-            hoverinfo="skip"
-        ))
+            showscale=True
+        ),
+        showlegend=False,
+        hoverinfo="skip"
+    ))
 
     title_layout = "POTENCIA MUSCULAR DE SALTO (CMJ)" if barras else "Evolución de la Potencia Muscular de Salto (CMJ)"
     fig.update_layout(
@@ -214,7 +219,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         ),
         yaxis=dict(
             title=util.traducir("ALTURA DE SALTO (CM)", idioma),
-            range=[ymin, ymax]
+            range=[cmin, cmax]
         ),
         template="plotly_white",
         barmode="group" if barras else "overlay",
