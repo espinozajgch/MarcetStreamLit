@@ -1053,6 +1053,45 @@ def calcular_promedios_filtrados(df, columnas_a_verificar):
     return df_promedios
 
 TRADUCCIONES = {
+    "PESO Y % GRASA": {
+        "es": "PESO Y % GRASA",
+        "en": "WEIGHT AND % FAT",
+        "pt": "PESO E % DE GORDURA",
+        "ar": "الوزن و٪ الدهون"
+    },
+    "Evolución de la Distancia Acumulada": {
+        "en": "Evolution of Accumulated Distance",
+        "it": "Evoluzione della Distanza Accumulata",
+        "de": "Entwicklung der Zurückgelegten Distanz",
+        "fr": "Évolution de la Distance Accumulée",
+        "ca": "Evolució de la Distància Acumulada",
+        "pt": "Evolução da Distância Acumulada",
+        "ar": "تطور المسافة التراكمية"
+    },
+    "DISTANCIA ACUMULADA (M)": {
+        "en": "ACCUMULATED DISTANCE (M)",
+        "it": "DISTANZA ACCUMULATA (M)",
+        "de": "ZURÜCKGELEGTE DISTANZ (M)",
+        "fr": "DISTANCE ACCUMULÉE (M)",
+        "ca": "DISTÀNCIA ACUMULADA (M)",
+        "pt": "DISTÂNCIA ACUMULADA (M)",
+        "ar": "المسافة التراكمية (متر)"
+    },
+    "Evolución de la Potencia Muscular de Salto (CMJ)": {
+        "en": "Evolution of Jump Muscle Power (CMJ)",
+        "it": "Evoluzione della Potenza Muscolare del Salto (CMJ)",
+        "de": "Entwicklung der Sprungkraft (CMJ)",
+        "fr": "Évolution de la Puissance Musculaire de Saut (CMJ)",
+        "ca": "Evolució de la Potència Muscular del Salt (CMJ)",
+        "pt": "Evolução da Potência Muscular do Salto (CMJ)",
+        "ar": "تطور القوة العضلية للقفز (CMJ)"
+    },
+    "POTENCIA MUSCULAR DE SALTO (CMJ)": {
+        "es": "POTENCIA MUSCULAR DE SALTO (CMJ)",
+        "en": "JUMP MUSCULAR POWER (CMJ)",
+        "pt": "POTÊNCIA MUSCULAR DO SALTO (CMJ)",
+        "ar": "القوة العضلية للقفز (CMJ)"
+    },
     "Evolución del Tiempo Total en Repeticiones de Sprint": {
         "en": "Evolution of Total Time in Sprint Repetitions",
         "it": "Evoluzione del Tempo Totale nelle Ripetizioni di Sprint",
@@ -1079,6 +1118,30 @@ TRADUCCIONES = {
         "ca": "Evolució de l'Agilitat (ESQ i DRE)",
         "pt": "Evolução da Agilidade (ESQ e DIR)",
         "ar": "تطور الرشاقة (يسار ويمين)"
+    },
+    "AGILIDAD (IZQ Y DER)": {
+        "es": "AGILIDAD (IZQ Y DER)",
+        "en": "AGILITY (LEFT AND RIGHT)",
+        "pt": "AGILIDADE (ESQ E DIR)",
+        "ar": "الرشاقة (يسار ويمين)"
+    },
+    "Evolución del Sprint": {
+        "en": "Sprint Evolution",
+        "it": "Evoluzione dello Sprint",
+        "de": "Sprint-Entwicklung",
+        "fr": "Évolution du Sprint",
+        "ca": "Evolució de l'Sprint",
+        "pt": "Evolução do Sprint",
+        "ar": "تطور العدو السريع"
+    },
+    "SPRINT": {
+        "en": "SPRINT EVOLUTION",
+        "it": "EVOLUZIONE DELLO SPRINT",
+        "de": "SPRINT-ENTWICKLUNG",
+        "fr": "ÉVOLUTION DU SPRINT",
+        "ca": "EVOLUCIÓ DE L'SPRINT",
+        "pt": "EVOLUÇÃO DO SPRINT",
+        "ar": "تطور العدو السريع"
     },
     "DIFERENCIA %": {
         "en": "DIFFERENCE %",
@@ -1125,15 +1188,6 @@ TRADUCCIONES = {
         "pt": "TEMPO (SEG)",
         "ar": "الوقت (ثانية)"
     },
-    "Evolución del Sprint": {
-        "en": "Sprint Evolution",
-        "it": "Evoluzione dello Sprint",
-        "de": "Sprint-Entwicklung",
-        "fr": "Évolution du Sprint",
-        "ca": "Evolució de l'Sprint",
-        "pt": "Evolução do Sprint",
-        "ar": "تطور العدو السريع"
-    },
     "TIEMPO 0-5M (SEG)": {
         "en": "TIME 0-5M (SEC)",
         "it": "TEMPO 0-5M (SEC)",
@@ -1169,33 +1223,6 @@ TRADUCCIONES = {
         "ca": "VEL 0-40M (M/S)",
         "pt": "VEL 0-40M (M/S)",
         "ar": "السرعة 0-40م (م/ث)"
-    },
-    "Evolución de la Distancia Acumulada": {
-        "en": "Evolution of Accumulated Distance",
-        "it": "Evoluzione della Distanza Accumulata",
-        "de": "Entwicklung der Zurückgelegten Distanz",
-        "fr": "Évolution de la Distance Accumulée",
-        "ca": "Evolució de la Distància Acumulada",
-        "pt": "Evolução da Distância Acumulada",
-        "ar": "تطور المسافة التراكمية"
-    },
-    "DISTANCIA ACUMULADA (M)": {
-        "en": "ACCUMULATED DISTANCE (M)",
-        "it": "DISTANZA ACCUMULATA (M)",
-        "de": "ZURÜCKGELEGTE DISTANZ (M)",
-        "fr": "DISTANCE ACCUMULÉE (M)",
-        "ca": "DISTÀNCIA ACUMULADA (M)",
-        "pt": "DISTÂNCIA ACUMULADA (M)",
-        "ar": "المسافة التراكمية (متر)"
-    },
-    "Evolución de la Potencia Muscular de Salto (CMJ)": {
-        "en": "Evolution of Jump Muscle Power (CMJ)",
-        "it": "Evoluzione della Potenza Muscolare del Salto (CMJ)",
-        "de": "Entwicklung der Sprungkraft (CMJ)",
-        "fr": "Évolution de la Puissance Musculaire de Saut (CMJ)",
-        "ca": "Evolució de la Potència Muscular del Salt (CMJ)",
-        "pt": "Evolução da Potência Muscular do Salto (CMJ)",
-        "ar": "تطور القوة العضلية للقفز (CMJ)"
     },
     "ALTURA DE SALTO (CM)": {
         "en": "JUMP HEIGHT (CM)",

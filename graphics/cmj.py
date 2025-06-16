@@ -203,8 +203,9 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             hoverinfo="skip"
         ))
 
+    title_layout = "POTENCIA MUSCULAR DE SALTO (CMJ)" if barras else "Evolución de la Potencia Muscular de Salto (CMJ)"
     fig.update_layout(
-        title=util.traducir("Evolución de la Potencia Muscular de Salto (CMJ)", idioma),
+        title=util.traducir(title_layout, idioma).upper(),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,

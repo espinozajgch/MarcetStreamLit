@@ -151,8 +151,9 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
     tickvals = df["FECHA TEXTO"].drop_duplicates().tolist()
     ticktext = tickvals
 
+    title_layout = "AGILIDAD (IZQ Y DER)" if barras else "Evolución de la Agilidad (IZQ y DER)"
     fig.update_layout(
-        title=util.traducir("Evolución de la Agilidad (IZQ y DER)", idioma),
+        title=util.traducir(title_layout, idioma).upper(),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,

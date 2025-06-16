@@ -210,10 +210,10 @@ else:
                     else:
                         st.success(f"El porcentaje de grasa corporal ({gact:.2f}%) está dentro de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%) para su categoria", icon="✅")
                     
-                    figalt = graphics.get_height_graph(df_anthropometrics, idioma)
+                    figalt = graphics.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
 
                     df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max, idioma)
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     

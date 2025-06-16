@@ -179,8 +179,9 @@ def get_sprint_graph(
         ))
         fig.update_layout(yaxis=dict(range=[y_min, y_max]))
 
+    title_layout = "SPRINT" if barras else "Evolución del Sprint"
     fig.update_layout(
-        title=f"{util.traducir('Evolución del Sprint', idioma)} ({util.traducir(metrica_tiempo, idioma)} y {util.traducir(metrica_velocidad, idioma)})",
+        title=f"{util.traducir(title_layout, idioma).upper()} ({util.traducir(metrica_tiempo, idioma)} y {util.traducir(metrica_velocidad, idioma)})",
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,

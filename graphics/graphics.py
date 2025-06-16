@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_height_graph(df_altura, idioma="es"):
+def get_height_graph(df_altura, idioma="es", barras=False):
     df = pd.DataFrame(df_altura)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
     df = df.sort_values(by="FECHA REGISTRO")
@@ -60,8 +60,9 @@ def get_height_graph(df_altura, idioma="es"):
             font=dict(color="white")
         )
 
+    title_layout = "ALTURA (CM)" if barras else "Evolución de la Altura (cm)"
     fig.update_layout(
-        title=util.traducir("Evolución de la Altura (cm)", idioma),
+        title=util.traducir(title_layout, idioma).upper(),
         xaxis_title=None,
         yaxis_title=util.traducir("ALTURA (CM)", idioma),
         template="plotly_white",
@@ -83,7 +84,7 @@ def get_height_graph(df_altura, idioma="es"):
 
     return fig
 
-def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es"):
+def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es", barras=False):
 
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -132,7 +133,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     # Asegurar que la barra de peso se vea si hay un solo registro
     if len(df) == 1:
         new_row = {
-            "FECHA REGISTRO": df["FECHA REGISTRO"].iloc[0] + pd.Timedelta(days=1),
+            "FECHA REGISTRO": df["FECHA REGISTRO"].iloc[0] + pd.Timedelta(days=5),
             "PESO (KG)": None,
             "GRASA (%)": None
         }
@@ -287,9 +288,11 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             hoverinfo="skip"
         ))
 
+        title_layout = "PESO Y % GRASA" if barras else "Evolución del Peso y % Grasa"
+
     # --- Layout final con dos ejes ---
     fig.update_layout(
-        title=util.traducir("Evolución del Peso y % Grasa",idioma),
+        title=util.traducir(title_layout,idioma).upper(),
         xaxis=dict(
             tickformat="%b",     # Mantén esto si quieres seguir usando el formato base (mes)
             dtick="M1",          # Mantén esto si quieres controlar cada mes

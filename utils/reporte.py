@@ -129,11 +129,11 @@ def generate_pdf_simple(df_jugador, df_anthropometrics, df_agilty, df_sprint, df
     # Preparar lista de figuras disponibles
     graficos = []
     if figs_dict.get("Peso y Grasa"):
-        graficos.append(("Evolución del Peso y % Grasa", figs_dict["Peso y Grasa"]))
+        graficos.append(("Peso y % Grasa", figs_dict["Peso y Grasa"]))
     if figs_dict.get("CMJ"):
         graficos.append(("POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)", figs_dict["CMJ"]))
     if figs_dict.get("SPRINT 0-40"):
-        graficos.append(("EVOLUCIÓN DEL SPRINT (0-40M)", figs_dict["SPRINT 0-40"]))
+        graficos.append(("SPRINT (0-40M)", figs_dict["SPRINT 0-40"]))
     if figs_dict.get("AGILIDAD"):
         graficos.append(("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)", figs_dict["AGILIDAD"]))
 
