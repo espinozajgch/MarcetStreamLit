@@ -523,10 +523,10 @@ def actualizar_datos_con_checkin(df_datos, df_checkin, df_joined):
 
     # 5. Eliminar duplicados por JUGADOR y CATEGORIA, manteniendo solo los que vienen de df_datos
     df_resultado = df_resultado.sort_values(by="PRIORIDAD", ascending=False)  # "datos" < "nuevos"
-    #df_resultado = df_resultado.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first")
+    df_resultado = df_resultado.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first")
 
     # 6. Eliminar la columna auxiliar
-    #df_resultado = df_resultado.drop(columns="PRIORIDAD").reset_index(drop=True)
+    df_resultado = df_resultado.drop(columns="PRIORIDAD").reset_index(drop=True)
 
     # 7. Eliminar filas completamente vacías
     df_resultado = df_resultado.dropna(how="all").reset_index(drop=True)

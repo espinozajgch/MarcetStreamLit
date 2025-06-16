@@ -56,7 +56,6 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
 ###################################################
 
-#st.dataframe(df_datos_final)
 # Filtros
 ###################################################
 on = st.toggle("Solo Jugadores con Test Realizados")
@@ -66,6 +65,8 @@ if on:
     df_datos_filtrado = util.get_filters(df_filtrado)
 else:
     df_datos_filtrado = util.get_filters(df_datos_final)
+
+st.dataframe(df_datos_filtrado)
 
 with st.expander("Configuración Avanzada"):
     col1, col2, col3 = st.columns([1,1,2])
