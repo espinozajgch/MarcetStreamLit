@@ -1549,6 +1549,38 @@ TRADUCCIONES = {
         "pt": "CHECK IN", "ar": "تسجيل الدخول"
     },
 
+    "LATERAL": {
+        "es": "LATERAL",
+        "en": "FULLBACK",
+        "fr": "LATÉRAL",
+        "it": "TERZINO",
+        "de": "AUSSENVERTEIDIGER",
+        "ca": "LATERAL",
+        "pt": "LATERAL",
+        "ar": "الظهير"
+    },
+    "EXTREMO DERECHO": {
+        "es": "EXTREMO DERECHO",
+        "en": "RIGHT WINGER",
+        "fr": "AILIER DROIT",
+        "it": "ALA DESTRA",
+        "de": "RECHTSAUSSEN",
+        "ca": "EXTREM DRET",
+        "pt": "EXTREMO DIREITO",
+        "ar": "الجناح الأيمن"
+    },
+    "EXTREMO IZQUIERDO": {
+        "es": "EXTREMO IZQUIERDO",
+        "en": "LEFT WINGER",
+        "fr": "AILIER GAUCHE",
+        "it": "ALA SINISTRA",
+        "de": "LINKSAUSSEN",
+        "ca": "EXTREM ESQUERRE",
+        "pt": "EXTREMO ESQUERDO",
+        "ar": "الجناح الأيسر"
+    },
+
+
     "ANTROPOMETRIA": {
         "en": "ANTHROPOMETRY",
         "it": "ANTROPOMETRIA",
