@@ -61,6 +61,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 marker_color=color,
                 text=[f"{val:.2f}" for val in y_vals],
                 textposition="auto",
+                textfont=dict(size=14),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
         else:
@@ -90,7 +91,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 ax=offset_x,
                 ay=offset_y,
                 xshift=xshift_val,
-                bgcolor=color,
+                bgcolor="gray",
                 font=dict(color="white")
             )
 
@@ -105,8 +106,9 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 x=[fecha],
                 y=[max(dom, nd) + 0.2],
                 mode="markers+text",
-                marker=dict(size=15, color="orange", opacity=0.7),
+                marker=dict(size=20, color="orange", opacity=0.7),
                 text=f"{diferencia:.1f}%",
+                textfont=dict(size=17,color="black"),
                 textposition="top center",
                 showlegend=not added_to_legend,
                 name=util.traducir("DIFERENCIA %", idioma),
@@ -114,39 +116,39 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             ))
             added_to_legend = True
 
-    if valores:
-        prom_dom = promedios.get(metricas[0], (ymin + ymax) / 2)
-        fig.add_trace(go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            marker=dict(
-                size=0,
-                color=[prom_dom],
-                colorscale=[
-                    [0.0, "green"],
-                    [0.5, "orange"],
-                    [1.0, "red"]
-                ],
-                cmin=ymin,
-                cmax=ymax,
-                colorbar=dict(
-                    title="",
-                    ticks="outside",
-                    tickfont=dict(color="black"),
-                    thickness=20,
-                    len=1,
-                    lenmode="fraction",
-                    y=0,
-                    yanchor="bottom",
-                    x=1.05,
-                    xanchor="left"
-                ),
-                showscale=True
-            ),
-            showlegend=False,
-            hoverinfo="skip"
-        ))
+    # if valores:
+    #     prom_dom = promedios.get(metricas[0], (ymin + ymax) / 2)
+    #     fig.add_trace(go.Scatter(
+    #         x=[None],
+    #         y=[None],
+    #         mode="markers",
+    #         marker=dict(
+    #             size=0,
+    #             color=[prom_dom],
+    #             colorscale=[
+    #                 [0.0, "green"],
+    #                 [0.5, "orange"],
+    #                 [1.0, "red"]
+    #             ],
+    #             cmin=ymin,
+    #             cmax=ymax,
+    #             colorbar=dict(
+    #                 title="",
+    #                 ticks="outside",
+    #                 tickfont=dict(color="black"),
+    #                 thickness=20,
+    #                 len=1,
+    #                 lenmode="fraction",
+    #                 y=0,
+    #                 yanchor="bottom",
+    #                 x=1.05,
+    #                 xanchor="left"
+    #             ),
+    #             showscale=True
+    #         ),
+    #         showlegend=False,
+    #         hoverinfo="skip"
+    #     ))
 
     tickvals = df["FECHA TEXTO"].drop_duplicates().tolist()
     ticktext = tickvals
@@ -158,7 +160,8 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
-            type="category"
+            type="category",
+            showticklabels=not barras
         ),
         yaxis=dict(
             title=util.traducir("TIEMPO (SEG)", idioma),

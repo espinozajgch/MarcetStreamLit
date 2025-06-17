@@ -8,9 +8,10 @@ import tempfile
 import plotly.io as pio
 
 class PDF(FPDF):
-    def __init__(self, idioma="es"):
+    def __init__(self, fecha_actual, idioma="es"):
         super().__init__()
         self.idioma = idioma  # Idioma predeterminado para traducciones
+        self.fecha_actual = fecha_actual
 
         if(idioma == "ar"):
             self.add_font("Amiri", "", "assets/fonts/Amiri-0.111/Amiri-Regular.ttf", uni=True)  # Añadir fuente Unicode
@@ -45,6 +46,7 @@ class PDF(FPDF):
             self.set_font("Amiri", "I", 8)
         else:
             self.set_font("Arial", "I", 8)
+        
         self.set_xy(120, 8)
         self.cell(80, 5, util.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
 
@@ -54,8 +56,12 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "B", 14)
         self.set_text_color(249, 178, 51)  # amarillo
-        self.set_xy(0, 20)
+        self.set_xy(0, 16)
         self.cell(210, 10, util.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
+        
+        self.set_text_color(0, 0, 0)
+        self.set_xy(0, 24)
+        self.cell(210, 10, "FECHA:" + self.fecha_actual, align="C")
         
         #self.set_xy(0, 25)
         #self.cell(210, 10, self.idioma, align="C")

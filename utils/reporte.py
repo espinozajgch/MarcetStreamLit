@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 from utils.pdf import PDF
 from utils import util
+from datetime import date
 
 def add_footer(pdf, invertido=False, idioma="es"):
 
@@ -14,8 +15,23 @@ def add_footer(pdf, invertido=False, idioma="es"):
     y_final = page_height - margen_inferior
     pdf.draw_gradient_scale(x=10, y=y_final, invertido=True, idioma=idioma)
 
-def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, idioma="es"):
-    pdf = PDF(idioma=idioma)
+def add_footer_con_texto(pdf, texto, idioma="es"):
+    page_height = pdf.get_height()
+    margen_inferior = 33
+    y_final = page_height - margen_inferior
+
+    # === Texto de Observaciones ===
+    pdf.set_xy(10, y_final)
+    pdf.set_font("Arial", "B", 11)
+    pdf.set_text_color(0, 51, 102)  # Azul oscuro
+    pdf.cell(0, 6, util.traducir("Observaciones", idioma).upper(), ln=True)
+
+    pdf.set_font("Arial", "", 10)
+    pdf.set_text_color(0, 0, 0)
+    pdf.multi_cell(0, 5, texto)
+
+def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, fecha_actual, idioma="es"):
+    pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
     pdf.add_page()
     pdf.header()
     
@@ -110,8 +126,9 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
 
     return pdf.output(dest='S') #.encode('utf-8')
 
-def generate_pdf_simple(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, idioma="es"):
-    pdf = PDF(idioma=idioma)
+def generate_pdf_simple(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, fecha_actual, idioma="es"):
+    
+    pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
     pdf.add_page()
     pdf.header()
     pdf.add_player_block(df_jugador, idioma=idioma)
@@ -161,10 +178,10 @@ def generate_pdf_simple(df_jugador, df_anthropometrics, df_agilty, df_sprint, df
                 break
             _, fig = graficos[i + col]
             x = 10 if col == 0 else 105
-            pdf.add_plotly_figure(fig, "", x=x, y=y_grafico, w=95, h=48, idioma=idioma)
+            pdf.add_plotly_figure(fig, "", x=x-3, y=y_grafico-2, w=99, h=55, idioma=idioma)
 
         pdf.ln(48)  # espacio para la fila de gráficos
         i += 2
 
-    add_footer(pdf, idioma=idioma)
+    add_footer_con_texto(pdf, "", idioma=idioma)
     return pdf.output(dest='S')

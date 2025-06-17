@@ -29,141 +29,12 @@ def get_sprint_graph(
     tickvals = df["FECHA TEXTO"].unique().tolist() if barras else fechas_unicas
     ticktext = tickvals if barras else fechas_unicas.dt.strftime(formato_fecha).tolist()
 
-    color_barra = "#66c2ff"
-    color_linea = "#f2950a"
+    color_linea = "#66c2ff"
     color_promedio = "green"
 
     fig = go.Figure()
 
-    promedio_row = df_promedios[
-        (df_promedios["CATEGORIA"] == categoria) &
-        (df_promedios["EQUIPO"] == equipo)
-    ]
-    prom_tiempo = promedio_row[metrica_tiempo].values[0] if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None
-    prom_tiempo = prom_tiempo if pd.notna(prom_tiempo) else None
-
-    cols_time = [columnas_fecha_registro, metrica_tiempo]
-    if columnas_fecha_registro != columna_x:
-        cols_time.insert(1, columna_x)
-    df_metric_time = df[cols_time].dropna()
-
-    if not df_metric_time.empty:
-        tiempo_min = df_metric_time[metrica_tiempo].min()
-        tiempo_max = df_metric_time[metrica_tiempo].max()
-
-        rango_categoria = {
-            "Juvenil": (4.4, 6.3),
-            "Cadete": (4.6, 6.5)
-        }
-        base_min, base_max = rango_categoria.get(categoria.capitalize(), (4.4, 6.3))
-
-        y_min = min(base_min, tiempo_min)
-        y_max = max(base_max, tiempo_max)
-        margen = (y_max - y_min) * 0.15
-        y_min -= margen
-        y_max += margen
-
-        fig.add_trace(go.Bar(
-            x=df_metric_time[columna_x],
-            y=df_metric_time[metrica_tiempo],
-            name=util.traducir(metrica_tiempo, idioma),
-            marker_color=color_barra,
-            offsetgroup="tiempo",
-            yaxis="y1",
-            text=df_metric_time[metrica_tiempo].round(2),
-            textposition="inside",
-            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
-        ))
-
-        if len(df_metric_time) > 1:
-            fila_min = df_metric_time[df_metric_time[metrica_tiempo] == df_metric_time[metrica_tiempo].min()].iloc[0]
-            fig.add_annotation(
-                x=fila_min[columna_x],
-                y=fila_min[metrica_tiempo],
-                yref="y1",
-                text=f"{util.traducir('Max', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
-                showarrow=True,
-                arrowhead=2,
-                ax=0 if barras else -60,
-                ay=-40,
-                xshift=-20 if barras else 0,
-                bgcolor=color_barra,
-                font=dict(color="white")
-            )
-
-        if prom_tiempo is not None:
-            fig.add_hline(
-                y=prom_tiempo,
-                line=dict(color=color_promedio, dash="dash", width=2),
-                annotation_text=f"{prom_tiempo:.2f} seg",
-                annotation_position="top right",
-                annotation=dict(font=dict(color="black", size=12)),
-                layer="above"
-            )
-            fig.add_trace(go.Scatter(
-                x=[None], y=[None],
-                mode="lines",
-                name=f"{metrica_tiempo} {util.traducir('PROMEDIO', idioma)} ({util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
-                line=dict(color=color_promedio, dash="dash", width=2),
-                showlegend=True
-            ))
-
-        # === Escala personalizada según categoría ===
-        if categoria.lower() == "juvenil":
-            escala_colores = [
-                [0.0, "#90ee90"],   # < 5.2
-                [0.35, "#006400"],  # 5.2 – 5.4
-                [0.55, "#FFD700"],  # 5.5 – 5.6
-                [0.75, "#FFA500"],  # 5.7 – 5.8
-                [1.0, "#FF4500"],   # ≥ 5.9
-            ]
-        elif categoria.lower() == "cadete":
-            escala_colores = [
-                [0.0, "#90ee90"],   # < 5.8
-                [0.35, "#006400"],  # 5.8 – 5.9
-                [0.55, "#FFD700"],  # 6.0 – 6.1
-                [0.75, "#FFA500"],  # 6.2 – 6.3
-                [1.0, "#FF4500"],   # ≥ 6.4
-            ]
-        else:
-            escala_colores = [
-                [0.0, "lightgreen"],
-                [0.25, "green"],
-                [0.5, "yellow"],
-                [0.75, "orange"],
-                [1.0, "red"]
-            ]
-
-        fig.add_trace(go.Scatter(
-            x=[None], y=[None],
-            mode="markers",
-            marker=dict(
-                size=0,
-                color=[prom_tiempo if prom_tiempo is not None else y_min],
-                colorscale=escala_colores,
-                cmin=y_min,
-                cmax=y_max,
-                colorbar=dict(
-                    title="",
-                    ticks="outside",
-                    tickfont=dict(color="black"),
-                    thickness=20,
-                    len=1,
-                    lenmode="fraction",
-                    y=0,
-                    yanchor="bottom",
-                    x=1.18 if barras else -0.19,
-                    xanchor="right" if barras else "left"
-                ),
-                showscale=True
-            ),
-            showlegend=False,
-            hoverinfo="skip"
-        ))
-
-
-        fig.update_layout(yaxis=dict(range=[y_min, y_max]))
-
+    # === VELOCIDAD ===
     cols_vel = [columnas_fecha_registro, metrica_velocidad]
     if columnas_fecha_registro != columna_x:
         cols_vel.insert(1, columna_x)
@@ -180,6 +51,7 @@ def get_sprint_graph(
                 yaxis="y2",
                 text=df_metric_vel[metrica_velocidad].round(2),
                 textposition="inside",
+                textfont=dict(size=16),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
         else:
@@ -189,7 +61,6 @@ def get_sprint_graph(
                 mode="lines+markers",
                 name=util.traducir(metrica_velocidad, idioma),
                 marker=dict(color=color_linea, size=10),
-                line=dict(color=color_linea, width=2),
                 yaxis="y2",
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
@@ -203,13 +74,149 @@ def get_sprint_graph(
                 text=f"{util.traducir('Max', idioma)}: {fila_max[metrica_velocidad]:.2f} m/s",
                 showarrow=True,
                 arrowhead=2,
-                ax=0,
+                ax=0 if barras else -60,
                 ay=-40,
-                xshift=20 if barras else 0,
-                bgcolor=color_linea,
+                xshift=-20 if barras else 0,
+                bgcolor="gray",
                 font=dict(color="white")
             )
 
+    # === TIEMPO ===
+    promedio_row = df_promedios[
+        (df_promedios["CATEGORIA"] == categoria) &
+        (df_promedios["EQUIPO"] == equipo)
+    ]
+    prom_tiempo = promedio_row[metrica_tiempo].values[0] if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None
+    prom_tiempo = prom_tiempo if pd.notna(prom_tiempo) else None
+
+    cols_time = [columnas_fecha_registro, metrica_tiempo]
+    if columnas_fecha_registro != columna_x:
+        cols_time.insert(1, columna_x)
+    df_metric_time = df[cols_time].dropna()
+
+    if not df_metric_time.empty:
+        tiempo_min = df_metric_time[metrica_tiempo].min()
+        tiempo_max = df_metric_time[metrica_tiempo].max()
+
+        # Rango por categoría
+        rango_categoria = {
+            "Juvenil": (4.4, 6.3),
+            "Cadete": (4.6, 6.5)
+        }
+        base_min, base_max = rango_categoria.get(categoria.capitalize(), (4.4, 6.3))
+
+        y_min = min(base_min, tiempo_min)
+        y_max = max(base_max, tiempo_max)
+        margen = (y_max - y_min) * 0.15
+        y_min -= margen
+        y_max += margen
+
+        escala_colores = [
+            [0.0, "#90ee90"], [0.35, "#006400"], [0.55, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
+        ] if categoria.lower() in ["juvenil", "cadete"] else [
+            [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
+        ]
+
+        #if barras:
+        fig.add_trace(go.Bar(
+            x=df_metric_time[columna_x],
+            y=df_metric_time[metrica_tiempo],
+            name=util.traducir(metrica_tiempo, idioma),
+            marker=dict(
+                color=df_metric_time[metrica_tiempo],
+                colorscale=escala_colores,
+                cmin=y_min,
+                cmax=y_max
+            ),
+            offsetgroup="tiempo",
+            yaxis="y1",
+            text=df_metric_time[metrica_tiempo].round(2),
+            textposition="inside",
+            textfont=dict(size=16),
+            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+        ))
+        # else:
+        #     fig.add_trace(go.Scatter(
+        #         x=df_metric_time[columna_x],
+        #         y=df_metric_time[metrica_tiempo],
+        #         mode="markers+lines",
+        #         name=util.traducir(metrica_tiempo, idioma),
+        #         marker=dict(
+        #             size=10,
+        #             color=df_metric_time[metrica_tiempo],
+        #             colorscale=escala_colores,
+        #             cmin=y_min,
+        #             cmax=y_max
+        #         ),
+        #         line=dict(color="gray", width=2),
+        #         yaxis="y1",
+        #         hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+        #     ))
+
+        if len(df_metric_time) > 1:
+            fila_min = df_metric_time[df_metric_time[metrica_tiempo] == df_metric_time[metrica_tiempo].min()].iloc[0]
+            fig.add_annotation(
+                x=fila_min[columna_x],
+                y=fila_min[metrica_tiempo],
+                yref="y1",
+                text=f"{util.traducir('Max', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
+                showarrow=True,
+                arrowhead=2,
+                ax=0,
+                ay=-40,
+                xshift=20 if barras else 0,
+                bgcolor="gray",
+                font=dict(color="white")
+            )
+
+        if prom_tiempo is not None:
+            fig.add_hline(
+                y=prom_tiempo,
+                line=dict(color=color_promedio, dash="dash", width=2),
+                annotation_text=f"{prom_tiempo:.2f} seg",
+                annotation_position="top right",
+                annotation=dict(font=dict(color="black", size=12)),
+                layer="above"
+            )
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None],
+                mode="lines",
+                name=f"{util.traducir('TIEMPO OPTIMO', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
+                line=dict(color=color_promedio, dash="dash", width=2),
+                showlegend=True
+            ))
+
+        # Barra lateral de color
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None],
+            mode="markers",
+            marker=dict(
+                size=0,
+                color=[prom_tiempo if prom_tiempo is not None else y_min],
+                colorscale=escala_colores,
+                cmin=y_min,
+                cmax=y_max,
+                colorbar=dict(
+                    title="",
+                    ticks="",
+                    tickfont=dict(color="white"),
+                    thickness=20,
+                    len=1,
+                    lenmode="fraction",
+                    y=0,
+                    yanchor="bottom",
+                    x=1.18 if barras else -0.19,
+                    xanchor="right" if barras else "left"
+                ),
+                showscale=True
+            ),
+            showlegend=False,
+            hoverinfo="skip"
+        ))
+
+        fig.update_layout(yaxis=dict(range=[y_min, y_max]))
+
+    # === Layout final ===
     title_layout = "SPRINT" if barras else "Evolución del Sprint"
     fig.update_layout(
         title=f"{util.traducir(title_layout, idioma).upper()} ({util.traducir(metrica_tiempo, idioma)} y {util.traducir(metrica_velocidad, idioma)})",
@@ -217,7 +224,8 @@ def get_sprint_graph(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
-            type="category" if barras else "date"
+            type="category" if barras else "date",
+            showticklabels=not barras
         ),
         yaxis=dict(
             title=util.traducir("TIEMPO (SEG)", idioma),
@@ -326,6 +334,7 @@ def get_sprint_graph_vt(
                 yaxis="y1",
                 text=df_metric_vel[metrica_velocidad].round(2),
                 textposition="inside",
+                textfont=dict(size=14,color="black"),
                 hovertemplate=f"<b>DATE:</b> %{{x|%d-%m-%Y}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 

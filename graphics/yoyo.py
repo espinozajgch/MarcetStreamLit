@@ -49,7 +49,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         for limite, color in semaforo:
             if valor >= limite:
                 return color
-        return "gray"
+        return "red"
 
     colores = [obtener_color(v) for v in df[metrica]]
 
@@ -58,7 +58,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
     base_max = max([r[0] for r in semaforo])
     valores_usuario = df[metrica].tolist() + ([valor_prom] if valor_prom is not None else [])
 
-    margen = 100
+    margen = 300
     ymin = min(base_min, min(valores_usuario)) - margen
     ymax = max(base_max, max(valores_usuario)) + margen
 
@@ -73,6 +73,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             marker_color=colores,
             text=[f"{v:.0f}" for v in df[metrica]],
             textposition="inside",
+            textfont=dict(size=14),
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Valor:</b> %{y:.0f} m<extra></extra>"
         ))
     else:
@@ -97,7 +98,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('DISTANCIA ACUMULADA (M)', idioma)} {util.traducir('PROMEDIO', idioma)} ({categoria} {equipo})",
+            name=f"{util.traducir('DISTANCIA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {categoria} {equipo})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
@@ -111,7 +112,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             arrowhead=2,
             ax=0,
             ay=-30,
-            bgcolor="#1f77b4",
+            bgcolor="gray",
             font=dict(color="white")
         )
 
@@ -137,8 +138,8 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
-                ticks="outside",
-                tickfont=dict(color="black"),
+                ticks="",
+                tickfont=dict(color="white"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -159,7 +160,8 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             tickmode="array",
             tickvals=df[columna_x].tolist(),
             ticktext=df[columna_x].tolist(),
-            type="category"
+            type="category",
+            showticklabels=not barras
         ),
         yaxis=dict(
             title=util.traducir(metrica, idioma),

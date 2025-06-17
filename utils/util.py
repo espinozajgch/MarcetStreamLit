@@ -1009,7 +1009,8 @@ def get_demarcaciones():
         "EXTREMO IZQUIERDO": "EI", 
         "LATERAL DERECHO": "ED",
         "LATERAL": "LA",             
-        "DELANTERO": "DC"
+        "DELANTERO": "DC",
+        "NO DISPONIBLE": "ND"
     }
 
     return MAPA_DEMARCACIONES
@@ -1261,14 +1262,14 @@ TRADUCCIONES = {
         "pt": "Evolução do Peso e % de Gordura",
         "ar": "تطور الوزن ونسبة الدهون (%)"
     },
-    "Zona % Grasa Promedio": {
-        "en": "Average Fat % Zone",
-        "it": "Zona Media di Grasso %",
-        "de": "Durchschnittlicher Fettanteil %",
-        "fr": "Zone Moyenne de Graisse %",
-        "ca": "Zona Mitjana de Greix %",
-        "pt": "Zona Média de Gordura %",
-        "ar": "منطقة متوسط نسبة الدهون (%)"
+    "Zona Optima": {
+        "en": "Optimal Fat % Zone",
+        "it": "Zona Ottimale di Grasso %",
+        "de": "Optimale Fettzone %",
+        "fr": "Zone Optimale de Graisse %",
+        "ca": "Zona Òptima de Greix %",
+        "pt": "Zona Ótima de Gordura %",
+        "ar": "منطقة الدهون المثلى (%)"
     },
     "Evolución de la Altura (cm)": {
         "en": "Height Evolution (cm)",
@@ -1279,6 +1280,43 @@ TRADUCCIONES = {
         "pt": "Evolução da Altura (cm)",
         "ar": "تطور الطول (سم)"
     },
+    "ALTURA OPTIMA": {
+        "en": "OPTIMAL HEIGHT",
+        "it": "ALTEZZA OTTIMALE",
+        "de": "OPTIMALE KÖRPERGRÖSSE",
+        "fr": "TAILLE OPTIMALE",
+        "ca": "ALÇADA ÒPTIMA",
+        "pt": "ALTURA ÓTIMA",
+        "ar": "الطُول الأَمْثَل"
+    },
+    "TIEMPO OPTIMO": {
+        "en": "OPTIMAL TIME",
+        "it": "TEMPO OTTIMALE",
+        "de": "OPTIMALE ZEIT",
+        "fr": "TEMPS OPTIMAL",
+        "ca": "TEMPS ÒPTIM",
+        "pt": "TEMPO ÓTIMO",
+        "ar": "الزَّمَن الأَمْثَل"
+    },
+    "DISTANCIA OPTIMA": {
+        "en": "OPTIMAL DISTANCE",
+        "it": "DISTANZA OTTIMALE",
+        "de": "OPTIMALE DISTANZ",
+        "fr": "DISTANCE OPTIMALE",
+        "ca": "DISTÀNCIA ÒPTIMA",
+        "pt": "DISTÂNCIA ÓTIMA",
+        "ar": "المَسَافَة الأَمْثَل"
+    },
+    "VELOCIDAD OPTIMA": {
+        "en": "OPTIMAL SPEED",
+        "it": "VELOCITÀ OTTIMALE",
+        "de": "OPTIMALE GESCHWINDIGKEIT",
+        "fr": "VITESSE OPTIMALE",
+        "ca": "VELOCITAT ÒPTIMA",
+        "pt": "VELOCIDADE ÓTIMA",
+        "ar": "السُّرْعَة الأَمْثَل"
+    },
+
     # Secciones
     "COMPOSICIÓN CORPORAL": {
         "en": "BODY COMPOSITION",

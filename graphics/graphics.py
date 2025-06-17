@@ -56,7 +56,7 @@ def get_height_graph(df_altura, idioma="es", barras=False):
             arrowhead=2,
             ax=0,
             ay=-30,
-            bgcolor="#12527c",
+            bgcolor="gray",
             font=dict(color="white")
         )
 
@@ -69,7 +69,8 @@ def get_height_graph(df_altura, idioma="es", barras=False):
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
-            ticktext=ticktext
+            ticktext=ticktext,
+            showticklabels=not barras
         ),
         legend=dict(
             orientation="h",
@@ -114,7 +115,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         cmax = cmin + 5
 
     color_lineas = {
-        "PESO (KG)": "#66c2ff",
+        "PESO (KG)": "#2989d2",
         "GRASA (%)": "#12527c"
     }
 
@@ -137,6 +138,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             marker_color=color_lineas["PESO (KG)"],
             text=df["PESO (KG)"].round(1),
             textposition="inside",
+            textfont=dict(size=14),
             yaxis="y1",
             hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
         ))
@@ -185,8 +187,8 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 arrowhead=2,
                 ax=0,
                 ay=30,
-                bgcolor=color_lineas["GRASA (%)"],
-                font=dict(color="white")
+                bgcolor="gray",
+                font=dict(size=14,color="white")
             )
 
             x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=15)
@@ -202,10 +204,13 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fig.add_annotation(x=x_min, y=zona_optima_min, yref="y2", text=zona_optima_min,
                                showarrow=False, font=dict(size=11), xanchor="left", yanchor="top")
 
+            namel = util.traducir('Zona Optima', idioma)
+            cat = util.traducir(categoria.upper(), idioma)
+            prom  = util.traducir("PROMEDIO", idioma)
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{util.traducir('Zona % Grasa Promedio', idioma)} {util.traducir(categoria.upper(), idioma)} A",
+                name=f"{namel} ({prom} {cat} A)".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
@@ -255,7 +260,8 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             dtick="M1",
             tickmode="array",
             tickvals=tickvals,
-            ticktext=ticktext
+            ticktext=ticktext,
+            showticklabels=not barras
         ),
         yaxis=dict(
             title=util.traducir("PESO (KG)", idioma),

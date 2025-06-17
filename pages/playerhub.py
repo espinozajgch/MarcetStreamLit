@@ -56,6 +56,7 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
 ###################################################
 
+df_datos_filtrado = pd.DataFrame()
 # Filtros
 ###################################################
 on = st.toggle("Solo Jugadores con Test Realizados")
@@ -645,18 +646,19 @@ else:
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)
+                    fecha_str = fecha_actual.strftime("%d/%m/%Y")
 
                     try:
                         if(tipo_reporte=="Avanzado"):
                             # 1. Generar PDF como bytes (puede tardar)
                             pdf_bytes = report.generate_pdf_avanzado(
                                 df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                                df_cmj, df_yoyo, df_rsa, figs_filtrados, idioma)
+                                df_cmj, df_yoyo, df_rsa, figs_filtrados, fecha_str, idioma)
                         else:
                             # 2. Generar PDF como bytes (puede tardar)
                             pdf_bytes = report.generate_pdf_simple(
                                 df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                                df_cmj, df_yoyo, df_rsa, figs_filtrados, idioma)
+                                df_cmj, df_yoyo, df_rsa, figs_filtrados, fecha_str, idioma)
                             
                         # 2. Codificar y preparar para mostrar
                         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
@@ -684,3 +686,4 @@ else:
                         st.exception(e)
             else:
                 st.text(mensaje_no_data)
+

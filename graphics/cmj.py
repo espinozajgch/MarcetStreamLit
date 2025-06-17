@@ -65,9 +65,9 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         colores_puntos = []
         for valor in y_vals:
             if es_cadete:
-                if valor > 32:
+                if valor > 33:
                     colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 30 <= valor <= 32:
+                elif 30 <= valor <= 33:
                     colores_puntos.append("#006400")  # Verde Oscuro
                 elif 27 <= valor <= 29:
                     colores_puntos.append("#FFFF00")  # Amarillo
@@ -96,12 +96,13 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
-                name=util.traducir(metrica, idioma),
+                name=util.traducir(metrica, idioma).replace("-", " "),
                 marker_color=colores_puntos,
                 width=ancho_barra,
                 yaxis="y1",
                 text=[f"{v:.2f}" for v in y_vals],
                 textposition="inside",
+                textfont=dict(size=14),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
             ))
         else:
@@ -135,7 +136,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 arrowhead=2,
                 ax=0,
                 ay=-30,
-                bgcolor=color_linea[metrica],
+                bgcolor="gray",
                 font=dict(color="white")
             )
 
@@ -151,7 +152,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('ALTURA DE SALTO (CM)', idioma)} {util.traducir('PROMEDIO', idioma)} ({util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
+            name=f"{util.traducir('ALTURA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
@@ -193,8 +194,8 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             cmin=cmin,
             cmax=cmax,
             colorbar=dict(
-                ticks="outside",
-                tickfont=dict(color="black"),
+                ticks="",
+                tickfont=dict(color="white"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -215,7 +216,8 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
-            type="category" if barras else "date"
+            type="category" if barras else "date",
+            showticklabels=not barras
         ),
         yaxis=dict(
             title=util.traducir("ALTURA DE SALTO (CM)", idioma),

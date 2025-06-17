@@ -64,8 +64,8 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     if prom is not None and not pd.isna(prom):
         valores.append(prom)
 
-    ymin = min(valores) - 0.5
-    ymax = max(valores) + ((max(valores) - min(valores)) * 0.5)
+    ymin = min(valores) - 1
+    ymax = max(valores) + ((max(valores) - min(valores)) * 1)
 
     tickvals = df[columna_x].tolist()
     ticktext = tickvals
@@ -79,6 +79,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             marker_color=colores_puntos,
             text=[f"{v:.2f}" for v in y_vals],
             textposition="inside",
+            textfont=dict(size=14),
             width=ancho_barra,
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Tiempo:</b> %{y:.2f} seg<extra></extra>"
         ))
@@ -112,11 +113,12 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
 
         promedio = util.traducir("PROMEDIO", idioma)
         categoria = util.traducir(categoria.upper(), idioma)
+        tl = util.traducir("TIEMPO OPTIMO", idioma)
 
         fig_tiempo.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{title} {promedio} ({categoria} {equipo})".upper(),
+            name=f"{tl} ({promedio} {categoria} {equipo})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
@@ -133,7 +135,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
                 arrowhead=2,
                 ax=0,
                 ay=-30,
-                bgcolor=color_linea,
+                bgcolor="gray",
                 font=dict(color="white")
             )
 
@@ -164,8 +166,8 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
-                ticks="outside",
-                tickfont=dict(color="black"),
+                ticks="",
+                tickfont=dict(color="white"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -185,7 +187,8 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
-            type="category"
+            type="category",
+            showticklabels=not barras
         ),
         yaxis=dict(
             title=title,
@@ -227,7 +230,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
         st.warning("No se encontraron promedios para esta categoría y equipo.")
 
     tolerancia = 0.3 * 3.6
-    color_linea = "#f2950a"
+    color_linea = "#66c2ff"
     color_promedio = "green"
 
     # Preparar datos
@@ -267,6 +270,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             marker_color=colores_puntos,
             text=[f"{v:.2f}" for v in y_vals],
             textposition="inside",
+            textfont=dict(size=14),
             width=ancho_barra,
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Velocidad:</b> %{y:.2f} m/s<extra></extra>"
         ))
@@ -298,10 +302,12 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
         )
         promedio = util.traducir("PROMEDIO", idioma)
         categoria_trad = util.traducir(categoria.upper(), idioma)
+        vl = util.traducir("VELOCIDAD ÓPTIMA", idioma)
+        
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{title} {promedio} ({categoria_trad} {equipo})".upper(),
+            name=f"{vl} ({promedio} {categoria_trad} {equipo})".upper(),
             line=dict(color=color_promedio, dash="dash")
         ))
 
@@ -350,8 +356,8 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             cmin=ymin,
             cmax=ymax,
             colorbar=dict(
-                ticks="outside",
-                tickfont=dict(color="black"),
+                ticks="",
+                tickfont=dict(color="white"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -373,7 +379,8 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             tickmode="array",
             tickvals=x_vals,
             ticktext=x_vals,
-            type="category"
+            type="category",
+            showticklabels=not barras
         ),
         template="plotly_white",
         legend=dict(
