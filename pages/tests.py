@@ -111,7 +111,6 @@ if on:
 	datatest_columns = util.get_dataframe_columns(df_nuevo)
 	# Lista de columnas que sí quieres validar
 	columnas_a_validar = [col for col in datatest_columns if col not in columnas]
-	#st.text(columnas_a_validar)
 	# 2. Elimina las filas donde TODAS las columnas a validar son NaN o None
 	df_nuevo = df_nuevo.dropna(subset=columnas_a_validar, how="all")
 

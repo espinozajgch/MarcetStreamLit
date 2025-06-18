@@ -63,33 +63,39 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         y_vals = df_filtro["VALOR"].tolist()
 
         colores_puntos = []
+
         for valor in y_vals:
+            if pd.isna(valor):
+                colores_puntos.append("gray")
+                continue
+
             if es_cadete:
-                if valor > 33:
+                if valor > 50:
                     colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 30 <= valor <= 33:
+                elif 35 <= valor <= 50:
                     colores_puntos.append("#006400")  # Verde Oscuro
-                elif 27 <= valor <= 29:
+                elif 27 <= valor < 35:
                     colores_puntos.append("#FFFF00")  # Amarillo
-                elif 25 <= valor <= 26:
+                elif 25 <= valor < 27:
                     colores_puntos.append("#FFA500")  # Naranja
-                elif valor <= 24:
+                elif valor < 25:
                     colores_puntos.append("#FF0000")  # Rojo
                 else:
                     colores_puntos.append("gray")
-            else:
-                if valor > 40:
+            else:  # Juvenil
+                if valor > 50:
                     colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 35 <= valor <= 39.99:
+                elif 40 <= valor <= 50:
                     colores_puntos.append("#006400")  # Verde Oscuro
-                elif 33 <= valor <= 34.99:
+                elif 33 <= valor < 40:
                     colores_puntos.append("#FFFF00")  # Amarillo
-                elif 31 <= valor <= 32.99:
+                elif 31 <= valor < 33:
                     colores_puntos.append("#FFA500")  # Naranja
-                elif valor <= 30:
+                elif valor < 31:
                     colores_puntos.append("#FF0000")  # Rojo
                 else:
                     colores_puntos.append("gray")
+
 
         if barras:
             ancho_barra = 0.2 if len(x_vals) == 1 else 0.3
