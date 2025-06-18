@@ -42,6 +42,7 @@ def get_sprint_graph(
 
     if not df_metric_vel.empty:
         if barras:
+            
             fig.add_trace(go.Bar(
                 x=df_metric_vel[columna_x],
                 y=df_metric_vel[metrica_velocidad],
@@ -49,7 +50,7 @@ def get_sprint_graph(
                 marker_color=color_linea,
                 offsetgroup="velocidad",
                 yaxis="y2",
-                text=df_metric_vel[metrica_velocidad].round(2),
+                text=df_metric_vel[metrica_velocidad].apply(lambda x: f"{x:.2f} m/s"),
                 textposition="inside",
                 textfont=dict(size=16),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
@@ -107,7 +108,7 @@ def get_sprint_graph(
 
         y_min = min(base_min, tiempo_min)
         y_max = max(base_max, tiempo_max)
-        margen = (y_max - y_min) * 0.15
+        margen = (y_max - y_min) * 0.5
         y_min -= margen
         y_max += margen
 
@@ -130,7 +131,8 @@ def get_sprint_graph(
             ),
             offsetgroup="tiempo",
             yaxis="y1",
-            text=df_metric_time[metrica_tiempo].round(2),
+            text=df_metric_time[metrica_tiempo].apply(lambda x: f"{x:.2f} m/s"),
+            #text=df_metric_time[metrica_tiempo].round(2),
             textposition="inside",
             textfont=dict(size=16),
             hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
@@ -175,7 +177,7 @@ def get_sprint_graph(
                 line=dict(color=color_promedio, dash="dash", width=2),
                 annotation_text=f"{prom_tiempo:.2f} seg",
                 annotation_position="top right",
-                annotation=dict(font=dict(color="black", size=12)),
+                annotation=dict(font=dict(color="black", size=14)),
                 layer="above"
             )
             fig.add_trace(go.Scatter(
@@ -334,7 +336,7 @@ def get_sprint_graph_vt(
                 yaxis="y1",
                 text=df_metric_vel[metrica_velocidad].round(2),
                 textposition="inside",
-                textfont=dict(size=14,color="black"),
+                textfont=dict(size=16,color="black"),
                 hovertemplate=f"<b>DATE:</b> %{{x|%d-%m-%Y}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 

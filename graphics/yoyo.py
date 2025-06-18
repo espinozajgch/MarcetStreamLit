@@ -58,7 +58,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
     base_max = max([r[0] for r in semaforo])
     valores_usuario = df[metrica].tolist() + ([valor_prom] if valor_prom is not None else [])
 
-    margen = 300
+    margen = 100
     ymin = min(base_min, min(valores_usuario)) - margen
     ymax = max(base_max, max(valores_usuario)) + margen
 
@@ -66,14 +66,16 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
     fig = go.Figure()
 
     if barras:
+        ancho_barra = 0.2 if len(df) == 1 else 0.3
         fig.add_trace(go.Bar(
             x=df[columna_x],
             y=df[metrica],
             name=util.traducir(metrica, idioma),
             marker_color=colores,
-            text=[f"{v:.0f}" for v in df[metrica]],
+            text=[f"{v:.0f} m" for v in df[metrica]],
             textposition="inside",
-            textfont=dict(size=14),
+            width=ancho_barra,
+            textfont=dict(size=16),
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Valor:</b> %{y:.0f} m<extra></extra>"
         ))
     else:
@@ -93,7 +95,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             line=dict(color="green", dash="dash"),
             annotation_text=f"{valor_prom:.0f} m",
             annotation_position="top left",
-            annotation=dict(font=dict(color="black", size=12, family="Arial"))
+            annotation=dict(font=dict(color="black", size=14, family="Arial"))
         )
         fig.add_trace(go.Scatter(
             x=[None], y=[None],

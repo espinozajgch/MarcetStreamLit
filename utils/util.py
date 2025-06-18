@@ -369,69 +369,120 @@ def get_metricas_por_test(df_estructura, tests_seleccionados):
 def get_new(datos_jugadores, df_existente, columnas_datos, fecha=None):
     """
     Genera un nuevo DataFrame con la estructura de 'df_existente',
-    agregando datos nuevos desde 'datos_jugadores' y completando
-    la columna de nombre del jugador si el ID coincide.
+    agregando registros faltantes por combinación (JUGADOR + CATEGORIA + FECHA REGISTRO),
+    y asignando correctamente la fecha si se especifica.
+
+    Siempre ordena por FECHA REGISTRO de menor a mayor
+    y coloca la columna JUGADOR justo después de ID.
 
     Args:
         datos_jugadores (pd.DataFrame): Nuevos registros a insertar.
         df_existente (pd.DataFrame): DataFrame original con estructura base.
         columnas_datos (list): Columnas clave a mantener desde los datos de origen.
-        fecha (str, opcional): Fecha para insertar en 'FECHA REGISTRO' si se desea sobreescribir. Formato: 'dd/mm/yyyy'.
+        fecha (str, opcional): Fecha única para asignar a nuevos registros. Formato: 'dd/mm/yyyy'.
 
     Returns:
-        pd.DataFrame: DataFrame combinado y ordenado por 'JUGADOR'.
+        pd.DataFrame: DataFrame combinado y ordenado por 'FECHA REGISTRO' y 'JUGADOR'.
     """
+    
     columnas_estructura = get_dataframe_columns(df_existente)
+    if "JUGADOR" not in columnas_estructura:
+        columnas_estructura.insert(2, "JUGADOR")
 
-    columna_nombre = columnas_datos[1]
-    if columna_nombre not in columnas_estructura:
-        columnas_estructura.insert(2, columna_nombre)
+    # === Añadir JUGADOR a df_existente si falta ===
+    if "JUGADOR" not in df_existente.columns and "ID" in df_existente.columns:
+        if "ID" in datos_jugadores.columns and "JUGADOR" in datos_jugadores.columns:
+            id_to_nombre = datos_jugadores.set_index("ID")["JUGADOR"].to_dict()
+            df_existente["JUGADOR"] = df_existente["ID"].map(id_to_nombre)
 
-    df_nuevo = pd.DataFrame(columns=columnas_estructura)
+    # === Añadir CATEGORIA a df_existente si falta ===
+    if "CATEGORIA" not in df_existente.columns and "ID" in df_existente.columns:
+        if "ID" in datos_jugadores.columns and "CATEGORIA" in datos_jugadores.columns:
+            id_to_categoria = datos_jugadores.set_index("ID")["CATEGORIA"].to_dict()
+            df_existente["CATEGORIA"] = df_existente["ID"].map(id_to_categoria)
 
-    if not df_existente.empty:
-        if columna_nombre not in df_existente.columns:
-            df_existente.insert(2, columna_nombre, None)
+    # Asegurar tipos string consistentes
+    for col in ["JUGADOR", "CATEGORIA"]:
+        if col in datos_jugadores.columns:
+            datos_jugadores[col] = datos_jugadores[col].astype(str)
+        if col in df_existente.columns:
+            df_existente[col] = df_existente[col].astype(str)
 
-        id_a_nombre = datos_jugadores.set_index("ID")["JUGADOR"].to_dict()
-        df_existente[columna_nombre] = df_existente["ID"].map(id_a_nombre)
+    # === MODO 1: Se pasa una única fecha ===
+    if fecha:
+        #existentes = df_existente[["ID"]].drop_duplicates()
+        nuevos = datos_jugadores[~datos_jugadores["ID"].isin(df_existente["ID"])].copy()
 
-        datos_jugadores = datos_jugadores[~datos_jugadores["ID"].isin(df_existente["ID"])]
+        df_nuevo = pd.DataFrame(columns=columnas_estructura)
+        for col in columnas_datos:
+            if col in df_nuevo.columns and col in nuevos.columns:
+                df_nuevo[col] = nuevos[col]
 
-    columnas_comunes = [col for col in columnas_datos if col in df_nuevo.columns]
-    for col in columnas_comunes:
-        df_nuevo[col] = datos_jugadores[col]
+        df_nuevo["JUGADOR"] = nuevos["JUGADOR"]
+        df_nuevo["CATEGORIA"] = nuevos["CATEGORIA"]
+        df_nuevo["FECHA REGISTRO"] = fecha
 
-    # Asignar la fecha solo si se proporciona
-    if "FECHA REGISTRO" in df_nuevo.columns:
-        if fecha:
-            df_nuevo["FECHA REGISTRO"] = fecha
-        else:
-            # En caso contrario, mantenerla vacía o gestionarla externamente
+    # === MODO 2: Detectar sesiones faltantes ===
+    else:
+        fechas_existentes = df_existente["FECHA REGISTRO"].dropna().unique().tolist()
+        fechas_existentes = [f for f in fechas_existentes if isinstance(f, str)]
+
+        jugadores_categoria = datos_jugadores[["JUGADOR", "CATEGORIA", "ID"]].drop_duplicates()
+
+        combinaciones = pd.MultiIndex.from_product(
+            [jugadores_categoria["JUGADOR"], jugadores_categoria["CATEGORIA"], fechas_existentes],
+            names=["JUGADOR", "CATEGORIA", "FECHA REGISTRO"]
+        ).to_frame(index=False)
+
+        existentes = df_existente[["JUGADOR", "CATEGORIA", "FECHA REGISTRO"]].drop_duplicates()
+        faltantes = combinaciones.merge(existentes, on=["JUGADOR", "CATEGORIA", "FECHA REGISTRO"], how="left", indicator=True)
+        faltantes = faltantes[faltantes["_merge"] == "left_only"].drop(columns="_merge")
+
+        df_nuevo = faltantes.merge(jugadores_categoria, on=["JUGADOR", "CATEGORIA"], how="left")
+        df_nuevo = df_nuevo.merge(datos_jugadores, on=["ID", "JUGADOR", "CATEGORIA"], how="left")
+
+    
+    # === Finalizar df_nuevo ===
+    if not df_nuevo.empty:
+        if "FECHA REGISTRO" not in df_nuevo.columns:
             df_nuevo["FECHA REGISTRO"] = None
 
-    # Tipos seguros
-    if "ID" in df_nuevo.columns:
-        df_nuevo["ID"] = df_nuevo["ID"].astype(str)
-    df_nuevo.columns = df_nuevo.columns.astype(str)
+        df_nuevo = df_nuevo.drop_duplicates(subset=["JUGADOR", "CATEGORIA", "FECHA REGISTRO"])
 
-    dfs_a_unir = [
-        df for df in [df_existente, df_nuevo]
-        if not df.empty and not df.isna().all().all()
-    ]
+        for col in columnas_estructura:
+            if col not in df_nuevo.columns:
+                df_nuevo[col] = None
 
-    if dfs_a_unir:
-        df_nuevo = pd.concat(dfs_a_unir, ignore_index=True)
+        df_nuevo = df_nuevo[columnas_estructura]
+
+        if "ID" in df_nuevo.columns:
+            df_nuevo["ID"] = df_nuevo["ID"].astype(str)
+
+        df_nuevo = df_nuevo[df_nuevo["FECHA REGISTRO"].notna()]
     else:
-        df_nuevo = df_nuevo.copy()
+        df_nuevo = pd.DataFrame(columns=columnas_estructura)
 
-    columnas_orden = ["CATEGORIA", "EQUIPO"]
-    columnas_presentes = [col for col in columnas_orden if col in df_nuevo.columns]
+    df_existente = df_existente.reset_index(drop=True)
+    #st.dataframe(df_existente)
+    # === Combinar ===
+    df_final = pd.concat([df_existente, df_nuevo], ignore_index=True)
+   
 
-    if columnas_presentes:
-        df_nuevo = df_nuevo.sort_values(by=columnas_presentes).reset_index(drop=True)
+    # === Ordenar por fecha y jugador ===
+    if "FECHA REGISTRO" in df_final.columns:
+        df_final["FECHA REGISTRO"] = pd.to_datetime(df_final["FECHA REGISTRO"], format="%d/%m/%Y", errors="coerce")
+        df_final = df_final.sort_values(by=["FECHA REGISTRO", "JUGADOR"]).reset_index(drop=True)
+        df_final["FECHA REGISTRO"] = df_final["FECHA REGISTRO"].dt.strftime("%d/%m/%Y")
 
-    return df_nuevo
+    # === Reordenar columnas: JUGADOR justo después de ID ===
+    if "ID" in df_final.columns and "JUGADOR" in df_final.columns:
+        cols = df_final.columns.tolist()
+        cols.remove("JUGADOR")
+        idx = cols.index("ID") + 1
+        cols.insert(idx, "JUGADOR")
+        df_final = df_final[cols]
+
+    return df_final
 
 
 def get_data_editor(df_nuevo, key=None, num_rows_user="fixed"):
@@ -627,6 +678,7 @@ def get_filters(df):
          return df_filtrado
     
     # Si no se seleccionó ningún filtro, retornar el original
+    df = df.reset_index(drop=True)
     return df
 
 def get_photo(url):

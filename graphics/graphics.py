@@ -136,9 +136,9 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             y=df["PESO (KG)"],
             name=util.traducir("PESO (KG)", idioma),
             marker_color=color_lineas["PESO (KG)"],
-            text=df["PESO (KG)"].round(1),
+            text=df["PESO (KG)"].apply(lambda x: f"{x:.2f} kg"),
             textposition="inside",
-            textfont=dict(size=14),
+            textfont=dict(size=16),
             yaxis="y1",
             hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
         ))
@@ -178,31 +178,66 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         if not df_filtro.empty:
             max_valor = df_filtro["GRASA (%)"].max()
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+            if not barras:
+                text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %"
+            else:
+                text = f"{fila_max['GRASA (%)']:.1f} %"
+
             fig.add_annotation(
                 x=fila_max["FECHA REGISTRO"],
                 y=fila_max["GRASA (%)"],
                 yref="y2",
-                text=f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.1f} %",
+                text=text,
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
                 ay=30,
                 bgcolor="gray",
-                font=dict(size=14,color="white")
+                font=dict(size=16,color="white")
             )
 
             x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=15)
             x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=15)
 
-            fig.add_trace(go.Scatter(x=[x_min, x_max], y=[zona_optima_max, zona_optima_max], mode="lines",
-                                     line=dict(color="green", dash="dash"), yaxis="y2", showlegend=False))
-            fig.add_annotation(x=x_min, y=zona_optima_max, yref="y2", text=zona_optima_max,
-                               showarrow=False, font=dict(size=11), xanchor="left", yanchor="bottom")
+            # Línea superior
+            fig.add_trace(go.Scatter(
+                x=[x_min, x_max],
+                y=[zona_optima_max, zona_optima_max],
+                mode="lines",
+                line=dict(color="green", dash="dash"),
+                yaxis="y2",
+                showlegend=False
+            ))
+            fig.add_annotation(
+                x=x_max,
+                y=zona_optima_max,
+                yref="y2",
+                text=f"{zona_optima_max}",
+                showarrow=False,
+                font=dict(size=14, color="black"),
+                xanchor="right",  # para alinear el texto desde la derecha
+                yanchor="bottom"
+            )
 
-            fig.add_trace(go.Scatter(x=[x_min, x_max], y=[zona_optima_min, zona_optima_min], mode="lines",
-                                     line=dict(color="green", dash="dash"), yaxis="y2", showlegend=False))
-            fig.add_annotation(x=x_min, y=zona_optima_min, yref="y2", text=zona_optima_min,
-                               showarrow=False, font=dict(size=11), xanchor="left", yanchor="top")
+            # Línea inferior
+            fig.add_trace(go.Scatter(
+                x=[x_min, x_max],
+                y=[zona_optima_min, zona_optima_min],
+                mode="lines",
+                line=dict(color="green", dash="dash"),
+                yaxis="y2",
+                showlegend=False
+            ))
+            fig.add_annotation(
+                x=x_max,
+                y=zona_optima_min,
+                yref="y2",
+                text=f"{zona_optima_min}",
+                showarrow=False,
+                font=dict(size=14, color="black"),
+                xanchor="right",
+                yanchor="top"
+            )
 
             namel = util.traducir('Zona Optima', idioma)
             cat = util.traducir(categoria.upper(), idioma)

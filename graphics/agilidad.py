@@ -59,9 +59,9 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 y=y_vals,
                 name=util.traducir(metrica, idioma),
                 marker_color=color,
-                text=[f"{val:.2f}" for val in y_vals],
+                text=[f"{val:.2f} seg" for val in y_vals],
                 textposition="auto",
-                textfont=dict(size=14),
+                textfont=dict(size=16),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
         else:

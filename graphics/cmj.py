@@ -92,7 +92,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                     colores_puntos.append("gray")
 
         if barras:
-            ancho_barra = 0.1 if len(x_vals) == 1 else 0.3
+            ancho_barra = 0.2 if len(x_vals) == 1 else 0.3
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
@@ -100,9 +100,9 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 marker_color=colores_puntos,
                 width=ancho_barra,
                 yaxis="y1",
-                text=[f"{v:.2f}" for v in y_vals],
+                text=[f"{v:.2f} cm" for v in y_vals],
                 textposition="inside",
-                textfont=dict(size=14),
+                textfont=dict(size=16),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
             ))
         else:
@@ -146,7 +146,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash"),
             annotation_text=f"{valor_prom:.2f} cm",
             annotation_position="top right",
-            annotation=dict(font=dict(color="black", size=12, family="Arial")),
+            annotation=dict(font=dict(color="black", size=14, family="Arial")),
             layer="above"
         )
         fig.add_trace(go.Scatter(

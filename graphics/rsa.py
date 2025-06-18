@@ -71,15 +71,15 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     ticktext = tickvals
 
     if barras:
-        ancho_barra = 0.1 if len(df) == 1 else 0.3
+        ancho_barra = 0.2 if len(df) == 1 else 0.3
         fig_tiempo.add_trace(go.Bar(
             x=x_vals,
             y=y_vals,
             name=title,
             marker_color=colores_puntos,
-            text=[f"{v:.2f}" for v in y_vals],
+            text=[f"{v:.2f} seg" for v in y_vals],
             textposition="inside",
-            textfont=dict(size=14),
+            textfont=dict(size=16),
             width=ancho_barra,
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Tiempo:</b> %{y:.2f} seg<extra></extra>"
         ))
@@ -108,7 +108,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             line=dict(color="green", dash="dash"),
             annotation_text=f"{prom:.2f} seg",
             annotation_position="top left",
-            annotation=dict(font=dict(color="black", size=12))
+            annotation=dict(font=dict(color="black", size=14))
         )
 
         promedio = util.traducir("PROMEDIO", idioma)
@@ -262,15 +262,15 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
     fig = go.Figure()
 
     if barras:
-        ancho_barra = 0.1 if len(df) == 1 else 0.3
+        ancho_barra = 0.2 if len(df) == 1 else 0.3
         fig.add_trace(go.Bar(
             x=x_vals,
             y=y_vals,
             name=title,
             marker_color=colores_puntos,
-            text=[f"{v:.2f}" for v in y_vals],
+            text=[f"{v:.2f} m/s" for v in y_vals],
             textposition="inside",
-            textfont=dict(size=14),
+            textfont=dict(size=16),
             width=ancho_barra,
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Velocidad:</b> %{y:.2f} m/s<extra></extra>"
         ))
@@ -298,7 +298,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             y=prom,
             line=dict(color=color_promedio, dash="dash"),
             annotation_text=f"{prom:.2f} m/s",
-            annotation=dict(font=dict(color="black", size=12))
+            annotation=dict(font=dict(color="black", size=14))
         )
         promedio = util.traducir("PROMEDIO", idioma)
         categoria_trad = util.traducir(categoria.upper(), idioma)

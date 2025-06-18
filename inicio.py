@@ -56,25 +56,25 @@ df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    st.metric(f"Total de Jugadores",f'{total_jugadores}')
+    st.metric("Total de Jugadores", total_jugadores)
 
 with col2:
     act = df_sesiones["TSUM"].iloc[0]
     ant = df_sesiones["TSUM"].iloc[1]
     variacion = act - ant
-    st.metric(f"Total Asistencia (Mes)",f'{act}', f'{variacion:,.2f}')
+    st.metric("Total Asistencia (Mes)",f'{act}', f'{variacion:,.2f}')
 
 with col3:
     act = df_sesiones["APUS"].iloc[0]
     ant = df_sesiones["APUS"].iloc[1]
     variacion = act - ant
-    st.metric(f"% Asistencia (Mes)",f'{act:,.3f}', f'{variacion:,.2f}')
+    st.metric("% Asistencia (Mes)",f'{act:,.3f}', f'{variacion:,.2f}')
 
 with col4:
     act = df_sesiones["JUS"].iloc[0]
     ant = df_sesiones["JUS"].iloc[1]
     variacion = act - ant
-    st.metric(f"Asistencia Ultima Sesion",f'{act}', f'{variacion:,.2f}')
+    st.metric("Asistencia Ultima Sesion",f'{act}', f'{variacion:,.2f}')
 
 with col5:
     # Mostrar la fecha si es válida
