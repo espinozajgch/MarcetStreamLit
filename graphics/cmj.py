@@ -83,11 +83,11 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 else:
                     colores_puntos.append("gray")
             else:  # Juvenil
-                if valor > 50:
+                if valor > 39:
                     colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 40 <= valor <= 50:
+                elif 35 <= valor <= 38:
                     colores_puntos.append("#006400")  # Verde Oscuro
-                elif 33 <= valor < 40:
+                elif 33 <= valor < 34:
                     colores_puntos.append("#FFFF00")  # Amarillo
                 elif 31 <= valor < 33:
                     colores_puntos.append("#FFA500")  # Naranja
