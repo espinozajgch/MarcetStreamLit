@@ -138,7 +138,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             marker_color=color_lineas["PESO (KG)"],
             text=df["PESO (KG)"].apply(lambda x: f"{x:.2f} kg"),
             textposition="inside",
-            textfont=dict(size=17),
+            textfont=dict(size=16),
             yaxis="y1",
             hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
         ))
