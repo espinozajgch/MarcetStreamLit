@@ -70,11 +70,11 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 continue
 
             if es_cadete:
-                if valor > 50:
+                if valor > 33:
                     colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 35 <= valor <= 50:
+                elif 30 <= valor <= 33:
                     colores_puntos.append("#006400")  # Verde Oscuro
-                elif 27 <= valor < 35:
+                elif 27 <= valor < 30:
                     colores_puntos.append("#FFFF00")  # Amarillo
                 elif 25 <= valor < 27:
                     colores_puntos.append("#FFA500")  # Naranja
@@ -131,7 +131,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
             ))
 
-        if len(df_filtro) > 1:
+        if len(df_filtro) > 1 or not barras:
             max_val = df_filtro["VALOR"].max()
             fila_max = df_filtro[df_filtro["VALOR"] == max_val].sort_values(by=columna_fecha_registro, ascending=False).iloc[0]
             maxl = util.traducir("Max", idioma)
@@ -186,8 +186,8 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             [(33 - cmin) / (cmax - cmin), "#FFFF00"],
             [(34 - cmin) / (cmax - cmin), "#FFFF00"],
             [(35 - cmin) / (cmax - cmin), "#006400"],
-            [(39 - cmin) / (cmax - cmin), "#006400"],
-            [(40 - cmin) / (cmax - cmin), "#7CFC00"],
+            [(38 - cmin) / (cmax - cmin), "#006400"],
+            [(39 - cmin) / (cmax - cmin), "#7CFC00"],
             [(50 - cmin) / (cmax - cmin), "#7CFC00"]
         ]
 

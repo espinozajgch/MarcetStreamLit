@@ -123,10 +123,10 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             line=dict(color="green", dash="dash")
         ))
 
-    if len(df) > 1:
+    if len(df) > 1 or not barras:
         df_max = df[df[metricas[0]] == min(y_vals)].sort_values(by=columna_fecha_registro, ascending=False)
         if not df_max.empty:
-            maxl = util.traducir("Max", idioma)
+            maxl = util.traducir("Min", idioma)
             fila = df_max.iloc[0]
             fig_tiempo.add_annotation(
                 x=fila[columna_x],
@@ -313,7 +313,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             line=dict(color=color_promedio, dash="dash")
         ))
 
-    if len(df) > 1:
+    if len(df) > 1 or not barras:
         max_valor = df[metric].max()
         fila_max = df[df[metric] == max_valor].sort_values(fecha_registro, ascending=False).iloc[0]
         maxl = util.traducir("Max", idioma)

@@ -151,7 +151,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         for valor in y_vals:
             if pd.isna(valor):
                 colores_puntos.append("gray")
-            elif valor >= 25 or valor < 5:
+            elif valor >= 20 or valor < 5:
                 colores_puntos.append("#FF0000")
             elif valor < 7:
                 colores_puntos.append("#FFA500")
@@ -159,7 +159,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 colores_puntos.append("#FFFF00")
             elif valor < 14:
                 colores_puntos.append("#7CFC00")
-            elif valor < 16:
+            elif valor < 15:
                 colores_puntos.append("#006400")
             elif valor < 18:
                 colores_puntos.append("#FFFF00")
@@ -230,7 +230,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                     x=x_max,
                     y=y_linea,
                     yref="y2",
-                    text=f"{y_linea}",
+                    text=f"{y_linea} %",
                     showarrow=False,
                     font=dict(size=14, color="black"),
                     xanchor="right",
@@ -240,7 +240,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{util.traducir('Zona Optima', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} A)".upper(),
+                name=f"{util.traducir('ZONA OPTIMA %', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} A)".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
@@ -258,7 +258,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 [(8 - cmin)/(cmax - cmin), "#006400"],
                 [(10 - cmin)/(cmax - cmin), "#7CFC00"],
                 [(14 - cmin)/(cmax - cmin), "#006400"],
-                [(16 - cmin)/(cmax - cmin), "#FFFF00"],
+                [(15 - cmin)/(cmax - cmin), "#FFFF00"],
                 [(18 - cmin)/(cmax - cmin), "#FFA500"],
                 [(20 - cmin)/(cmax - cmin), "#FF0000"],
                 [(25 - cmin)/(cmax - cmin), "#FF0000"],

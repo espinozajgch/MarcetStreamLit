@@ -66,7 +66,8 @@ def get_sprint_graph(
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 
-        if not barras:
+        #if not barras:
+        if len(df_metric_vel) > 1 or not barras:
             fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == df_metric_vel[metrica_velocidad].max()].iloc[0]
             fig.add_annotation(
                 x=fila_max[columna_x],
@@ -132,7 +133,7 @@ def get_sprint_graph(
             ),
             offsetgroup="tiempo",
             yaxis="y1",
-            text=df_metric_time[metrica_tiempo].apply(lambda x: f"{x:.2f} m/s"),
+            text=df_metric_time[metrica_tiempo].apply(lambda x: f"{x:.2f} seg"),
             #text=df_metric_time[metrica_tiempo].round(2),
             textposition="inside",
             textfont=dict(size=size),
@@ -162,7 +163,7 @@ def get_sprint_graph(
                 x=fila_min[columna_x],
                 y=fila_min[metrica_tiempo],
                 yref="y1",
-                text=f"{util.traducir('Max', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
+                text=f"{util.traducir('Min', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,

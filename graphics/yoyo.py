@@ -31,7 +31,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             (2000, "darkgreen"), (1900, "darkgreen"),
             (1800, "yellow"), (1700, "yellow"),
             (1600, "orange"), (1500, "orange"), (1400, "orange"),
-            (1300, "red"), (1200, "red"), (1100, "red"), (1000, "red"), (900, "red")
+            (1300, "red"), (1200, "red"), (1100, "red"), (1000, "red"), (600, "red")
         ],
         "Cadete": [
             (2500, "lightgreen"), (2400, "lightgreen"), (2300, "lightgreen"), (2200, "lightgreen"),
@@ -105,7 +105,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             line=dict(color="green", dash="dash")
         ))
 
-    if len(df) > 1:
+    if len(df) > 1 or not barras:
         fila_max = df.loc[df[metrica].idxmax()]
         fig.add_annotation(
             x=fila_max[columna_x],

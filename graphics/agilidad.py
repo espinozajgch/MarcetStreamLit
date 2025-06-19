@@ -76,10 +76,10 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
 
-        if not df_metric.empty and len(df_metric) > 1:
+        if (not df_metric.empty and len(df_metric) > 1) or not barras:
             min_val = df_metric[metrica].min()
             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-            maxl = util.traducir("Max", idioma)
+            maxl = util.traducir("Min ", idioma)
             xshift_val = -20 if barras and metrica == metricas[0] else 20 if barras and metrica == metricas[1] else 0
             offset_y = -30 if metrica == metricas[1] else -60
             offset_x = 60 if metrica == metricas[1] else -60

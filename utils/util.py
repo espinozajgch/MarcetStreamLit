@@ -1314,13 +1314,13 @@ TRADUCCIONES = {
         "pt": "Evolução do Peso e % de Gordura",
         "ar": "تطور الوزن ونسبة الدهون (%)"
     },
-    "Zona Optima": {
-        "en": "Optimal Fat % Zone",
-        "it": "Zona Ottimale di Grasso %",
-        "de": "Optimale Fettzone %",
-        "fr": "Zone Optimale de Graisse %",
-        "ca": "Zona Òptima de Greix %",
-        "pt": "Zona Ótima de Gordura %",
+    "ZONA OPTIMA %": {
+        "en": "OPTIMAL FAT ZONE %",
+        "it": "ZONA OTTIMALE DI GRASSO %",
+        "de": "OPTIMALE FETTZONE %",
+        "fr": "ZONE OPTIMALE DE GRAISSE %",
+        "ca": "ZONA ÒPTIMA DE GREIX %",
+        "pt": "ZONA ÓTIMA DE GORDURA %",
         "ar": "منطقة الدهون المثلى (%)"
     },
     "Evolución de la Altura (cm)": {
@@ -1715,6 +1715,15 @@ TRADUCCIONES = {
         "ca": "Max",
         "pt": "Max",
         "ar": "ماكس"
+    },
+    "Min:": {
+        "en": "Min:",
+        "it": "Minimo:",
+        "de": "Minimal:",
+        "fr": "Min :",
+        "ca": "Mínim:",
+        "pt": "Mínimo:",
+        "ar": "الحد الأدنى:"
     },
     "ID": {
         "en": "ID",
