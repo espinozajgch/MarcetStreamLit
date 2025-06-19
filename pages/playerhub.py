@@ -135,10 +135,12 @@ df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
     st.warning("No se ha encontrado información o aun no ha seleccionado a un jugador.")
 else:
+    df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
+    
     # Sección datos de usuario
     df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
-    df_jugador["FOTO PERFIL"] = df_jugador["FOTO PERFIL"].apply(player.convert_drive_url)
-    #st.dataframe(df_joined_filtrado)
+    #st.dataframe(df_jugador)
+    
     if not df_datos_filtrado.empty:
         #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])

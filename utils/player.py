@@ -3,16 +3,28 @@ import pandas as pd
 from utils import util
 import re
 
+import re
+
 def convert_drive_url(original_url):
     """
-    Convierte una URL de Google Drive en una URL directa para acceder a la imagen.
+    Convierte una URL de Google Drive en una URL directa para acceder a la imagen,
+    excepto si ya está en formato final o es None.
     """
+    if original_url is None or not isinstance(original_url, str):
+        return original_url
+
+    # Si ya es una URL directa (uc?export=view&id=...), no hacer nada
+    if "drive.google.com/uc?" in original_url:
+        return original_url
+
+    # Extraer ID de la URL tipo /file/d/<id>/view
     match = re.search(r"/d/([a-zA-Z0-9_-]+)", original_url)
     if match:
         file_id = match.group(1)
         return f"https://drive.google.com/uc?export=view&id={file_id}"
-    else:
-        return None
+
+    return original_url  # Si no coincide, devuelve lo original
+
 
 def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idioma="es"):
     
@@ -75,15 +87,21 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
 
         with col1:
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
-            url_directa = convert_drive_url(url_drive)
-            response = util.get_photo(url_directa)
+            #url_directa = convert_drive_url(url_drive)
 
-            if response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
-                st.image(response.content, width=150)
-                #st.image(response.content, width=150)
+            if url_drive is not None:
+
+                response = util.get_photo(url_drive)
+
+                if response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
+                    st.image(response.content, width=150)
+                    #st.image(response.content, width=150)
+                else:
+                    #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
+                    st.image("assets/images/profile.png", width=180)
             else:
-                #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
-                st.image("assets/images/profile.png", width=180)
+                    #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
+                    st.image("assets/images/profile.png", width=180)
         with col2:
 
             if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):
