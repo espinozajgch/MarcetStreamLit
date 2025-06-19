@@ -93,7 +93,6 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     metricas = ["PESO (KG)", "GRASA (%)"]
     df = df[["FECHA REGISTRO"] + metricas]
 
-    # --- Definir etiquetas personalizadas de eje X ---
     df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
 
@@ -104,13 +103,10 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         tickvals = df_fechas_unicas
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
-    # --- Ajuste de rango para cmin y cmax (grasa) ---
     grasa_min = df["GRASA (%)"].min()
     grasa_max = df["GRASA (%)"].max()
-
     cmin = min(3, grasa_min - 1 if grasa_min < 3 else grasa_min)
     cmax = max(25, grasa_max + 1 if grasa_max > 25 else grasa_max)
-
     if cmax - cmin < 5:
         cmax = cmin + 5
 
@@ -129,144 +125,143 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         }
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
-    # --- PESO como barra ---
+    # PESO (always as bar)
     if "PESO (KG)" in df.columns:
+        size = 20 if df["PESO (KG)"].notna().sum() == 1 else 14
+
         fig.add_trace(go.Bar(
             x=df["FECHA REGISTRO"],
             y=df["PESO (KG)"],
             name=util.traducir("PESO (KG)", idioma),
             marker_color=color_lineas["PESO (KG)"],
+            offsetgroup="peso",
             text=df["PESO (KG)"].apply(lambda x: f"{x:.2f} kg"),
             textposition="inside",
-            textfont=dict(size=16),
+            textfont=dict(size=size),
             yaxis="y1",
             hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>PESO (KG):</b> %{y:.1f} kg<extra></extra>"
         ))
 
-    # --- GRASA como línea con puntos coloreados ---
+    # GRASA
     if "GRASA (%)" in df.columns:
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
         colores_puntos = []
 
         for valor in y_vals:
-            if valor >= 25 or 20 <= valor < 21 or 22 <= valor < 23 or 3 <= valor <= 5:
-                colores_puntos.append("#FF0000")  # Rojo
-            elif 18 <= valor < 20 or 6 <= valor < 7:
-                colores_puntos.append("#FFA500")  # Naranja
-            elif 16 <= valor < 18 or 7 <= valor < 8:
-                colores_puntos.append("#FFFF00")  # Amarillo
-            elif 14 <= valor < 16 or 8 <= valor < 10:
-                colores_puntos.append("#006400")  # Verde Oscuro
-            elif 10 <= valor < 14:
-                colores_puntos.append("#7CFC00")  # Verde Manzana
-            else:
+            if pd.isna(valor):
                 colores_puntos.append("gray")
+            elif valor >= 25 or valor < 5:
+                colores_puntos.append("#FF0000")
+            elif valor < 7:
+                colores_puntos.append("#FFA500")
+            elif valor < 9:
+                colores_puntos.append("#FFFF00")
+            elif valor < 14:
+                colores_puntos.append("#7CFC00")
+            elif valor < 16:
+                colores_puntos.append("#006400")
+            elif valor < 18:
+                colores_puntos.append("#FFFF00")
+            elif valor < 20:
+                colores_puntos.append("#FFA500")
+            else:
+                colores_puntos.append("#FF0000")
 
-        fig.add_trace(go.Scatter(
-            x=x_vals,
-            y=y_vals,
-            mode="lines+markers",
-            name=util.traducir("GRASA (%)", idioma),
-            line=dict(color="gray", width=3),
-            marker=dict(color=colores_puntos, size=10),
-            yaxis="y2",
-            hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f} %<extra></extra>"
-        ))
+        if barras:
+            size = 14 if len(x_vals) == 1 else 20
+            fig.add_trace(go.Bar(
+                x=x_vals,
+                y=y_vals,
+                name=util.traducir("GRASA (%)", idioma),
+                marker_color=colores_puntos,
+                offsetgroup="grasa",
+                yaxis="y2",
+                text=y_vals.apply(lambda x: f"{x:.1f} %"),
+                textposition="inside",
+                textfont=dict(size=size),
+                hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.1f} %<extra></extra>"
+            ))
+        else:
+            fig.add_trace(go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                mode="lines+markers",
+                name=util.traducir("GRASA (%)", idioma),
+                line=dict(color="gray", width=3),
+                marker=dict(color=colores_puntos, size=10),
+                yaxis="y2",
+                hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.2f} %<extra></extra>"
+            ))
 
         df_filtro = df[["FECHA REGISTRO", "GRASA (%)"]].dropna()
         if not df_filtro.empty:
             max_valor = df_filtro["GRASA (%)"].max()
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-            if not barras:
-                text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %"
-            else:
-                text = f"{fila_max['GRASA (%)']:.1f} %"
+            text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.1f} %"
 
-            fig.add_annotation(
-                x=fila_max["FECHA REGISTRO"],
-                y=fila_max["GRASA (%)"],
-                yref="y2",
-                text=text,
-                showarrow=True,
-                arrowhead=2,
-                ax=0,
-                ay=30,
-                bgcolor="gray",
-                font=dict(size=18,color="white")
-            )
+            if not barras:
+                fig.add_annotation(
+                    x=fila_max["FECHA REGISTRO"],
+                    y=fila_max["GRASA (%)"],
+                    yref="y2",
+                    text=text,
+                    showarrow=True,
+                    arrowhead=2,
+                    ax=0,
+                    ay=30,
+                    bgcolor="gray",
+                    font=dict(size=18, color="white")
+                )
 
             x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=15)
             x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=15)
 
-            # Línea superior
-            fig.add_trace(go.Scatter(
-                x=[x_min, x_max],
-                y=[zona_optima_max, zona_optima_max],
-                mode="lines",
-                line=dict(color="green", dash="dash"),
-                yaxis="y2",
-                showlegend=False
-            ))
-            fig.add_annotation(
-                x=x_max,
-                y=zona_optima_max,
-                yref="y2",
-                text=f"{zona_optima_max}",
-                showarrow=False,
-                font=dict(size=14, color="black"),
-                xanchor="right",  # para alinear el texto desde la derecha
-                yanchor="bottom"
-            )
+            for y_linea, yanchor in [(zona_optima_max, "bottom"), (zona_optima_min, "top")]:
+                fig.add_trace(go.Scatter(
+                    x=[x_min, x_max],
+                    y=[y_linea, y_linea],
+                    mode="lines",
+                    line=dict(color="green", dash="dash"),
+                    yaxis="y2",
+                    showlegend=False
+                ))
+                fig.add_annotation(
+                    x=x_max,
+                    y=y_linea,
+                    yref="y2",
+                    text=f"{y_linea}",
+                    showarrow=False,
+                    font=dict(size=14, color="black"),
+                    xanchor="right",
+                    yanchor=yanchor
+                )
 
-            # Línea inferior
-            fig.add_trace(go.Scatter(
-                x=[x_min, x_max],
-                y=[zona_optima_min, zona_optima_min],
-                mode="lines",
-                line=dict(color="green", dash="dash"),
-                yaxis="y2",
-                showlegend=False
-            ))
-            fig.add_annotation(
-                x=x_max,
-                y=zona_optima_min,
-                yref="y2",
-                text=f"{zona_optima_min}",
-                showarrow=False,
-                font=dict(size=14, color="black"),
-                xanchor="right",
-                yanchor="top"
-            )
-
-            namel = util.traducir('Zona Optima', idioma)
-            cat = util.traducir(categoria.upper(), idioma)
-            prom  = util.traducir("PROMEDIO", idioma)
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{namel} ({prom} {cat} A)".upper(),
+                name=f"{util.traducir('Zona Optima', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} A)".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
 
-    # --- Barra de color para GRASA (%) ---
+    # Colorbar lateral
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
         fig.add_trace(go.Heatmap(
             z=[[0]],
             x=[df["FECHA REGISTRO"].min()],
             y=[(cmin + cmax) / 2],
             colorscale=[
-                [(3 - cmin)/(cmax - cmin), "#FF0000"],     # Rojo
-                [(6 - cmin)/(cmax - cmin), "#FFA500"],     # Naranja
-                [(7 - cmin)/(cmax - cmin), "#FFFF00"],     # Amarillo
-                [(8 - cmin)/(cmax - cmin), "#006400"],     # Verde Oscuro
-                [(10 - cmin)/(cmax - cmin), "#7CFC00"],    # Verde Manzana
-                [(14 - cmin)/(cmax - cmin), "#006400"],    # Verde Oscuro
-                [(16 - cmin)/(cmax - cmin), "#FFFF00"],    # Amarillo
-                [(18 - cmin)/(cmax - cmin), "#FFA500"],    # Naranja
-                [(20 - cmin)/(cmax - cmin), "#FF0000"],    # Rojo
-                [(25 - cmin)/(cmax - cmin), "#FF0000"],    # Rojo
+                [(3 - cmin)/(cmax - cmin), "#FF0000"],
+                [(6 - cmin)/(cmax - cmin), "#FFA500"],
+                [(7 - cmin)/(cmax - cmin), "#FFFF00"],
+                [(8 - cmin)/(cmax - cmin), "#006400"],
+                [(10 - cmin)/(cmax - cmin), "#7CFC00"],
+                [(14 - cmin)/(cmax - cmin), "#006400"],
+                [(16 - cmin)/(cmax - cmin), "#FFFF00"],
+                [(18 - cmin)/(cmax - cmin), "#FFA500"],
+                [(20 - cmin)/(cmax - cmin), "#FF0000"],
+                [(25 - cmin)/(cmax - cmin), "#FF0000"],
             ],
             zmin=cmin,
             zmax=cmax,

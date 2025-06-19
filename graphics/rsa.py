@@ -72,6 +72,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
 
     if barras:
         ancho_barra = 0.2 if len(df) == 1 else 0.3
+        size = 20 if len(x_vals) == 1 else 14
         fig_tiempo.add_trace(go.Bar(
             x=x_vals,
             y=y_vals,
@@ -79,7 +80,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             marker_color=colores_puntos,
             text=[f"{v:.2f} seg" for v in y_vals],
             textposition="inside",
-            textfont=dict(size=16),
+            textfont=dict(size=size),
             width=ancho_barra,
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Tiempo:</b> %{y:.2f} seg<extra></extra>"
         ))
@@ -263,6 +264,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
 
     if barras:
         ancho_barra = 0.2 if len(df) == 1 else 0.3
+        size = 20 if len(x_vals) == 1 else 14
         fig.add_trace(go.Bar(
             x=x_vals,
             y=y_vals,
@@ -270,7 +272,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             marker_color=colores_puntos,
             text=[f"{v:.2f} m/s" for v in y_vals],
             textposition="inside",
-            textfont=dict(size=16),
+            textfont=dict(size=size),
             width=ancho_barra,
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Velocidad:</b> %{y:.2f} m/s<extra></extra>"
         ))

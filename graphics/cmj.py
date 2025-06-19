@@ -99,6 +99,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
 
         if barras:
             ancho_barra = 0.2 if len(x_vals) == 1 else 0.3
+            size = 20 if len(x_vals) == 1 else 14
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
@@ -108,7 +109,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 yaxis="y1",
                 text=[f"{v:.2f} cm" for v in y_vals],
                 textposition="inside",
-                textfont=dict(size=16),
+                textfont=dict(size=size),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
             ))
         else:

@@ -54,6 +54,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         y_vals = df_metric[metrica].tolist()
 
         if barras:
+            size = 20 if len(x_vals) == 1 else 14
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
@@ -61,7 +62,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 marker_color=color,
                 text=[f"{val:.2f} seg" for val in y_vals],
                 textposition="auto",
-                textfont=dict(size=16),
+                textfont=dict(size=size),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
         else:
@@ -100,6 +101,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         fecha = row[columna_x]
         dom = row.get(metricas[0], None)
         nd = row.get(metricas[1], None)
+        size = 20 if len(x_vals) == 1 else 14
         if pd.notna(dom) and pd.notna(nd) and nd != 0:
             diferencia = ((dom - nd) / nd) * 100
             fig.add_trace(go.Scatter(
@@ -108,7 +110,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 mode="markers+text",
                 marker=dict(size=20, color="orange", opacity=0.7),
                 text=f"{diferencia:.1f}%",
-                textfont=dict(size=17,color="black"),
+                textfont=dict(size=size,color="black"),
                 textposition="top center",
                 showlegend=not added_to_legend,
                 name=util.traducir("DIFERENCIA %", idioma),

@@ -67,6 +67,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
 
     if barras:
         ancho_barra = 0.2 if len(df) == 1 else 0.3
+        size = 20 if df[metrica].notna().sum() == 1 else 14
         fig.add_trace(go.Bar(
             x=df[columna_x],
             y=df[metrica],
@@ -75,7 +76,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             text=[f"{v:.0f} m" for v in df[metrica]],
             textposition="inside",
             width=ancho_barra,
-            textfont=dict(size=16),
+            textfont=dict(size=size),
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Valor:</b> %{y:.0f} m<extra></extra>"
         ))
     else:

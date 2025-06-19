@@ -42,7 +42,7 @@ def get_sprint_graph(
 
     if not df_metric_vel.empty:
         if barras:
-            
+            size = 20 if df_metric_vel[metrica_velocidad].notna().sum() == 1 else 14
             fig.add_trace(go.Bar(
                 x=df_metric_vel[columna_x],
                 y=df_metric_vel[metrica_velocidad],
@@ -52,7 +52,7 @@ def get_sprint_graph(
                 yaxis="y2",
                 text=df_metric_vel[metrica_velocidad].apply(lambda x: f"{x:.2f} m/s"),
                 textposition="inside",
-                textfont=dict(size=16),
+                textfont=dict(size=size),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
         else:
@@ -66,7 +66,7 @@ def get_sprint_graph(
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 
-        if len(df_metric_vel) > 1:
+        if not barras:
             fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == df_metric_vel[metrica_velocidad].max()].iloc[0]
             fig.add_annotation(
                 x=fila_max[columna_x],
@@ -119,6 +119,7 @@ def get_sprint_graph(
         ]
 
         #if barras:
+        size = 20 if df_metric_time[metrica_tiempo].notna().sum() == 1 else 14
         fig.add_trace(go.Bar(
             x=df_metric_time[columna_x],
             y=df_metric_time[metrica_tiempo],
@@ -134,7 +135,7 @@ def get_sprint_graph(
             text=df_metric_time[metrica_tiempo].apply(lambda x: f"{x:.2f} m/s"),
             #text=df_metric_time[metrica_tiempo].round(2),
             textposition="inside",
-            textfont=dict(size=16),
+            textfont=dict(size=size),
             hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
         ))
         # else:
