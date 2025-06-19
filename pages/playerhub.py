@@ -137,7 +137,8 @@ if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
 else:
     # Sección datos de usuario
     df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
-
+    df_jugador["FOTO PERFIL"] = df_jugador["FOTO PERFIL"].apply(player.convert_drive_url)
+    #st.dataframe(df_joined_filtrado)
     if not df_datos_filtrado.empty:
         #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
@@ -155,6 +156,7 @@ else:
         figyoyo = None
         figrsat = None
         figrsav = None
+        observaciones_dict = {}
 
         with antropometria:
             if len(df_joined_filtrado) > 0:
@@ -204,11 +206,15 @@ else:
                         act = df_anthropometrics[fecha_registro].iloc[0]
                         st.metric(f"Último Registro",act)
 
-                    if(gact < zona_optima_min) or (gact > zona_optima_max):
-                        st.warning(f"El porcentaje de grasa corporal ({gact:.2f}%) está fuera de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%) para su categoria", icon="⚠️")
+                    observacion = util.get_observacion_grasa(gact)
+
+                    if(gact < 7) or (gact > 15):
+                        st.warning(f"{observacion}", icon="⚠️")
                     else:
-                        st.success(f"El porcentaje de grasa corporal ({gact:.2f}%) está dentro de la zona óptima ({zona_optima_min:.2f}% - {zona_optima_max:.2f}%) para su categoria", icon="✅")
+                        st.success(f"{observacion}", icon="✅")
                     
+                    observaciones_dict["Peso y % Grasa"] = observacion
+
                     figalt = graphics.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
 
                     df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
@@ -299,11 +305,27 @@ else:
                     promedio_cmj = float(promedio_cmj)
                     cactc = float(cactc)
 
-                    if promedio_cmj is not None:
-                        if(cactc < promedio_cmj):
-                            st.warning(f"{metrica_cmj} ({cactc:.2f} cm) está por debajo del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="⚠️")
+                    observacion = util.get_observacion_cmj(cactc, categoria)
+                    observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
+                    
+                    # Mostrar mensaje visual según el rango definido por categoría
+                    if categoria.lower() == "juvenil":
+                        if cactc > 36:
+                            st.success(observacion, icon="✅")
+                        elif 32 < cactc <= 36:
+                            st.warning(observacion, icon="⚠️")
                         else:
-                            st.success(f"{metrica_cmj} ({cactc:.2f} cm) está por encima del promedio de su categoría ({promedio_cmj:.2f} cm)", icon="✅")
+                            st.warning(observacion, icon="⚠️")
+
+                    elif categoria.lower() == "cadete":
+                        if cactc > 30:
+                            st.success(observacion, icon="✅")
+                        elif 26 < cactc <= 30:
+                            st.warning(observacion, icon="⚠️")
+                        else:
+                            st.warning(observacion, icon="⚠️")
+
+
                     #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
                     #st.divider()
@@ -379,6 +401,21 @@ else:
                         st.metric(f"Último Registro",act)
                         #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
+                    observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria)
+                    observaciones_dict["SPRINT (0-40M)"] = observacion
+                    
+                    if categoria.lower() == "juvenil":
+                        if act040t < 5.2:
+                            st.success(observacion, icon="✅")
+                        else:
+                            st.warning(observacion, icon="⚠️")
+
+                    elif categoria.lower() == "cadete":
+                        if act040t < 5.9:
+                            st.success(observacion, icon="✅")
+                        else:
+                            st.warning(observacion, icon="⚠️")
+
                     if(act05t != 0) or (act05v != 0):
                         figsp05 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool)
 
@@ -493,6 +530,14 @@ else:
                     with col3:
                         act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
                         st.metric(f"Último Registro",act)
+
+
+                    # observacion = get_observacion_agilidad(valor_asimetria=cactc, categoria=categoria)
+
+                    # if cactc <= 5:
+                    #     st.success(observacion, icon="✅")
+                    # else:
+                    #     st.warning(observacion, icon="⚠️")
 
                     figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool)
                     st.divider()
@@ -647,6 +692,13 @@ else:
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)
                     fecha_str = fecha_actual.strftime("%d/%m/%Y")
 
+                    observaciones = {
+                        "Peso y % Grasa": "El jugador mantiene un % graso dentro del rango saludable.",
+                        "POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)": "Mejora significativa respecto al mes anterior.",
+                        "SPRINT (0-40M)": "El tiempo total ha disminuido, indicando mayor aceleración.",
+                        "VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)": "Aún se observa una leve asimetría entre piernas."
+                    }
+                    
                     try:
                         if(tipo_reporte=="Avanzado"):
                             # 1. Generar PDF como bytes (puede tardar)
@@ -656,8 +708,7 @@ else:
                         else:
                             # 2. Generar PDF como bytes (puede tardar)
                             pdf_bytes = report.generate_pdf_simple(
-                                df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                                df_cmj, df_yoyo, df_rsa, figs_filtrados, fecha_str, idioma)
+                                df_jugador, df_anthropometrics, figs_filtrados, fecha_str, idioma, observaciones_dict)
                             
                         # 2. Codificar y preparar para mostrar
                         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')

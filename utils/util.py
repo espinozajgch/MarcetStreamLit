@@ -1751,7 +1751,18 @@ TRADUCCIONES = {
         "ca": "No disponible",
         "pt": "Indisponível",
         "ar": "غير متوفر"
+    },
+    "OBSERVACIONES": {
+        "es": "OBSERVACIONES",
+        "en": "OBSERVATIONS",
+        "it": "OSSERVAZIONI",
+        "de": "BEOBACHTUNGEN",
+        "fr": "OBSERVATIONS",
+        "ca": "OBSERVACIONS",
+        "pt": "OBSERVAÇÕES",
+        "ar": "ملاحظات"
     }
+
 
 }
 
@@ -1764,3 +1775,132 @@ def traducir_lista(palabras, idioma_destino="en"):
         traduccion = TRADUCCIONES.get(palabra, {}).get(idioma_destino, palabra)
         palabras_traducidas.append(traduccion)
     return palabras_traducidas
+
+def get_observacion_grasa(grasa):
+    if grasa > 15:
+        return ("Grasa corporal >15%: mayor riesgo de lesiones, fatiga precoz, menor eficiencia y rendimiento físico. "
+                "Recomendamos seguimiento con nutricionista deportivo.")
+    elif grasa < 7:
+        return ("Grasa <7%: riesgo de lesiones, fatiga y desequilibrio hormonal. "
+                "Recomendamos seguimiento con nutricionista deportivo.")
+    else:
+        return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
+
+def get_observacion_cmj(valor_cmj, categoria):
+    """
+    Devuelve una frase interpretativa para el test de CMJ según la categoría ('Juvenil' o 'Cadete')
+    y el valor de salto (en cm).
+    """
+
+    if valor_cmj is None or pd.isna(valor_cmj):
+        return ""
+
+    categoria = categoria.lower()
+
+    if "juvenil" in categoria:
+        if valor_cmj > 36:
+            return (
+                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento. "
+                "El objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
+            )
+        elif 32 < valor_cmj <= 36:
+            return (
+                "Mejorar la eficiencia en la técnica de salto. "
+                "Necesidad de trabajo de potencia de tren inferior."
+            )
+        elif valor_cmj <= 32:
+            return (
+                "Masa muscular insuficiente. "
+                "Necesidad de trabajo de fuerza y potencia de tren inferior. "
+                "Mejorar la técnica de salto."
+            )
+
+    elif "cadete" in categoria:
+        if valor_cmj > 30:
+            return (
+                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento."
+            )
+        elif 26 < valor_cmj <= 30:
+            return (
+                "Mejorar la eficiencia en la técnica de salto. "
+                "Necesidad de trabajo de potencia de tren inferior."
+            )
+        elif valor_cmj <= 26:
+            return (
+                "Masa muscular insuficiente. "
+                "Necesidad de trabajo de fuerza y potencia de tren inferior. "
+                "Mejorar la técnica de salto."
+            )
+
+    return ""
+
+def get_observacion_sprint(valor_sprint, categoria):
+    """
+    Devuelve una observación interpretativa según el valor del sprint (0-40m en segundos)
+    y la categoría ('Juvenil' o 'Cadete').
+    """
+    if valor_sprint is None or pd.isna(valor_sprint):
+        return ""
+
+    categoria = categoria.lower()
+
+    if "juvenil" in categoria:
+        if valor_sprint < 5.2:
+            return "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
+        elif 5.2 <= valor_sprint < 5.8:
+            return (
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
+                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima. "
+                "Mejorar tu potencia en tramos cortos."
+            )
+        else:  # valor_sprint >= 5.8
+            return (
+                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior. "
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
+                "Es fundamental mejorar tu potencia en tramos cortos y largos."
+            )
+
+    elif "cadete" in categoria:
+        if valor_sprint < 5.9:
+            return "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
+        elif 5.9 <= valor_sprint < 6.2:
+            return (
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
+                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima. "
+                "Mejorar tu potencia en tramos cortos."
+            )
+        else:  # valor_sprint >= 6.2
+            return (
+                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior. "
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
+                "Es fundamental mejorar tu potencia en tramos cortos y largos."
+            )
+
+    return ""
+
+def get_observacion_agilidad(valor_asimetria):
+    """
+    Devuelve una observación interpretativa basada en el porcentaje de asimetría funcional
+    (diferencia entre piernas en el cambio de dirección), sin diferenciar por categoría.
+    """
+    if valor_asimetria is None or pd.isna(valor_asimetria):
+        return ""
+
+    if valor_asimetria <= 5:
+        return (
+            "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección."
+        )
+    elif 5 < valor_asimetria <= 8:
+        return (
+            "Ligera asimetría funcional entre ambas piernas en el cambio de dirección. "
+            "Aunque se encuentra dentro de un rango aceptable, es recomendable aplicar estrategias preventivas para evitar que esta diferencia aumente y afecte el rendimiento o aumente el riesgo de lesión."
+        )
+    else:  # valor_asimetria > 8
+        return (
+            ". Asimetría >10% en el cambio de dirección representa:\n"
+            "- Déficit de fuerza excéntrica y/o potencia reactiva\n"
+            "- Necesidad de mejora de la técnica de frenado\n"
+            "- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n"
+            "- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings)\n\n"
+            ". Recomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+        )

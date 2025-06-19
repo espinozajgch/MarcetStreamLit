@@ -19,6 +19,13 @@ class PDF(FPDF):
             self.add_font("Amiri", "I", "assets/fonts/Amiri-0.111/Amiri-Slanted.ttf", uni=True)
             self.set_font("Amiri", "", 12)
        
+    def footer(self):
+        # Posición a 15 mm del final de la página
+        self.set_y(-15)
+        self.set_font("Arial", "I", 8)
+        self.set_text_color(150, 150, 150)
+        self.cell(0, 10, f"Página {self.page_no()}", align="C")
+        
     def header(self):
         
         # Dibujar solo el borde inferior del header
@@ -80,7 +87,7 @@ class PDF(FPDF):
         self.set_line_width(0.5)
 
         # Línea inferior del "rectángulo"
-        self.line(pdf_x, pdf_y + pdf_h, pdf_x + pdf_w, pdf_y + pdf_h)
+        #self.line(pdf_x, pdf_y + pdf_h, pdf_x + pdf_w, pdf_y + pdf_h)
 
         # Extraer la primera fila como diccionario
         data = df.iloc[0].to_dict()
@@ -235,7 +242,7 @@ class PDF(FPDF):
                 txt = f"Imagen para {codigod} no encontrada"
                 self.cell(0, 6, txt, ln=True)
 
-        self.ln(8)
+        self.ln(2)
 
     def add_img(self, img_path, x, y, w):
         self.image(img_path, x, y, w)
@@ -547,7 +554,7 @@ class PDF(FPDF):
 
         # Posiciones base
         x_start = self.get_x()
-        y_start = self.get_y()
+        y_start = self.get_y() - 2
 
         col_width = 60  # ajustable
 
@@ -612,3 +619,26 @@ class PDF(FPDF):
 
         # Eliminar archivo temporal
         os.remove(tmpfile_path)
+
+    def add_observation_block(self, title="OBSERVACIONES:", text="", x=None, y=None, font_size=8, style="I", w=90):
+        """
+        Añade un bloque de observaciones debajo de un gráfico o en cualquier parte.
+
+        Parameters:
+            title (str): Título de la sección de observaciones.
+            text (str): Texto de las observaciones.
+            x (float): Posición X. Si None, se mantiene la actual.
+            y (float): Posición Y. Si None, se mantiene la actual.
+            font_size (int): Tamaño de fuente.
+            style (str): Estilo de fuente: "", "B", "I", "BI".
+            w (int): Ancho del bloque.
+        """
+        if x is not None and y is not None:
+            self.set_xy(x, y)
+        
+        self.set_font("Arial", "B", font_size)
+        self.cell(w, 5, title, ln=True)
+
+        self.set_font("Arial", style, font_size)
+        self.multi_cell(w, 4, text)
+        self.ln(2)

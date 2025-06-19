@@ -1,6 +1,18 @@
 import streamlit as st
 import pandas as pd
 from utils import util
+import re
+
+def convert_drive_url(original_url):
+    """
+    Convierte una URL de Google Drive en una URL directa para acceder a la imagen.
+    """
+    match = re.search(r"/d/([a-zA-Z0-9_-]+)", original_url)
+    if match:
+        file_id = match.group(1)
+        return f"https://drive.google.com/uc?export=view&id={file_id}"
+    else:
+        return None
 
 def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idioma="es"):
     
@@ -31,8 +43,6 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         
         jugador = df_jugador.iloc[0]
         
-        response = util.get_photo(df_jugador['FOTO PERFIL'].iloc[0])
-
         nombre = df_jugador['JUGADOR'].iloc[0]
         nacionalidad = df_jugador['NACIONALIDAD'].iloc[0]
         categoria = df_jugador['CATEGORIA'].iloc[0]
@@ -64,8 +74,13 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         col1, col2, col3 = st.columns([1, 2, 2])
 
         with col1:
-            if response:
+            url_drive = df_jugador['FOTO PERFIL'].iloc[0]
+            url_directa = convert_drive_url(url_drive)
+            response = util.get_photo(url_directa)
+
+            if response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
                 st.image(response.content, width=150)
+                #st.image(response.content, width=150)
             else:
                 #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
                 st.image("assets/images/profile.png", width=180)
