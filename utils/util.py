@@ -1761,8 +1761,169 @@ TRADUCCIONES = {
         "ca": "OBSERVACIONS",
         "pt": "OBSERVAÇÕES",
         "ar": "ملاحظات"
+    },
+    "AGILIDAD (Pierna Izquierda y Pierna Derecha)": {
+        "en": "AGILITY (Left Leg and Right Leg)",
+        "it": "AGILITÀ (Gamba Sinistra e Gamba Destra)",
+        "de": "AGILITÄT (Linkes Bein und Rechtes Bein)",
+        "fr": "AGILITÉ (Jambe Gauche et Jambe Droite)",
+        "ca": "AGILITAT (Cama Esquerra i Cama Dreta)",
+        "pt": "AGILIDADE (Perna Esquerda e Perna Direita)",
+        "ar": "المرونة (الساق اليسرى والساق اليمنى)"
+    },
+    "Evolución de la Agilidad (Pierna Izquierda y Pierna Derecha)": {
+        "en": "Agility Progression (Left Leg and Right Leg)",
+        "it": "Evoluzione dell'Agilità (Gamba Sinistra e Gamba Destra)",
+        "de": "Entwicklung der Agilität (Linkes Bein und Rechtes Bein)",
+        "fr": "Évolution de l'Agilité (Jambe Gauche et Jambe Droite)",
+        "ca": "Evolució de l'Agilitat (Cama Esquerra i Cama Dreta)",
+        "pt": "Evolução da Agilidade (Perna Esquerda e Perna Direita)",
+        "ar": "تطور المرونة (الساق اليسرى والساق اليمنى)"
+    },
+    ## PESO Y GRASA
+    "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento.": {
+        "es": "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento.",
+        "en": "Your body fat level is within the ideal range for a high-performance football player.",
+        "it": "Il tuo livello di grasso corporeo è nella gamma ideale per un calciatore ad alte prestazioni.",
+        "de": "Dein Körperfettanteil liegt im idealen Bereich für einen Hochleistungssportler.",
+        "fr": "Votre taux de graisse corporelle est dans la plage idéale pour un footballeur de haut niveau.",
+        "ca": "El teu nivell de greix corporal està dins del rang ideal per a un futbolista d'alt rendiment.",
+        "pt": "Seu nível de gordura corporal está dentro da faixa ideal para um jogador de futebol de alto rendimento.",
+        "ar": "نسبة الدهون في جسمك تقع ضمن النطاق المثالي للاعب كرة قدم عالي الأداء."
+    },
+    "Grasa corporal >15%: mayor riesgo de lesiones, fatiga precoz, menor eficiencia y rendimiento físico.\nRecomendamos seguimiento con nutricionista deportivo.\n": {
+        "es": "Grasa corporal >15%: mayor riesgo de lesiones, fatiga precoz, menor eficiencia y rendimiento físico.\nRecomendamos seguimiento con nutricionista deportivo.\n",
+        "en": "Body fat >15%: higher risk of injuries, early fatigue, lower efficiency and physical performance.\nWe recommend follow-up with a sports nutritionist.\n",
+        "it": "Grasso corporeo >15%: maggiore rischio di infortuni, affaticamento precoce, minore efficienza e prestazioni fisiche.\nSi consiglia un monitoraggio con un nutrizionista sportivo.\n",
+        "de": "Körperfett >15%: höheres Risiko für Verletzungen, frühzeitige Ermüdung, geringere Effizienz und körperliche Leistung.\nWir empfehlen eine Nachsorge durch einen Sporternährungsberater.\n",
+        "fr": "Graisse corporelle >15 % : risque accru de blessures, fatigue précoce, moindre efficacité et performance physique.\nNous recommandons un suivi avec un nutritionniste du sport.\n",
+        "ca": "Greix corporal >15%: més risc de lesions, fatiga precoç, menor eficiència i rendiment físic.\nRecomanem un seguiment amb un nutricionista esportiu.\n",
+        "pt": "Gordura corporal >15%: maior risco de lesões, fadiga precoce, menor eficiência e desempenho físico.\nRecomendamos acompanhamento com nutricionista esportivo.\n",
+        "ar": "دهون الجسم >15٪: زيادة خطر الإصابات، التعب المبكر، انخفاض الكفاءة والأداء البدني.\nننصح بالمتابعة مع اختصاصي تغذية رياضية.\n"
+    },
+    "Grasa <7%: riesgo de lesiones, fatiga y desequilibrio hormonal.\nRecomendamos seguimiento con nutricionista deportivo.": {
+        "es": "Grasa <7%: riesgo de lesiones, fatiga y desequilibrio hormonal.\nRecomendamos seguimiento con nutricionista deportivo.",
+        "en": "Fat <7%: risk of injuries, fatigue and hormonal imbalance.\nWe recommend follow-up with a sports nutritionist.",
+        "it": "Grasso <7%: rischio di infortuni, affaticamento e squilibrio ormonale.\nSi consiglia un monitoraggio con un nutrizionista sportivo.",
+        "de": "Fett <7%: Risiko für Verletzungen, Ermüdung und hormonelles Ungleichgewicht.\nWir empfehlen eine Nachsorge durch einen Sporternährungsberater.",
+        "fr": "Graisse <7 % : risque de blessures, de fatigue et de déséquilibre hormonal.\nNous recommandons un suivi avec un nutritionniste du sport.",
+        "ca": "Greix <7%: risc de lesions, fatiga i desequilibri hormonal.\nRecomanem un seguiment amb un nutricionista esportiu.",
+        "pt": "Gordura <7%: risco de lesões, fadiga e desequilíbrio hormonal.\nRecomendamos acompanhamento com nutricionista esportivo.",
+        "ar": "دهون <7٪: خطر الإصابة، التعب واختلال التوازن الهرموني.\nننصح بالمتابعة مع اختصاصي تغذية رياضية."
+    },
+    #CMJ
+    "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.": {
+        "es": "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.",
+        "en": "Your CMJ level is within the optimal performance range.",
+        "it": "Il tuo livello nel CMJ è all'interno dell'intervallo ottimale di rendimento.",
+        "de": "Dein CMJ-Wert liegt im optimalen Leistungsbereich.",
+        "fr": "Votre niveau au CMJ se situe dans la plage optimale de performance.",
+        "ca": "El teu nivell en el CMJ està dins del rang òptim de rendiment.",
+        "pt": "O seu nível no CMJ está dentro da faixa ideal de desempenho.",
+        "ar": "مستواك في اختبار CMJ يقع ضمن النطاق الأمثل للأداء."
+    },
+    "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\nEl objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento.": {
+        "en": "Your CMJ level is within the optimal performance range.\nThe goal is to improve jump technique efficiency and slightly maintain or increase performance.",
+        "it": "Il tuo livello di CMJ è all'interno della gamma ottimale di prestazioni.\nL'obiettivo è migliorare l'efficienza della tecnica di salto e mantenere o aumentare leggermente le prestazioni.",
+        "de": "Dein CMJ-Wert liegt im optimalen Leistungsbereich.\nZiel ist es, die Sprungtechnik zu verbessern und die Leistung leicht zu halten oder zu steigern.",
+        "fr": "Votre niveau de CMJ est dans la plage de performance optimale.\nL'objectif est d'améliorer l'efficacité de la technique de saut et de maintenir ou d'augmenter légèrement la performance.",
+        "ca": "El teu nivell de CMJ està dins del rang òptim de rendiment.\nL'objectiu és millorar l'eficiència de la tècnica de salt i mantenir o augmentar lleugerament el rendiment.",
+        "pt": "Seu nível de CMJ está dentro da faixa ideal de desempenho.\nO objetivo é melhorar a eficiência da técnica de salto e manter ou aumentar ligeiramente o desempenho.",
+        "ar": "مستوى قفزك العمودي (CMJ) ضمن النطاق الأمثل للأداء.\nالهدف هو تحسين كفاءة تقنية القفز والحفاظ أو زيادة الأداء قليلاً.",
+        "es": "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\nEl objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
+    },
+    "Mejorar la eficiencia en la técnica de salto.\nNecesidad de trabajo de potencia de tren inferior.": {
+        "en": "Improve jump technique efficiency.\nNeed for lower body power training.",
+        "it": "Migliora l'efficienza della tecnica di salto.\nNecessità di lavoro sulla potenza degli arti inferiori.",
+        "de": "Verbessere die Effizienz der Sprungtechnik.\nNotwendigkeit von Krafttraining für den Unterkörper.",
+        "fr": "Améliorer l'efficacité de la technique de saut.\nNécessité de travail de puissance du bas du corps.",
+        "ca": "Millorar l'eficiència en la tècnica de salt.\nNecessitat de treball de potència del tren inferior.",
+        "pt": "Melhorar a eficiência da técnica de salto.\nNecessidade de trabalho de potência de membros inferiores.",
+        "ar": "تحسين كفاءة تقنية القفز.\nالحاجة إلى تدريب قوة الجزء السفلي من الجسم.",
+        "es": "Mejorar la eficiencia en la técnica de salto.\nNecesidad de trabajo de potencia de tren inferior."
+    },
+    "Masa muscular insuficiente.\nNecesidad de trabajo de fuerza y potencia de tren inferior.\nMejorar la técnica de salto.": {
+        "en": "Insufficient muscle mass.\nNeed for strength and lower body power training.\nImprove jump technique.",
+        "it": "Massa muscolare insufficiente.\nNecessità di lavoro di forza e potenza degli arti inferiori.\nMigliorare la tecnica di salto.",
+        "de": "Unzureichende Muskelmasse.\nBedarf an Kraft- und Unterkörpertraining.\nVerbesserung der Sprungtechnik.",
+        "fr": "Masse musculaire insuffisante.\nNécessité de travailler la force et la puissance du bas du corps.\nAméliorer la technique de saut.",
+        "ca": "Massa muscular insuficient.\nNecessitat de treball de força i potència del tren inferior.\nMillorar la tècnica de salt.",
+        "pt": "Massa muscular insuficiente.\nNecessidade de treino de força e potência de membros inferiores.\nMelhorar a técnica de salto.",
+        "ar": "كتلة عضلية غير كافية.\nالحاجة إلى تدريب القوة والطاقة للجزء السفلي من الجسم.\nتحسين تقنية القفز.",
+        "es": "Masa muscular insuficiente.\nNecesidad de trabajo de fuerza y potencia de tren inferior.\nMejorar la técnica de salto."
+    },
+    #SPRINT
+    "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría.": {
+        "en": "Your horizontal sprint strength level is excellent for your age and category.",
+        "it": "Il tuo livello di forza orizzontale nello sprint è eccellente per la tua età e categoria.",
+        "de": "Dein horizontales Sprintkraftniveau ist ausgezeichnet für dein Alter und deine Kategorie.",
+        "fr": "Votre niveau de force horizontale au sprint est excellent pour votre âge et votre catégorie.",
+        "ca": "El teu nivell de força horitzontal en l'esprint és excel·lent per a la teva edat i categoria.",
+        "pt": "Seu nível de força horizontal no sprint é excelente para sua idade e categoria.",
+        "ar": "مستوى القوة الأفقية لديك في العدو ممتاز بالنسبة لعمرك وفئتك.",
+        "es": "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
+    },
+    "Necesidad de trabajo técnico de zancada y frecuencia de paso.\nIdentificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\nMejorar tu potencia en tramos cortos.": {
+        "en": "Need to improve stride technique and step frequency.\nIdentify whether the deficit is in the initial acceleration or maximum speed phase.\nImprove your power in short sprints.",
+        "it": "Necessità di migliorare la tecnica del passo e la frequenza.\nIdentificare se il deficit è nell'accelerazione iniziale o nella fase di velocità massima.\nMigliora la tua potenza nei tratti brevi.",
+        "de": "Notwendigkeit, die Schrittlänge und -frequenz zu verbessern.\nDefizite in der Startbeschleunigung oder der Maximalgeschwindigkeit identifizieren.\nVerbessere deine Kraft auf kurzen Strecken.",
+        "fr": "Besoin d'améliorer la technique de foulée et la fréquence des pas.\nIdentifier si le déficit se situe dans l'accélération initiale ou la phase de vitesse maximale.\nAméliorer votre puissance sur les courtes distances.",
+        "ca": "Necessitat de millorar la tècnica de la gambada i la freqüència del pas.\nIdentificar si el dèficit està en l'acceleració inicial o en la fase de velocitat màxima.\nMillorar la teva potència en trams curts.",
+        "pt": "Necessidade de melhorar a técnica de passada e frequência.\nIdentificar se o déficit está na aceleração inicial ou na fase de velocidade máxima.\nMelhore sua potência em trechos curtos.",
+        "ar": "الحاجة لتحسين تقنية الخطوة وتكرارها.\nتحديد ما إذا كان النقص في التسارع الأولي أو في مرحلة السرعة القصوى.\nحسّن قوتك في المسافات القصيرة.",
+        "es": "Necesidad de trabajo técnico de zancada y frecuencia de paso.\nIdentificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\nMejorar tu potencia en tramos cortos."
+    },
+    "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\nNecesidad de trabajo técnico de zancada y frecuencia de paso.\nEs fundamental mejorar tu potencia en tramos cortos y largos.": {
+        "en": "You have a wide margin for improvement in lower body strength.\nNeed to improve stride technique and step frequency.\nIt is essential to improve your power in both short and long sprints.",
+        "it": "Hai un ampio margine di miglioramento nella forza del treno inferiore.\nNecessità di migliorare la tecnica della falcata e la frequenza.\nÈ fondamentale migliorare la tua potenza nei tratti brevi e lunghi.",
+        "de": "Du hast großes Verbesserungspotenzial bei der Beinmuskulatur.\nNotwendigkeit, Technik und Frequenz zu verbessern.\nEs ist entscheidend, deine Kraft in kurzen und langen Sprints zu steigern.",
+        "fr": "Vous avez une grande marge de progression dans la force du bas du corps.\nBesoin d'améliorer la technique et la fréquence de foulée.\nIl est essentiel d'améliorer votre puissance sur les sprints courts et longs.",
+        "ca": "Tens un gran marge de millora en la força del tren inferior.\nNecessitat de millorar la tècnica i la freqüència de la gambada.\nÉs fonamental millorar la teva potència en trams curts i llargs.",
+        "pt": "Você tem uma grande margem de melhora na força dos membros inferiores.\nNecessidade de melhorar a técnica e a frequência da passada.\nÉ fundamental melhorar sua potência em trechos curtos e longos.",
+        "ar": "لديك هامش كبير لتحسين قوة الجزء السفلي من الجسم.\nالحاجة لتحسين تقنية الخطوة وتكرارها.\nمن الضروري تحسين قوتك في المسافات القصيرة والطويلة.",
+        "es": "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\nNecesidad de trabajo técnico de zancada y frecuencia de paso.\nEs fundamental mejorar tu potencia en tramos cortos y largos."
+    },
+    #AGILIDAD
+    "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección.": {
+        "en": "The player shows an adequate level of functional symmetry (<5%) between both legs in change of direction.",
+        "it": "Il giocatore presenta un livello adeguato di simmetria funzionale (<5%) tra entrambe le gambe nel cambio di direzione.",
+        "de": "Der Spieler weist ein angemessenes Maß an funktioneller Symmetrie (<5 %) zwischen beiden Beinen bei Richtungswechseln auf.",
+        "fr": "Le joueur présente un niveau adéquat de symétrie fonctionnelle (<5 %) entre les deux jambes lors du changement de direction.",
+        "ca": "El jugador presenta un nivell adequat de simetria funcional (<5%) entre ambdues cames en el canvi de direcció.",
+        "pt": "O jogador apresenta um nível adequado de simetria funcional (<5%) entre as duas pernas na mudança de direção.",
+        "ar": "يُظهر اللاعب مستوى مناسبًا من التماثل الوظيفي (<5٪) بين الساقين عند تغيير الاتجاه.",
+        "es": "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección."
+    },
+    "Ligera asimetría funcional entre ambas piernas en el cambio de dirección.\nAunque se encuentra dentro de un rango aceptable, es recomendable aplicar estrategias preventivas para evitar que esta diferencia aumente y afecte el rendimiento o aumente el riesgo de lesión.": {
+        "en": "Slight functional asymmetry between both legs in change of direction.\nAlthough within an acceptable range, preventive strategies are recommended to avoid worsening and risk of injury.",
+        "it": "Leggera asimmetria funzionale tra entrambe le gambe nel cambio di direzione.\nAnche se entro limiti accettabili, si raccomandano strategie preventive per evitare peggioramenti e rischi di infortunio.",
+        "de": "Leichte funktionelle Asymmetrie zwischen beiden Beinen bei Richtungswechsel.\nObwohl im akzeptablen Bereich, werden präventive Maßnahmen empfohlen, um eine Verschlechterung und Verletzungen zu vermeiden.",
+        "fr": "Légère asymétrie fonctionnelle entre les deux jambes lors du changement de direction.\nBien que dans une plage acceptable, il est recommandé d’appliquer des stratégies préventives pour éviter une détérioration et un risque accru de blessure.",
+        "ca": "Lleugera asimetria funcional entre ambdues cames en el canvi de direcció.\nTot i que dins d’un rang acceptable, és recomanable aplicar estratègies preventives per evitar que aquesta diferència augmenti i afecti el rendiment o el risc de lesió.",
+        "pt": "Assimetria funcional leve entre ambas as pernas na mudança de direção.\nEmbora esteja dentro de uma faixa aceitável, recomenda-se aplicar estratégias preventivas para evitar que a diferença aumente e afete o desempenho ou o risco de lesão.",
+        "ar": "اختلاف بسيط في الأداء الوظيفي بين الساقين عند تغيير الاتجاه.\nرغم أنه ضمن النطاق المقبول، يُوصى باتباع استراتيجيات وقائية لمنع تفاقم الفارق أو زيادة خطر الإصابة.",
+        "es": "Ligera asimetría funcional entre ambas piernas en el cambio de dirección.\nAunque se encuentra dentro de un rango aceptable, es recomendable aplicar estrategias preventivas para evitar que esta diferencia aumente y afecte el rendimiento o aumente el riesgo de lesión."
+    },
+    "Asimetría >10% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva.\n- Necesidad de mejora de la técnica de frenado.\n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria.": {
+        "en": "Asymmetry >10% in change of direction represents:\n- Deficit in eccentric strength and/or reactive power.\n- Need to improve braking technique.\n- Increased risk of musculoskeletal injury, especially hamstrings and ACL.\n- Limitation in ability to perform explosive actions (turns, feints, dribbles).\n\nWe recommend a specific unilateral training plan for the weaker leg.",
+        "it": "Asimmetria >10% nel cambio di direzione rappresenta:\n- Deficit di forza eccentrica e/o potenza reattiva.\n- Necessità di migliorare la tecnica di frenata.\n- Maggior rischio di infortuni muscoloscheletrici, soprattutto agli ischiocrurali e al LCA.\n- Limitazione nella capacità di eseguire azioni esplosive (cambi di direzione, finte, dribbling).\n\nRaccomandiamo un piano di allenamento unilaterale specifico per la gamba più debole.",
+        "de": "Asymmetrie >10 % bei Richtungswechseln bedeutet:\n- Defizit an exzentrischer Kraft und/oder Reaktivkraft.\n- Notwendigkeit zur Verbesserung der Bremstechnik.\n- Erhöhtes Risiko für muskuloskelettale Verletzungen, insbesondere an den hinteren Oberschenkelmuskeln und dem Kreuzband.\n- Eingeschränkte Fähigkeit zu explosiven Bewegungen (Drehungen, Finten, Dribblings).\n\nWir empfehlen ein spezielles einseitiges Trainingsprogramm für das schwächere Bein.",
+        "fr": "Asymétrie >10 % lors du changement de direction indique :\n- Déficit de force excentrique et/ou de puissance réactive.\n- Besoin d'améliorer la technique de freinage.\n- Risque accru de blessure musculo-squelettique, notamment des ischio-jambiers et du LCA.\n- Capacité limitée à effectuer des actions explosives (tours, feintes, dribbles).\n\nNous recommandons un plan d'entraînement unilatéral spécifique pour la jambe déficitaire.",
+        "ca": "Asimetria >10% en el canvi de direcció representa:\n- Dèficit de força excèntrica i/o potència reactiva.\n- Necessitat de millorar la tècnica de frenada.\n- Augment del risc de lesió musculoesquelètica, especialment en isquiotibials i LCA.\n- Limitació de la capacitat per realitzar accions explosives (girs, fintes, driblatges).\n\nRecomanem un pla específic d'entrenament unilateral per a la cama deficitària.",
+        "pt": "Assimetria >10% na mudança de direção representa:\n- Déficit de força excêntrica e/ou potência reativa.\n- Necessidade de melhorar a técnica de frenagem.\n- Maior risco de lesão musculoesquelética, especialmente nos isquiotibiais e LCA.\n- Limitação na capacidade de realizar ações explosivas (giros, fintas, dribles).\n\nRecomendamos um plano de treino unilateral específico para a perna mais fraca.",
+        "ar": "الاختلاف >10٪ في تغيير الاتجاه يشير إلى:\n- ضعف في القوة اللامركزية و/أو الطاقة التفاعلية.\n- الحاجة لتحسين تقنية الإيقاف.\n- زيادة خطر الإصابة العضلية الهيكلية، خاصة في عضلات الفخذ الخلفية والرباط الصليبي الأمامي.\n- ضعف القدرة على تنفيذ الحركات المتفجرة (كالتفافات، تمويهات، مراوغات).\n\nننصح بخطة تدريب أحادية الساق مخصصة للساق الأضعف.",
+        "es": "Asimetría >10% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva.\n- Necesidad de mejora de la técnica de frenado.\n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+    },
+    "FECHA": {
+        "es": "FECHA",
+        "en": "DATE",
+        "it": "DATA",
+        "de": "DATUM",
+        "fr": "DATE",
+        "ca": "DATA",
+        "pt": "DATA",
+        "ar": "التاريخ"
     }
-
 
 }
 
@@ -1778,10 +1939,10 @@ def traducir_lista(palabras, idioma_destino="en"):
 
 def get_observacion_grasa(grasa):
     if grasa > 15:
-        return ("Grasa corporal >15%: mayor riesgo de lesiones, fatiga precoz, menor eficiencia y rendimiento físico. "
-                "Recomendamos seguimiento con nutricionista deportivo.")
+        return ("Grasa corporal >15%: mayor riesgo de lesiones, fatiga precoz, menor eficiencia y rendimiento físico.\n"
+                "Recomendamos seguimiento con nutricionista deportivo.\n")
     elif grasa < 7:
-        return ("Grasa <7%: riesgo de lesiones, fatiga y desequilibrio hormonal. "
+        return ("Grasa <7%: riesgo de lesiones, fatiga y desequilibrio hormonal.\n"
                 "Recomendamos seguimiento con nutricionista deportivo.")
     else:
         return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
@@ -1800,35 +1961,35 @@ def get_observacion_cmj(valor_cmj, categoria):
     if "juvenil" in categoria:
         if valor_cmj > 36:
             return (
-                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento. "
+                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\n"
                 "El objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
             )
         elif 32 < valor_cmj <= 36:
             return (
-                "Mejorar la eficiencia en la técnica de salto. "
+                "Mejorar la eficiencia en la técnica de salto.\n"
                 "Necesidad de trabajo de potencia de tren inferior."
             )
         elif valor_cmj <= 32:
             return (
-                "Masa muscular insuficiente. "
-                "Necesidad de trabajo de fuerza y potencia de tren inferior. "
+                "Masa muscular insuficiente.\n"
+                "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
                 "Mejorar la técnica de salto."
             )
 
     elif "cadete" in categoria:
         if valor_cmj > 30:
             return (
-                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento."
+                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento"
             )
         elif 26 < valor_cmj <= 30:
             return (
-                "Mejorar la eficiencia en la técnica de salto. "
+                "Mejorar la eficiencia en la técnica de salto.\n"
                 "Necesidad de trabajo de potencia de tren inferior."
             )
         elif valor_cmj <= 26:
             return (
-                "Masa muscular insuficiente. "
-                "Necesidad de trabajo de fuerza y potencia de tren inferior. "
+                "Masa muscular insuficiente.\n"
+                "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
                 "Mejorar la técnica de salto."
             )
 
@@ -1849,14 +2010,14 @@ def get_observacion_sprint(valor_sprint, categoria):
             return "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
         elif 5.2 <= valor_sprint < 5.8:
             return (
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
-                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima. "
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
+                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\n"
                 "Mejorar tu potencia en tramos cortos."
             )
         else:  # valor_sprint >= 5.8
             return (
-                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior. "
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
+                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\n"
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
                 "Es fundamental mejorar tu potencia en tramos cortos y largos."
             )
 
@@ -1865,14 +2026,14 @@ def get_observacion_sprint(valor_sprint, categoria):
             return "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
         elif 5.9 <= valor_sprint < 6.2:
             return (
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
-                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima. "
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
+                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\n"
                 "Mejorar tu potencia en tramos cortos."
             )
         else:  # valor_sprint >= 6.2
             return (
-                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior. "
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso. "
+                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\n"
+                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
                 "Es fundamental mejorar tu potencia en tramos cortos y largos."
             )
 
@@ -1892,15 +2053,15 @@ def get_observacion_agilidad(valor_asimetria):
         )
     elif 5 < valor_asimetria <= 8:
         return (
-            "Ligera asimetría funcional entre ambas piernas en el cambio de dirección. "
+            "Ligera asimetría funcional entre ambas piernas en el cambio de dirección.\n"
             "Aunque se encuentra dentro de un rango aceptable, es recomendable aplicar estrategias preventivas para evitar que esta diferencia aumente y afecte el rendimiento o aumente el riesgo de lesión."
         )
     else:  # valor_asimetria > 8
         return (
-            "Asimetría >10% en el cambio de dirección representa: "
-            "- Déficit de fuerza excéntrica y/o potencia reactiva. "
-            "- Necesidad de mejora de la técnica de frenado. "
-            "- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA. "
-            "- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings). \n"
+            "Asimetría >10% en el cambio de dirección representa:\n"
+            "- Déficit de fuerza excéntrica y/o potencia reactiva.\n"
+            "- Necesidad de mejora de la técnica de frenado.\n"
+            "- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n"
+            "- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\n"
             "Recomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
         )

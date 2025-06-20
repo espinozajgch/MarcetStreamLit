@@ -14,7 +14,7 @@ def get_agilidad_colorbar_agregada(fig, y_min, y_max):
             size=0,
             color=[10],
             cmin=0,
-            cmax=11,
+            cmax=12,
             colorscale=[
                 [0.0, "#A8E6A1"],
                 [0.45, "#4CAF50"],
@@ -23,11 +23,11 @@ def get_agilidad_colorbar_agregada(fig, y_min, y_max):
                 [1.0, "#F44336"]
             ],
             colorbar=dict(
-                title="DIF. %",
-                ticks="outside",
-                tickvals=[0, 5, 6, 7, 8, 9, 10],
-                ticktext=["0%", "5%", "6%", "7%", "8%", "9%", "10%+"],
-                tickfont=dict(color="black"),
+                title="",
+                #ticks="outside",
+                tickvals=[0, 5, 6, 7, 8, 9, 10, 12],
+                ticktext=["0%", "5%", "6%", "7%", "8%", "9%", "10%", "12%"],
+                tickfont=dict(size=12, color="black"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
@@ -160,9 +160,9 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             color = calcular_color_diferencia_agilidad(diferencia)
 
             if 0 <= diferencia <= 10:
-                y_pos = ymin + (diferencia / 10) * (ymax - ymin)
+                y_pos = ymin + (diferencia / 12) * (ymax - ymin)
             else:
-                y_pos = (ymin + ymax) / 2
+                y_pos = ((ymin + ymax) / 2)
 
             fig.add_trace(go.Scatter(
                 x=[fecha],
@@ -181,7 +181,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
     tickvals = df["FECHA TEXTO"].drop_duplicates().tolist()
     ticktext = tickvals
 
-    title_layout = "AGILIDAD (IZQ Y DER)" if barras else "Evolución de la Agilidad (IZQ y DER)"
+    title_layout = "AGILIDAD (Pierna Izquierda y Pierna Derecha)" if barras else "Evolución de la Agilidad (Pierna Izquierda y Pierna Derecha)"
     fig.update_layout(
         title=util.traducir(title_layout, idioma).upper(),
         xaxis=dict(

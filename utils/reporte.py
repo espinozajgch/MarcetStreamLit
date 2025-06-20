@@ -22,11 +22,21 @@ def add_footer_con_texto(pdf, texto, idioma="es"):
 
     # === Texto de Observaciones ===
     pdf.set_xy(10, y_final)
-    pdf.set_font("Arial", "B", 11)
+
+    if(idioma == "ar"):
+        pdf.set_font("Amiri", "", 11)
+    else:
+        pdf.set_font("Arial", "", 11)
+    #pdf.set_font("Arial", "B", 11)
+
     pdf.set_text_color(0, 51, 102)  # Azul oscuro
     pdf.cell(0, 6, util.traducir("Observaciones", idioma).upper(), ln=True)
 
-    pdf.set_font("Arial", "", 10)
+    if(idioma == "ar"):
+        pdf.set_font("Amiri", "", 10)
+    else:
+        pdf.set_font("Arial", "", 10)
+        
     pdf.set_text_color(0, 0, 0)
     pdf.multi_cell(0, 5, texto)
 
@@ -256,15 +266,24 @@ def generate_pdf_simple(
 
             titulo, _ = graficos[i + col]
             x = 9 if col == 0 else 103
-            obs_text = observaciones_dict.get(titulo, "").strip()
+            obs_text = observaciones_dict.get(titulo, "").strip().replace("\n"," ")
 
             # Título observaciones
             pdf.set_xy(x, y_obs)
-            pdf.set_font("Arial", "B", 5)
+            #pdf.set_font("Arial", "B", 5)
+            if(idioma == "ar"):
+                pdf.set_font("Amiri", "B", 5)
+            else:
+                pdf.set_font("Arial", "B", 5)
             #pdf.cell(obs_width, 3, "OBSERVACIONES:", ln=False)
 
             # Texto observaciones
-            pdf.set_font("Arial", "I", 6.6)
+            #pdf.set_font("Arial", "I", 6.6)
+            if(idioma == "ar"):
+                pdf.set_font("Amiri", "I", 6.6)
+            else:
+                pdf.set_font("Arial", "I", 6.6)
+
             pdf.set_x(x)
             y_current = pdf.get_y()
 

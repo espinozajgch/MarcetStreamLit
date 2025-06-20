@@ -69,7 +69,7 @@ class PDF(FPDF):
         
         self.set_text_color(0, 0, 0)
         self.set_xy(0, 24)
-        self.cell(210, 10, "FECHA:" + self.fecha_actual, align="C")
+        self.cell(210, 10, util.traducir("FECHA", self.idioma) + ":" + self.fecha_actual, align="C")
         
         #self.set_xy(0, 25)
         #self.cell(210, 10, self.idioma, align="C")

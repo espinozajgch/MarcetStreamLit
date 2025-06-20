@@ -208,7 +208,7 @@ else:
                         st.metric(f"Último Registro",act)
 
                     observacion = util.get_observacion_grasa(gact)
-
+                    observacion = util.traducir(observacion, idioma)
                     if(gact < 7) or (gact > 15):
                         st.warning(f"{observacion}", icon="⚠️")
                     else:
@@ -307,6 +307,7 @@ else:
                     cactc = float(cactc)
 
                     observacion = util.get_observacion_cmj(cactc, categoria)
+                    observacion = util.traducir(observacion, idioma)
                     observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
                     
                     # Mostrar mensaje visual según el rango definido por categoría
@@ -325,7 +326,6 @@ else:
                             st.warning(observacion, icon="⚠️")
                         else:
                             st.warning(observacion, icon="⚠️")
-
 
                     #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
@@ -403,6 +403,7 @@ else:
                         #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
                     observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria)
+                    observacion = util.traducir(observacion, idioma)
                     observaciones_dict["SPRINT (0-40M)"] = observacion
                     
                     if categoria.lower() == "juvenil":
@@ -534,6 +535,7 @@ else:
 
                     diferencia = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
                     observacion = util.get_observacion_agilidad(valor_asimetria=diferencia)
+                    observacion = util.traducir(observacion, idioma)
                     observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
                     #st.text(diferencia)
                     if diferencia <= 5:

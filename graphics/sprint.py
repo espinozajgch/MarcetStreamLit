@@ -209,7 +209,7 @@ def get_sprint_graph(
                     lenmode="fraction",
                     y=0,
                     yanchor="bottom",
-                    x=1.18 if barras else -0.19,
+                    x=1.12 if barras else -0.19,
                     xanchor="right" if barras else "left"
                 ),
                 showscale=True

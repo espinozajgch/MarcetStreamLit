@@ -95,8 +95,6 @@ elif fecha_inicio == fecha_fin:
 	df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas, fecha_formateada)
 		
 
-
-
 columnas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO']
 if len(metricas) > 0:
 	df_nuevo = df_nuevo[columnas + metricas]
