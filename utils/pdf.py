@@ -25,7 +25,7 @@ class PDF(FPDF):
         self.set_font("Arial", "I", 8)
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, f"Página {self.page_no()}", align="C")
-        
+
     def header(self):
         
         # Dibujar solo el borde inferior del header
@@ -62,8 +62,9 @@ class PDF(FPDF):
             self.set_font("Amiri", "B", 14)
         else:
             self.set_font("Arial", "B", 14)
+        
         self.set_text_color(249, 178, 51)  # amarillo
-        self.set_xy(0, 16)
+        self.set_xy(0, 14)
         self.cell(210, 10, util.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
         
         self.set_text_color(0, 0, 0)
@@ -142,7 +143,7 @@ class PDF(FPDF):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, str(util.traducir(data["ID"], idioma)), ln=True)
+        self.cell(50, 6, str(util.traducir(data["ID"], idioma)).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -157,7 +158,7 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "", 10)
         
-        self.cell(50, 6, data["NACIONALIDAD"].capitalize(), ln=True)
+        self.cell(50, 6, data["NACIONALIDAD"].upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -198,7 +199,7 @@ class PDF(FPDF):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, util.traducir(data["DEMARCACION"], idioma).capitalize(), ln=True)
+        self.cell(50, 6, util.traducir(data["DEMARCACION"], idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -211,7 +212,7 @@ class PDF(FPDF):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, util.traducir(data["CATEGORIA"].upper(), idioma).capitalize(), ln=True)
+        self.cell(50, 6, util.traducir(data["CATEGORIA"].upper(), idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -225,7 +226,7 @@ class PDF(FPDF):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, util.traducir(data["EQUIPO"], idioma).capitalize(), ln=True)
+        self.cell(50, 6, util.traducir(data["EQUIPO"], idioma).upper(), ln=True)
 
         # Imagen del campo (derecha)
         #self.image("assets/images/test/505.jpg", 130, 50, 70)

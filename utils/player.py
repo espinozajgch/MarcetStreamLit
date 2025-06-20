@@ -88,9 +88,9 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         with col1:
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
             #url_directa = convert_drive_url(url_drive)
-
-            if url_drive is not None:
-
+            
+            if url_drive is not None and url_drive != "No Disponible":
+                #st.text(url_drive)
                 response = util.get_photo(url_drive)
 
                 if response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):

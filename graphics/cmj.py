@@ -47,7 +47,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     # --- Rango dinámico con base entre 20-50 ---
     cmj_min = min(valores)
     cmj_max = max(valores)
-    cmin = min(20, cmj_min - 1 if cmj_min < 20 else cmj_min)
+    cmin = min(15, cmj_min - 1 if cmj_min < 20 else cmj_min)
     cmax = max(50, cmj_max + 1 if cmj_max > 50 else cmj_max)
     if cmax - cmin < 10:
         cmax = cmin + 10
@@ -87,7 +87,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                     colores_puntos.append("#7CFC00")  # Verde Manzana
                 elif 35 <= valor <= 38:
                     colores_puntos.append("#006400")  # Verde Oscuro
-                elif 33 <= valor < 34:
+                elif 33 <= valor < 35:
                     colores_puntos.append("#FFFF00")  # Amarillo
                 elif 31 <= valor < 33:
                     colores_puntos.append("#FFA500")  # Naranja
@@ -99,7 +99,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
 
         if barras:
             ancho_barra = 0.2 if len(x_vals) == 1 else 0.3
-            size = 20 if len(x_vals) == 1 else 14
+            size = 19 if len(x_vals) == 1 else 14
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
@@ -166,7 +166,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     # --- Colorbar lateral según categoría ---
     if es_cadete:
         colorscale = [
-            [(20 - cmin) / (cmax - cmin), "#FF0000"],
+            [(15 - cmin) / (cmax - cmin), "#FF0000"],
             [(24 - cmin) / (cmax - cmin), "#FF0000"],
             [(25 - cmin) / (cmax - cmin), "#FFA500"],
             [(26 - cmin) / (cmax - cmin), "#FFA500"],
@@ -179,7 +179,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         ]
     else:
         colorscale = [
-            [(20 - cmin) / (cmax - cmin), "#FF0000"],
+            [(15 - cmin) / (cmax - cmin), "#FF0000"],
             [(30 - cmin) / (cmax - cmin), "#FF0000"],
             [(31 - cmin) / (cmax - cmin), "#FFA500"],
             [(32 - cmin) / (cmax - cmin), "#FFA500"],

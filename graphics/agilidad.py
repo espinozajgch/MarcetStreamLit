@@ -5,6 +5,58 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
+def get_agilidad_colorbar_agregada(fig, y_min, y_max):
+    fig.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
+        marker=dict(
+            size=0,
+            color=[10],
+            cmin=0,
+            cmax=11,
+            colorscale=[
+                [0.0, "#A8E6A1"],
+                [0.45, "#4CAF50"],
+                [0.6, "#FFEB3B"],
+                [0.75, "#FFA500"],
+                [1.0, "#F44336"]
+            ],
+            colorbar=dict(
+                title="DIF. %",
+                ticks="outside",
+                tickvals=[0, 5, 6, 7, 8, 9, 10],
+                ticktext=["0%", "5%", "6%", "7%", "8%", "9%", "10%+"],
+                tickfont=dict(color="black"),
+                thickness=20,
+                len=1,
+                lenmode="fraction",
+                y=0.5,
+                yanchor="middle",
+                x=1.05,
+                xanchor="left"
+            ),
+            showscale=True
+        ),
+        showlegend=False,
+        hoverinfo="skip"
+    ))
+    return fig
+
+
+def calcular_color_diferencia_agilidad(diferencia):
+    if diferencia < 5:
+        return "#A8E6A1"  # Verde Manzana
+    elif diferencia < 6:
+        return "#4CAF50"  # Verde Oscuro
+    elif diferencia < 7:
+        return "#FFEB3B"  # Amarillo
+    elif diferencia < 9:
+        return "#FFA500"  # Naranja
+    else:
+        return "#F44336"  # Rojo
+
+
 def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es", barras=False):
 
     df = pd.DataFrame(df_agility)
@@ -17,10 +69,8 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
     df["FECHA TEXTO"] = df[columnas_fecha_registro].dt.strftime(fecha_formato)
 
     columna_x = "FECHA TEXTO"
-
-    color_linea_dom = "#1f77b4"   # azul
-    color_linea_nd = "#66c2ff"    # celeste
-
+    color_linea_dom = "#1f77b4"
+    color_linea_nd = "#66c2ff"
     fig = go.Figure()
 
     promedio_row = df_promedios[
@@ -41,9 +91,9 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 
     if valores:
         ymin = min(valores) - 0.1
-        ymax = max(valores) + 0.1
-        margen = (ymax - ymin) * 0.8
-        ymin -= margen
+        ymax = max(valores) + 0.5
+        margen = (ymax - ymin) * 0.3
+        ymin = min(0, ymin - margen) 
         ymax += margen
     else:
         ymin, ymax = 0, 1
@@ -101,56 +151,32 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         fecha = row[columna_x]
         dom = row.get(metricas[0], None)
         nd = row.get(metricas[1], None)
-        size = 20 if len(x_vals) == 1 else 14
+        sizet = 20 if len(df) == 1 else 14
+        sizec = 50 if len(df) == 1 else 20
+
         if pd.notna(dom) and pd.notna(nd) and nd != 0:
+            
             diferencia = ((dom - nd) / nd) * 100
+            color = calcular_color_diferencia_agilidad(diferencia)
+
+            if 0 <= diferencia <= 10:
+                y_pos = ymin + (diferencia / 10) * (ymax - ymin)
+            else:
+                y_pos = (ymin + ymax) / 2
+
             fig.add_trace(go.Scatter(
                 x=[fecha],
-                y=[max(dom, nd) + 0.2],
+                y=[y_pos],
                 mode="markers+text",
-                marker=dict(size=20, color="orange", opacity=0.7),
+                marker=dict(size=sizec, color=color, opacity=0.9),
                 text=f"{diferencia:.1f}%",
-                textfont=dict(size=size,color="black"),
-                textposition="top center",
+                textfont=dict(size=sizet, color="black"),
+                textposition="middle center",
                 showlegend=not added_to_legend,
                 name=util.traducir("DIFERENCIA %", idioma),
                 hoverinfo="skip"
             ))
             added_to_legend = True
-
-    # if valores:
-    #     prom_dom = promedios.get(metricas[0], (ymin + ymax) / 2)
-    #     fig.add_trace(go.Scatter(
-    #         x=[None],
-    #         y=[None],
-    #         mode="markers",
-    #         marker=dict(
-    #             size=0,
-    #             color=[prom_dom],
-    #             colorscale=[
-    #                 [0.0, "green"],
-    #                 [0.5, "orange"],
-    #                 [1.0, "red"]
-    #             ],
-    #             cmin=ymin,
-    #             cmax=ymax,
-    #             colorbar=dict(
-    #                 title="",
-    #                 ticks="outside",
-    #                 tickfont=dict(color="black"),
-    #                 thickness=20,
-    #                 len=1,
-    #                 lenmode="fraction",
-    #                 y=0,
-    #                 yanchor="bottom",
-    #                 x=1.05,
-    #                 xanchor="left"
-    #             ),
-    #             showscale=True
-    #         ),
-    #         showlegend=False,
-    #         hoverinfo="skip"
-    #     ))
 
     tickvals = df["FECHA TEXTO"].drop_duplicates().tolist()
     ticktext = tickvals
@@ -181,8 +207,222 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         )
     )
 
+    # Añadir barra lateral de colores
+    fig = get_agilidad_colorbar_agregada(fig, ymin, ymax)
+
     st.plotly_chart(fig, use_container_width=True)
     return fig
+
+# def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es", barras=False):
+
+#     df = pd.DataFrame(df_agility)
+#     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors="coerce")
+#     df = df.sort_values(by=columnas_fecha_registro)
+
+#     fechas_unicas = pd.to_datetime(df[columnas_fecha_registro].dropna().unique())
+#     periodos = pd.Series(fechas_unicas).dt.to_period("M").unique()
+#     fecha_formato = "%d-%b-%Y" if len(periodos) == 1 else "%b-%Y"
+#     df["FECHA TEXTO"] = df[columnas_fecha_registro].dt.strftime(fecha_formato)
+
+#     columna_x = "FECHA TEXTO"
+
+#     color_linea_dom = "#1f77b4"   # azul
+#     color_linea_nd = "#66c2ff"    # celeste
+
+#     fig = go.Figure()
+
+#     promedio_row = df_promedios[
+#         (df_promedios["CATEGORIA"] == categoria) &
+#         (df_promedios["EQUIPO"] == equipo)
+#     ]
+
+#     promedios = {}
+#     for metrica in metricas:
+#         if not promedio_row.empty and metrica in promedio_row.columns:
+#             valor = promedio_row[metrica].values[0]
+#             if pd.notna(valor):
+#                 promedios[metrica] = valor
+
+#     valores = []
+#     for metrica in metricas:
+#         valores += df[metrica].dropna().tolist()
+
+#     if valores:
+#         ymin = min(valores) - 0.1
+#         ymax = max(valores) + 0.1
+#         margen = (ymax - ymin) * 0.8
+#         ymin -= margen
+#         ymax += margen
+#     else:
+#         ymin, ymax = 0, 1
+
+#     for metrica, color, dash in zip(metricas, [color_linea_nd, color_linea_dom], ["solid", "dash"]):
+#         df_metric = df[[columna_x, columnas_fecha_registro, metrica]].dropna()
+#         x_vals = df_metric[columna_x].tolist()
+#         y_vals = df_metric[metrica].tolist()
+
+#         if barras:
+#             size = 20 if len(x_vals) == 1 else 14
+#             fig.add_trace(go.Bar(
+#                 x=x_vals,
+#                 y=y_vals,
+#                 name=util.traducir(metrica, idioma),
+#                 marker_color=color,
+#                 text=[f"{val:.2f} seg" for val in y_vals],
+#                 textposition="auto",
+#                 textfont=dict(size=size),
+#                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+#             ))
+#         else:
+#             fig.add_trace(go.Scatter(
+#                 x=x_vals,
+#                 y=y_vals,
+#                 mode="lines+markers",
+#                 name=util.traducir(metrica, idioma),
+#                 line=dict(color=color, width=3, dash=dash),
+#                 marker=dict(size=8, color=color),
+#                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
+#             ))
+
+#         if (not df_metric.empty and len(df_metric) > 1) or not barras:
+#             min_val = df_metric[metrica].min()
+#             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
+#             maxl = util.traducir("Min ", idioma)
+#             xshift_val = -20 if barras and metrica == metricas[0] else 20 if barras and metrica == metricas[1] else 0
+#             offset_y = -30 if metrica == metricas[1] else -60
+#             offset_x = 60 if metrica == metricas[1] else -60
+#             fig.add_annotation(
+#                 x=fila_min[columna_x],
+#                 y=fila_min[metrica],
+#                 text=f"{maxl}: {fila_min[metrica]:.2f} seg",
+#                 showarrow=True,
+#                 arrowhead=2,
+#                 ax=offset_x,
+#                 ay=offset_y,
+#                 xshift=xshift_val,
+#                 bgcolor="gray",
+#                 font=dict(color="white")
+#             )
+
+#     added_to_legend = False
+#     for idx, row in df.iterrows():
+#         fecha = row[columna_x]
+#         dom = row.get(metricas[0], None)
+#         nd = row.get(metricas[1], None)
+#         size = 20 if len(x_vals) == 1 else 14
+#         if pd.notna(dom) and pd.notna(nd) and nd != 0:
+#             diferencia = ((dom - nd) / nd) * 100
+#             fig.add_trace(go.Scatter(
+#                 x=[fecha],
+#                 y=[max(dom, nd) + 0.2],
+#                 mode="markers+text",
+#                 marker=dict(size=20, color="orange", opacity=0.7),
+#                 text=f"{diferencia:.1f}%",
+#                 textfont=dict(size=size,color="black"),
+#                 textposition="top center",
+#                 showlegend=not added_to_legend,
+#                 name=util.traducir("DIFERENCIA %", idioma),
+#                 hoverinfo="skip"
+#             ))
+#             added_to_legend = True
+
+#     # if valores:
+#     #     prom_dom = promedios.get(metricas[0], (ymin + ymax) / 2)
+#     #     fig.add_trace(go.Scatter(
+#     #         x=[None],
+#     #         y=[None],
+#     #         mode="markers",
+#     #         marker=dict(
+#     #             size=0,
+#     #             color=[prom_dom],
+#     #             colorscale=[
+#     #                 [0.0, "green"],
+#     #                 [0.5, "orange"],
+#     #                 [1.0, "red"]
+#     #             ],
+#     #             cmin=ymin,
+#     #             cmax=ymax,
+#     #             colorbar=dict(
+#     #                 title="",
+#     #                 ticks="outside",
+#     #                 tickfont=dict(color="black"),
+#     #                 thickness=20,
+#     #                 len=1,
+#     #                 lenmode="fraction",
+#     #                 y=0,
+#     #                 yanchor="bottom",
+#     #                 x=1.05,
+#     #                 xanchor="left"
+#     #             ),
+#     #             showscale=True
+#     #         ),
+#     #         showlegend=False,
+#     #         hoverinfo="skip"
+#     #     ))
+
+#     tickvals = df["FECHA TEXTO"].drop_duplicates().tolist()
+#     ticktext = tickvals
+
+#     title_layout = "AGILIDAD (IZQ Y DER)" if barras else "Evolución de la Agilidad (IZQ y DER)"
+#     fig.update_layout(
+#         title=util.traducir(title_layout, idioma).upper(),
+#         xaxis=dict(
+#             tickmode="array",
+#             tickvals=tickvals,
+#             ticktext=ticktext,
+#             type="category",
+#             showticklabels=not barras
+#         ),
+#         yaxis=dict(
+#             title=util.traducir("TIEMPO (SEG)", idioma),
+#             range=[ymin, ymax],
+#             side="left"
+#         ),
+#         template="plotly_white",
+#         barmode="group" if barras else "overlay",
+#         legend=dict(
+#             orientation="h",
+#             yanchor="bottom",
+#             y=-0.3,
+#             xanchor="center",
+#             x=0.5
+#         )
+#     )
+
+#     st.plotly_chart(fig, use_container_width=True)
+#     return fig
+
+def get_diferencia_agilidad(df_agility, metricas, columna_fecha):
+    """
+    Calcula la diferencia porcentual entre pierna dominante y no dominante en agilidad (505).
+    
+    Parámetros:
+        df_agility (pd.DataFrame): Datos del test de agilidad.
+        metricas (list): Lista con dos métricas, [dominante, no dominante].
+        columna_fecha (str): Nombre de la columna de fecha.
+        
+    Retorna:
+        list[dict]: Lista con fecha y diferencia porcentual para cada fila válida.
+    """
+    df = df_agility.copy()
+    df[columna_fecha] = pd.to_datetime(df[columna_fecha], format="%d/%m/%Y", errors="coerce")
+    df = df.sort_values(by=columna_fecha)
+
+    diferencias = []
+
+    for _, row in df.iterrows():
+        dom = row.get(metricas[0])
+        nd = row.get(metricas[1])
+        fecha = row.get(columna_fecha)
+
+        if pd.notna(dom) and pd.notna(nd) and nd != 0:
+            diferencia = ((dom - nd) / nd) * 100
+            diferencias.append({
+                "fecha": fecha,
+                "diferencia_%": round(diferencia, 2)
+            })
+
+    return diferencia
 
 def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es"):
 

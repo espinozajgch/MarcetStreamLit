@@ -1897,10 +1897,10 @@ def get_observacion_agilidad(valor_asimetria):
         )
     else:  # valor_asimetria > 8
         return (
-            ". Asimetría >10% en el cambio de dirección representa:\n"
-            "- Déficit de fuerza excéntrica y/o potencia reactiva\n"
-            "- Necesidad de mejora de la técnica de frenado\n"
-            "- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n"
-            "- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings)\n\n"
-            ". Recomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+            "Asimetría >10% en el cambio de dirección representa: "
+            "- Déficit de fuerza excéntrica y/o potencia reactiva. "
+            "- Necesidad de mejora de la técnica de frenado. "
+            "- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA. "
+            "- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings). \n"
+            "Recomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
         )

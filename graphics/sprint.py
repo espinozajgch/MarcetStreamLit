@@ -114,7 +114,7 @@ def get_sprint_graph(
         y_max += margen
 
         escala_colores = [
-            [0.0, "#90ee90"], [0.35, "#006400"], [0.55, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
+            [0.0, "lightgreen"], [0.35, "green"], [0.55, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
         ] if categoria.lower() in ["juvenil", "cadete"] else [
             [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
         ]

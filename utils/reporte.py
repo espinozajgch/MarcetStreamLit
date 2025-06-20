@@ -246,8 +246,8 @@ def generate_pdf_simple(
 
         # Observaciones inmediatamente debajo
         y_obs = pdf.get_y() + 52
-        obs_width = 90
-        obs_height_max = 11
+        obs_width = 92
+        obs_height_max = 7
         obs_line_height = 3
 
         for col in range(2):
@@ -255,7 +255,7 @@ def generate_pdf_simple(
                 break
 
             titulo, _ = graficos[i + col]
-            x = 10 if col == 0 else 105
+            x = 9 if col == 0 else 103
             obs_text = observaciones_dict.get(titulo, "").strip()
 
             # Título observaciones
@@ -264,7 +264,7 @@ def generate_pdf_simple(
             #pdf.cell(obs_width, 3, "OBSERVACIONES:", ln=False)
 
             # Texto observaciones
-            pdf.set_font("Arial", "I", 7)
+            pdf.set_font("Arial", "I", 6.6)
             pdf.set_x(x)
             y_current = pdf.get_y()
 

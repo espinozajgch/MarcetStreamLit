@@ -136,10 +136,9 @@ if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
     st.warning("No se ha encontrado información o aun no ha seleccionado a un jugador.")
 else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
-    
+    #st.dataframe(df_datos_final)
     # Sección datos de usuario
     df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
-    #st.dataframe(df_jugador)
     
     if not df_datos_filtrado.empty:
         #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
@@ -533,13 +532,14 @@ else:
                         act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
                         st.metric(f"Último Registro",act)
 
-
-                    # observacion = get_observacion_agilidad(valor_asimetria=cactc, categoria=categoria)
-
-                    # if cactc <= 5:
-                    #     st.success(observacion, icon="✅")
-                    # else:
-                    #     st.warning(observacion, icon="⚠️")
+                    diferencia = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
+                    observacion = util.get_observacion_agilidad(valor_asimetria=diferencia)
+                    observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
+                    #st.text(diferencia)
+                    if diferencia <= 5:
+                        st.success(observacion, icon="✅")
+                    else:
+                        st.warning(observacion, icon="⚠️")
 
                     figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool)
                     st.divider()
