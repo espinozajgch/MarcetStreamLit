@@ -30,9 +30,12 @@ columnas_usadas = ["ID", "JUGADOR", "CATEGORIA", "EQUIPO"]
 
 df_estructura_test = util.get_test(conn)
 nombres_tests = df_estructura_test.columns.tolist()
-#st.dataframe(nombres_tests)
 
 player_data, test_data, df_checkin = util.getData(conn)
+
+df_joined = util.getJoinedDataFrame(player_data, test_data)
+test_data, df_datos_final = util.actualizar_datos_con_checkin(player_data, df_checkin, df_joined)
+#st.dataframe(df_data_test_final)
 
 player_data_filtered = util.get_filters(player_data)
 player_data_filtered = player_data_filtered.reset_index(drop=True)
@@ -73,8 +76,11 @@ elif fecha_fin > fecha_inicio:
 	test_data_filtered = util.filtrar_por_rango_fechas(test_data, "FECHA REGISTRO", fecha_inicio, fecha_fin)
 	test_data_filtered = test_data_filtered.reset_index(drop=True)
 	
-	test_data_filtered = test_data_filtered[test_data_filtered["ID"].isin(player_data_filtered["ID"])]
-	#st.text("test_data_filtered")
+	test_data_filtered = test_data_filtered.merge(
+    player_data_filtered[["JUGADOR", "CATEGORIA"]],on=["JUGADOR", "CATEGORIA"],how="inner")
+
+	#test_data_filtered = test_data_filtered[test_data_filtered["JUGADOR"].isin(player_data_filtered["JUGADOR"])]
+	#st.dataframe(player_data_filtered)
 	
 	if not test_data_filtered.empty:
 		df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas)
@@ -103,22 +109,53 @@ if len(metricas) > 0:
 columnas_excluidas = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
 datatest_columns = util.get_dataframe_columns(test_data)
 
-on = st.toggle("Solo Jugadores con Datos")
+# on = st.toggle("Solo Jugadores con Datos")
 
-if on:
-	datatest_columns = util.get_dataframe_columns(df_nuevo)
-	# Lista de columnas que sí quieres validar
-	columnas_a_validar = [col for col in datatest_columns if col not in columnas]
-	# 2. Elimina las filas donde TODAS las columnas a validar son NaN o None
-	df_nuevo = df_nuevo.dropna(subset=columnas_a_validar, how="all")
+# if on:
+# 	datatest_columns = util.get_dataframe_columns(df_nuevo)
+# 	# Lista de columnas que sí quieres validar
+# 	columnas_a_validar = [col for col in datatest_columns if col not in columnas]
+# 	# 2. Elimina las filas donde TODAS las columnas a validar son NaN o None
+# 	df_nuevo = df_nuevo.dropna(subset=columnas_a_validar, how="all")
 
-	if df_nuevo.empty:
-		st.warning("⚠️ No existen datos de pruebas fisicas para el periodo seleccionado.")
-		st.stop()
+# 	if df_nuevo.empty:
+# 		st.warning("⚠️ No existen datos de pruebas fisicas para el periodo seleccionado.")
+# 		st.stop()
 	
-	edited_df = util.get_data_editor(df_nuevo)
-else:
-	edited_df = util.get_data_editor(df_nuevo)
+# 	edited_df = util.get_data_editor(df_nuevo)
+# else:
+# 	edited_df = util.get_data_editor(df_nuevo)
+
+# Selector horizontal
+opcion_datos = st.radio(
+    "Selecciona los jugadores a visualizar:",
+    ("Jugadores con Datos Físicos", "Jugadores sin Datos Físicos"),
+    horizontal=True
+)
+
+# Identificar columnas físicas (las que no están en 'columnas')
+datatest_columns = util.get_dataframe_columns(df_nuevo)
+columnas_a_validar = [col for col in datatest_columns if col not in columnas]
+
+# Crear una copia de trabajo
+df_filtrado = df_nuevo.copy()
+
+if opcion_datos == "Jugadores con Datos Físicos":
+    # Filtro: al menos una columna relevante no es nula ni cero
+    mask_datos = ~(df_filtrado[columnas_a_validar].isna() | (df_filtrado[columnas_a_validar] == 0)).all(axis=1)
+    df_filtrado = df_filtrado[mask_datos]
+
+    if df_filtrado.empty:
+        st.warning("⚠️ No existen datos de pruebas físicas para el periodo seleccionado.")
+        st.stop()
+
+else:  # Jugadores sin datos físicos
+    # Filtro: todas las columnas relevantes son NaN, None o 0
+    mask_sin_datos = (df_filtrado[columnas_a_validar].isna() | (df_filtrado[columnas_a_validar] == 0)).all(axis=1)
+    df_filtrado = df_filtrado[mask_sin_datos]
+
+edited_df = util.get_data_editor(df_filtrado)
+
 
 st.divider()
 
@@ -154,5 +191,5 @@ def guardar_datos():
 			status.update(label=f"❌ Error al actualizar: {e}", state="error", expanded=True)
 
 # 🔘 Botón que activa el diálogo manual
-if st.button("💾 Guardar Cambios"):
-	guardar_datos()
+#if st.button("💾 Guardar Cambios"):
+#	guardar_datos()
