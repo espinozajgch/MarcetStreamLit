@@ -1119,6 +1119,10 @@ TRADUCCIONES = {
     "PESO Y % GRASA": {
         "es": "PESO Y % GRASA",
         "en": "WEIGHT AND % FAT",
+        "it": "PESO E % DI GRASSO",
+        "de": "GEWICHT UND % FETT",
+        "fr": "POIDS ET % DE GRAISSE",
+        "ca": "PES I % DE GREIX",
         "pt": "PESO E % DE GORDURA",
         "ar": "الوزن و٪ الدهون"
     },
@@ -1152,9 +1156,13 @@ TRADUCCIONES = {
     "POTENCIA MUSCULAR DE SALTO (CMJ)": {
         "es": "POTENCIA MUSCULAR DE SALTO (CMJ)",
         "en": "JUMP MUSCULAR POWER (CMJ)",
+        "it": "POTENZA MUSCOLARE DEL SALTO (CMJ)",
+        "de": "SPRUNGKRAFT DER MUSKULATUR (CMJ)",
+        "fr": "PUISSANCE MUSCULAIRE DU SAUT (CMJ)",
+        "ca": "POTÈNCIA MUSCULAR DEL SALT (CMJ)",
         "pt": "POTÊNCIA MUSCULAR DO SALTO (CMJ)",
         "ar": "القوة العضلية للقفز (CMJ)"
-    },
+        },
     "Evolución del Tiempo Total en Repeticiones de Sprint": {
         "en": "Evolution of Total Time in Sprint Repetitions",
         "it": "Evoluzione del Tempo Totale nelle Ripetizioni di Sprint",
@@ -1185,6 +1193,10 @@ TRADUCCIONES = {
     "AGILIDAD (IZQ Y DER)": {
         "es": "AGILIDAD (IZQ Y DER)",
         "en": "AGILITY (LEFT AND RIGHT)",
+        "it": "AGILITÀ (SINISTRA E DESTRA)",
+        "de": "AGILITÄT (LINKS UND RECHTS)",
+        "fr": "AGILITÉ (GAUCHE ET DROITE)",
+        "ca": "AGILITAT (ESQUERRA I DRETA)",
         "pt": "AGILIDADE (ESQ E DIR)",
         "ar": "الرشاقة (يسار ويمين)"
     },

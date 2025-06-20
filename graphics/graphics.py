@@ -267,13 +267,13 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             zmax=cmax,
             showscale=True,
             colorbar=dict(
-                title=dict(text=util.traducir("GRASA (%)", idioma), side="right"),
+                #title=dict(text=util.traducir("GRASA (%)", idioma), side="right"),
                 orientation="v",
                 y=-0.02,
                 yanchor="bottom",
                 len=1.05,
                 lenmode="fraction",
-                x=1.03,
+                x=1.08,
                 xanchor="left",
                 thickness=20,
                 tickfont=dict(color="white"),
@@ -298,7 +298,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             side="left"
         ),
         yaxis2=dict(
-            title="",
+            title=util.traducir("GRASA (%)", idioma),
             overlaying="y",
             side="right",
             showgrid=False,

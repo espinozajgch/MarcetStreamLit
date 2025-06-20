@@ -151,8 +151,12 @@ if opcion_datos == "Jugadores con Datos Físicos":
 
 else:  # Jugadores sin datos físicos
     # Filtro: todas las columnas relevantes son NaN, None o 0
-    mask_sin_datos = (df_filtrado[columnas_a_validar].isna() | (df_filtrado[columnas_a_validar] == 0)).all(axis=1)
-    df_filtrado = df_filtrado[mask_sin_datos]
+	if len(tests_seleccionados)>1:
+		mask_sin_datos = (df_filtrado[columnas_a_validar].isna() | (df_filtrado[columnas_a_validar] == 0)).any(axis=1)
+	else:
+		mask_sin_datos = (df_filtrado[columnas_a_validar].isna() | (df_filtrado[columnas_a_validar] == 0)).all(axis=1)
+    
+	df_filtrado = df_filtrado[mask_sin_datos]
 
 edited_df = util.get_data_editor(df_filtrado)
 

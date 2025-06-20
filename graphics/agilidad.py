@@ -23,17 +23,18 @@ def get_agilidad_colorbar_agregada(fig, y_min, y_max):
                 [1.0, "#F44336"]
             ],
             colorbar=dict(
-                title="",
+                title=dict(text="DIF %"),
+                #orientation="v",
                 #ticks="outside",
-                tickvals=[0, 5, 6, 7, 8, 9, 10, 12],
-                ticktext=["0%", "5%", "6%", "7%", "8%", "9%", "10%", "12%"],
+                tickvals=[0, 3, 5, 8, 10, 12],
+                ticktext=["0", "3", "5", "8", "10", "12"],
                 tickfont=dict(size=12, color="black"),
                 thickness=20,
                 len=1,
                 lenmode="fraction",
                 y=0.5,
                 yanchor="middle",
-                x=1.05,
+                x=1.03,
                 xanchor="left"
             ),
             showscale=True

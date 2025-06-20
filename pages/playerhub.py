@@ -740,4 +740,3 @@ else:
                         st.exception(e)
             else:
                 st.text(mensaje_no_data)
-
