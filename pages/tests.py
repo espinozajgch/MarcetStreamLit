@@ -35,11 +35,13 @@ player_data, test_data, df_checkin = util.getData(conn)
 
 df_joined = util.getJoinedDataFrame(player_data, test_data)
 test_data, df_datos_final = util.actualizar_datos_con_checkin(player_data, df_checkin, df_joined)
-#st.dataframe(df_data_test_final)
 
 player_data_filtered = util.get_filters(player_data)
 player_data_filtered = player_data_filtered.reset_index(drop=True)
 	
+#st.dataframe(player_data_filtered)
+
+
 col1, col2, col3 = st.columns([1,1,2])
 with col1:
 	fecha_inicio = st.date_input(
@@ -77,7 +79,7 @@ elif fecha_fin > fecha_inicio:
 	test_data_filtered = test_data_filtered.reset_index(drop=True)
 	
 	test_data_filtered = test_data_filtered.merge(
-    player_data_filtered[["JUGADOR", "CATEGORIA"]],on=["JUGADOR", "CATEGORIA"],how="inner")
+    player_data_filtered[["JUGADOR", "CATEGORIA", "EQUIPO"]],on=["JUGADOR", "CATEGORIA", "EQUIPO"],how="inner")
 
 	#test_data_filtered = test_data_filtered[test_data_filtered["JUGADOR"].isin(player_data_filtered["JUGADOR"])]
 	#st.dataframe(player_data_filtered)

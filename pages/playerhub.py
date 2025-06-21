@@ -691,6 +691,7 @@ else:
                             if test in k:
                                 figs_filtrados[k] = graficos_disponibles[k]
 
+
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)
@@ -708,7 +709,7 @@ else:
                             # 1. Generar PDF como bytes (puede tardar)
                             pdf_bytes = report.generate_pdf_avanzado(
                                 df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                                df_cmj, df_yoyo, df_rsa, figs_filtrados, fecha_str, idioma)
+                                df_cmj, df_yoyo, df_rsa, figs_filtrados, fecha_str, idioma, observaciones_dict)
                         else:
                             # 2. Generar PDF como bytes (puede tardar)
                             pdf_bytes = report.generate_pdf_simple(

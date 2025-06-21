@@ -96,8 +96,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 else:
                     colores_puntos.append("gray")
 
-
-        if barras:
+        if barras or len(y_vals) == 1:
             ancho_barra = 0.2 if len(x_vals) == 1 else 0.3
             size = 19 if len(x_vals) == 1 else 14
             fig.add_trace(go.Bar(
@@ -131,7 +130,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
                 hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} cm<extra></extra>"
             ))
 
-        if len(df_filtro) > 1 or not barras:
+        if not barras and len(df_filtro) > 1:
             max_val = df_filtro["VALOR"].max()
             fila_max = df_filtro[df_filtro["VALOR"] == max_val].sort_values(by=columna_fecha_registro, ascending=False).iloc[0]
             maxl = util.traducir("Max", idioma)

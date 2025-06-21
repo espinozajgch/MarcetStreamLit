@@ -40,7 +40,8 @@ def add_footer_con_texto(pdf, texto, idioma="es"):
     pdf.set_text_color(0, 0, 0)
     pdf.multi_cell(0, 5, texto)
 
-def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, fecha_actual, idioma="es"):
+def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, 
+                          df_rsa, figs_dict, fecha_actual, idioma="es", observaciones_dict=None):
     pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
     pdf.add_page()
     pdf.header()
@@ -96,7 +97,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
         #pdf.section_title("COMPOSICIÓN CORPORAL")
         pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
-
+        pdf.ln(5)
     # Inicializar contador de gráficos y sección actual
     contador_graficos = 0
     primer_grafico_insertado = False
@@ -112,7 +113,9 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
                             pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
                             seccion_ya_impresa.add(nombre_seccion)
                         pdf.add_plotly_figure(fig, "", idioma=idioma)
-                        add_footer(pdf, idioma=idioma)
+                        #obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
+
+                        #add_footer(pdf, idioma=idioma)
                         primer_grafico_insertado = True
                         continue
 
