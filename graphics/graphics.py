@@ -127,7 +127,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     # PESO (always as bar)
     if "PESO (KG)" in df.columns:
-        size = 20 if df["PESO (KG)"].notna().sum() == 1 else 14
+        size = 20 if len(df) <= 2 else 14
 
         fig.add_trace(go.Bar(
             x=df["FECHA REGISTRO"],
@@ -170,7 +170,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
         if barras or len(y_vals) == 1:
             #st.text(x_vals)
-            size = 14 if len(x_vals) == 1 else 20
+            size = 20 if len(x_vals) <= 2 else 14
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
@@ -201,7 +201,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
             text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.1f} %"
 
-            if not barras and len(df_filtro) > 1:
+            if not barras:
                 fig.add_annotation(
                     x=fila_max["FECHA REGISTRO"],
                     y=fila_max["GRASA (%)"],
@@ -215,8 +215,8 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                     font=dict(size=18, color="white")
                 )
 
-            x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=60)
-            x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=60)
+            x_min = df["FECHA REGISTRO"].min() - pd.Timedelta(days=20)
+            x_max = df["FECHA REGISTRO"].max() + pd.Timedelta(days=15)
 
             for y_linea, yanchor in [(zona_optima_max, "bottom"), (zona_optima_min, "top")]:
                 fig.add_trace(go.Scatter(

@@ -174,7 +174,7 @@ else:
                     # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
                     df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columns] == 0).all(axis=1)]
                     #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
-                   
+                    #st.dataframe(df_anthropometrics)
                     st.markdown("📆 **Ultímas Mediciones**")
 
                     if categoria == "Juvenil":
@@ -561,7 +561,6 @@ else:
 
                 ######################################################################################################
                 ## RSA
-
                 columns = list(test_cat.get(lista_columnas[5], []))
                 df_rsa = df_joined_filtrado[[fecha_registro] + columns]
                 df_rsa = df_rsa.reset_index(drop=True)
@@ -690,7 +689,6 @@ else:
                         for k in graficos_disponibles.keys():
                             if test in k:
                                 figs_filtrados[k] = graficos_disponibles[k]
-
 
                 if st.button("📄 Generar PDF"):
                     # Mostrar el status inmediatamente
