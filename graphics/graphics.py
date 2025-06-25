@@ -106,7 +106,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     grasa_min = df["GRASA (%)"].min()
     grasa_max = df["GRASA (%)"].max()
     cmin = min(3, grasa_min - 1 if grasa_min < 3 else grasa_min)
-    cmax = max(25, grasa_max + 1 if grasa_max > 25 else grasa_max)
+    cmax = max(27, grasa_max + 1 if grasa_max > 27 else grasa_max)
     if cmax - cmin < 5:
         cmax = cmin + 5
 
@@ -262,7 +262,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 [(15 - cmin)/(cmax - cmin), "#FFFF00"],
                 [(18 - cmin)/(cmax - cmin), "#FFA500"],
                 [(20 - cmin)/(cmax - cmin), "#FF0000"],
-                [(25 - cmin)/(cmax - cmin), "#FF0000"],
+                [(27 - cmin)/(cmax - cmin), "#FF0000"],
             ],
             zmin=cmin,
             zmax=cmax,

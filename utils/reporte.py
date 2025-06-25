@@ -115,7 +115,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
                         pdf.add_plotly_figure(fig, "", idioma=idioma)
                         #obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
 
-                        #add_footer(pdf, idioma=idioma)
+                        add_footer(pdf, idioma=idioma)
                         primer_grafico_insertado = True
                         continue
 

@@ -158,25 +158,21 @@ def get_dataframe_columns(dataframe):
     return dataframe_columns
 
 def getJoinedDataFrame(df_datos, df_data_test):
-    #df_datos, df_data_test = getData(conn)
-    ##df_datos = getDatos(conn, default_reload_time)
-    ##df_data_test = getDataTest(conn, default_reload_time)
 
     # Verificar si alguno de los DataFrames está vacío
     if df_datos.empty or df_data_test.empty:
         return pd.DataFrame()  # Retornar DataFrame vacío si alguno de los dos está vacío
 
-    columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "TEST"]
+    columnas_excluidas = ["FECHA REGISTRO", "ID", "CATEGORIA", "EQUIPO", "GENERO"]
     columnas_estructura = get_dataframe_columns(df_data_test)
 
     # Eliminar columnas excluidas
     columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
 
     # Asegurarse de insertar el nombre completo en la posición 2 si falta
-    columna_nombre = "JUGADOR"  # por ejemplo "NOMBRE COMPLETO"
-    #if columna_nombre not in columnas_estructura:
-    #    columnas_estructura.insert(2, columna_nombre)
-
+    columna_nombre = "JUGADOR" 
+    columna_genero = "GENERO" 
+    
     # Si hay datos ya existentes, mapear nombres desde datos_jugadores
     if not df_data_test.empty:
         # Eliminar registros cuyo ID no está en df_datos
@@ -186,13 +182,19 @@ def getJoinedDataFrame(df_datos, df_data_test):
         if columna_nombre not in df_data_test.columns:
             df_data_test.insert(2, columna_nombre, None)
 
+        if columna_genero not in df_data_test.columns:
+            df_data_test.insert(3, columna_genero, None)
+
         # Mapear nombres desde df_datos
         id_a_nombre = df_datos.set_index("ID")["JUGADOR"].to_dict()
+        id_a_genero = df_datos.set_index("ID")["GENERO"].to_dict()
         df_data_test[columna_nombre] = df_data_test["ID"].map(id_a_nombre)
+        df_data_test[columna_genero] = df_data_test["ID"].map(id_a_genero)
 
         # Eliminar registros ya existentes según ID
         #datos_jugadores = datos_jugadores[~datos_jugadores["ID"].isin(df_data_test["ID"])]
 
+    #st.dataframe(df_data_test)
     # Realizar el merge asegurando que las claves de unión existen en ambos DataFrames
     common_columns = ['ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO']
     if not all(col in df_datos.columns and col in df_data_test.columns for col in common_columns):
@@ -232,56 +234,6 @@ def getJoinedDataFrame(df_datos, df_data_test):
     df_data_test = df_data_test.astype({ "JUGADOR": str })  # o ajusta a tus columnas específicas
 
     return df_data_test
-
-def merge_by_nombre_categoria(df_unido, df_nuevo):
-    """
-    Une dos DataFrames con estructura similar usando 'JUGADOR' y 'CATEGORIA' como claves.
-    - Conserva el orden y columnas de df_unido.
-    - Llena columnas faltantes en df_nuevo con NaN o 0 según tipo.
-    - Limpia solo columnas numéricas.
-    - Mantiene los valores originales de JUGADOR y CATEGORIA.
-    """
-    if df_unido.empty or df_nuevo.empty:
-        return pd.DataFrame()
-
-    # === Columnas que NO deben tocarse durante limpieza ===
-    columnas_excluidas = ["FECHA REGISTRO", "ID", "EQUIPO", "TEST", "JUGADOR", "CATEGORIA"]
-    columnas_estructura = get_dataframe_columns(df_nuevo)
-    columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
-
-    # === Procesamiento de fechas ===
-    df_nuevo["FECHA REGISTRO"] = pd.to_datetime(df_nuevo["FECHA REGISTRO"], errors='coerce', dayfirst=True)
-    df_nuevo["anio"] = df_nuevo["FECHA REGISTRO"].dt.year.astype(str)
-    df_nuevo["mes"] = df_nuevo["FECHA REGISTRO"].dt.month.astype(str)
-    df_nuevo = df_nuevo.sort_values(by="FECHA REGISTRO", ascending=False)
-    df_nuevo["FECHA REGISTRO"] = df_nuevo["FECHA REGISTRO"].dt.strftime('%d/%m/%Y')
-
-    # === Limpieza SOLO de columnas numéricas ===
-    df_nuevo = limpiar_columnas_numericas(df_nuevo, columnas_filtradas)
-    df_nuevo[columnas_filtradas] = df_nuevo[columnas_filtradas].fillna(0).replace("None", 0)
-
-    # === Asegurar tipo texto correcto en claves ===
-    df_nuevo["JUGADOR"] = df_nuevo["JUGADOR"].astype(str).str.strip()
-    df_nuevo["CATEGORIA"] = df_nuevo["CATEGORIA"].astype(str).str.strip()
-
-    # === Asegurar que df_nuevo tenga todas las columnas de df_unido ===
-    columnas_faltantes = [col for col in df_unido.columns if col not in df_nuevo.columns]
-    for col in columnas_faltantes:
-        if df_unido[col].dtype.kind in "iufc":  # numérico
-            df_nuevo[col] = 0
-        else:
-            df_nuevo[col] = None
-
-    # === Reordenar columnas en el orden de df_unido ===
-    df_nuevo = df_nuevo[df_unido.columns]
-
-    # === Concatenar ===
-    df_final = pd.concat([df_unido, df_nuevo], ignore_index=True)
-
-    # === Eliminar duplicados si corresponde ===
-    df_final = df_final.drop_duplicates(subset=["JUGADOR", "CATEGORIA", "FECHA REGISTRO"], keep="last")
-
-    return df_final
 
 def limpiar_columnas_numericas(df, columnas_filtradas):
     for col in columnas_filtradas:
@@ -570,22 +522,78 @@ def actualizar_datos_con_checkin(df_datos, df_checkin, df_joined):
     df_nuevos["PRIORIDAD"] = "0"
 
     # 4. Concatenar
-    df_resultado = pd.concat([df_datos, df_nuevos], ignore_index=True)
+    df_datos_final = pd.concat([df_datos, df_nuevos], ignore_index=True)
 
     # 5. Eliminar duplicados por JUGADOR y CATEGORIA, manteniendo solo los que vienen de df_datos
-    df_resultado = df_resultado.sort_values(by="PRIORIDAD", ascending=False)  # "datos" < "nuevos"
-    df_resultado = df_resultado.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first")
+    df_datos_final = df_datos_final.sort_values(by="PRIORIDAD", ascending=False)  # "datos" < "nuevos"
+    df_datos_final = df_datos_final.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first")
 
     # 6. Eliminar la columna auxiliar
-    df_resultado = df_resultado.drop(columns="PRIORIDAD").reset_index(drop=True)
+    df_datos_final = df_datos_final.drop(columns="PRIORIDAD").reset_index(drop=True)
 
     # 7. Eliminar filas completamente vacías
-    df_resultado = df_resultado.dropna(how="all").reset_index(drop=True)
+    df_datos_final = df_datos_final.dropna(how="all").reset_index(drop=True)
 
     # 8. Realizar merge con df_joined
-    df_final = merge_by_nombre_categoria(df_joined, df_checkin)
+    df_data_test_final = merge_by_nombre_categoria(df_joined, df_checkin)
 
-    return df_final, df_resultado
+    if not df_data_test_final.empty:
+        # Mapear nombres desde df_datos
+        id_a_genero = df_datos_final.set_index("JUGADOR")["GENERO"].to_dict()
+        df_data_test_final["GENERO"] = df_data_test_final["JUGADOR"].map(id_a_genero)
+
+    #st.dataframe(df_datos_final)
+    return df_data_test_final, df_datos_final
+
+def merge_by_nombre_categoria(df_unido, df_nuevo):
+    """
+    Une dos DataFrames con estructura similar usando 'JUGADOR' y 'CATEGORIA' como claves.
+    - Conserva el orden y columnas de df_unido.
+    - Llena columnas faltantes en df_nuevo con NaN o 0 según tipo.
+    - Limpia solo columnas numéricas.
+    - Mantiene los valores originales de JUGADOR y CATEGORIA.
+    """
+    if df_unido.empty or df_nuevo.empty:
+        return pd.DataFrame()
+
+    # === Columnas que NO deben tocarse durante limpieza ===
+    columnas_excluidas = ["FECHA REGISTRO", "ID", "EQUIPO", "TEST", "JUGADOR", "CATEGORIA", "GENERO"]
+    columnas_estructura = get_dataframe_columns(df_nuevo)
+    columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
+
+    # === Procesamiento de fechas ===
+    df_nuevo["FECHA REGISTRO"] = pd.to_datetime(df_nuevo["FECHA REGISTRO"], errors='coerce', dayfirst=True)
+    df_nuevo["anio"] = df_nuevo["FECHA REGISTRO"].dt.year.astype(str)
+    df_nuevo["mes"] = df_nuevo["FECHA REGISTRO"].dt.month.astype(str)
+    df_nuevo = df_nuevo.sort_values(by="FECHA REGISTRO", ascending=False)
+    df_nuevo["FECHA REGISTRO"] = df_nuevo["FECHA REGISTRO"].dt.strftime('%d/%m/%Y')
+
+    # === Limpieza SOLO de columnas numéricas ===
+    df_nuevo = limpiar_columnas_numericas(df_nuevo, columnas_filtradas)
+    df_nuevo[columnas_filtradas] = df_nuevo[columnas_filtradas].fillna(0).replace("None", 0)
+
+    # === Asegurar tipo texto correcto en claves ===
+    df_nuevo["JUGADOR"] = df_nuevo["JUGADOR"].astype(str).str.strip()
+    df_nuevo["CATEGORIA"] = df_nuevo["CATEGORIA"].astype(str).str.strip()
+
+    # === Asegurar que df_nuevo tenga todas las columnas de df_unido ===
+    columnas_faltantes = [col for col in df_unido.columns if col not in df_nuevo.columns]
+    for col in columnas_faltantes:
+        if df_unido[col].dtype.kind in "iufc":  # numérico
+            df_nuevo[col] = 0
+        else:
+            df_nuevo[col] = None
+
+    # === Reordenar columnas en el orden de df_unido ===
+    df_nuevo = df_nuevo[df_unido.columns]
+
+    # === Concatenar ===
+    df_final = pd.concat([df_unido, df_nuevo], ignore_index=True)
+
+    # === Eliminar duplicados si corresponde ===
+    df_final = df_final.drop_duplicates(subset=["JUGADOR", "GENERO" ,"CATEGORIA", "FECHA REGISTRO"], keep="last")
+
+    return df_final
 
 def filtrar_por_rango_fechas(df, columna_fecha, fecha_inicio, fecha_fin, formato="%d/%m/%Y"):
     """

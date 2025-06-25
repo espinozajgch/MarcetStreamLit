@@ -48,6 +48,8 @@ fecha_actual = date.today()
 ###################################################
 df_datos, df_data_test, df_checkin = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
+#st.dataframe(df_data_test)
+
 test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
 
 datatest_columns = util.get_dataframe_columns(df_data_test)
@@ -55,6 +57,7 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 
 df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
 ###################################################
+#st.dataframe(df_data_test_final)
 
 df_datos_filtrado = pd.DataFrame()
 # Filtros
@@ -114,9 +117,6 @@ with st.expander("Configuración Avanzada"):
         tipo_reporte_bool = False
 
 
-#st.dataframe(df_data_test_final)
-###################################################
-
 # Promedios
 ###################################################
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
@@ -136,10 +136,10 @@ if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
     st.warning("No se ha encontrado información o aun no ha seleccionado a un jugador.")
 else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
-    #st.dataframe(df_datos_final)
+    
     # Sección datos de usuario
     df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
-    
+    #st.dataframe(test_data_filtered)
     if not df_datos_filtrado.empty:
         #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
