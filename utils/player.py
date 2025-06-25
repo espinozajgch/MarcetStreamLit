@@ -69,10 +69,6 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         
         genero_icono = ":material/girl:" if genero == "M" else ":material/boy:"
 
-        anios = util.traducir("años",idioma)
-        if edad != unavailable:
-            edad = f"{edad:,.0f} {anios}"
-
         if nacionalidad == unavailable:
             bandera = ""
         else:
@@ -119,7 +115,7 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
                     categoria = "Juvenil"
                 else:
                     categoria = "Cadete"
-
+                    
                 equipo = "A"
 
             else:
@@ -127,6 +123,10 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
                 st.metric(label=f":{color}[F. Nacimiento]", value=f"{fnacimiento}", border=True)
 
         with col3:
+            anios = util.traducir("años",idioma)
+            if edad != unavailable:
+                edad = f"{edad:,.0f} {anios}"
+            
             st.metric(label=f":{color}[Posición]", value=f"{util.traducir(demarcacion.upper(), idioma).capitalize()}", border=True)
             st.metric(label=f":{color}[Edad]", value=edad, border=True)
 

@@ -6,84 +6,97 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_height_graph(df_altura, idioma="es", barras=False):
-    df = pd.DataFrame(df_altura)
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
-    df = df.sort_values(by="FECHA REGISTRO")
+# Define rangos y colores semáforo por género
+SEMAFORO_GRASA = {
+    "H": [
+        (3, "#FF0000"),   # Rojo
+        (6, "#FFA500"),   # Naranja
+        (7, "#FFFF00"),   # Amarillo
+        (8, "#006400"),   # Verde oscuro
+        (10, "#7CFC00"),  # Verde claro
+        (14, "#006400"),
+        (15, "#FFFF00"),
+        (18, "#FFA500"),
+        (20, "#FF0000"),
+        (25, "#FF0000")
+    ],
+    "M": [
+        (3, "#FF0000"),
+        (6, "#FFA500"),
+        (7, "#FFFF00"),
+        (8, "#006400"),
+        (10, "#7CFC00"),
+        (14, "#006400"),
+        (15, "#FFFF00"),
+        (18, "#FFA500"),
+        (20, "#FF0000"),
+        (25, "#FF0000")
+    ]
+}
 
-    if "ALTURA (CM)" not in df.columns:
-        st.warning("No se encontró la columna 'ALTURA (CM)' en los datos.")
-        return None
+def get_range(gender):
+    return SEMAFORO_GRASA.get(gender.upper(), SEMAFORO_GRASA["H"])
 
-    fig = go.Figure()
+def get_color_scale(cmin, cmax, rango_color):
+    def norm(valor):
+        return round((valor - cmin) / (cmax - cmin), 4)
+    
+    scale = []
+    for valor, color in rango_color:
+        escala_norm = norm(valor)
+        if 0 <= escala_norm <= 1:
+            scale.append([escala_norm, color])
+        elif escala_norm < 0:
+            scale.append([0, color])
+        elif escala_norm > 1:
+            scale.append([1, color])
+    
+    # Asegura el 100% del rango para evitar barras incompletas
+    if scale[-1][0] < 1:
+        scale.append([1, scale[-1][1]])
+    return scale
 
-    # Traza principal de altura con burbujas
-    fig.add_trace(go.Scatter(
-        x=df["FECHA REGISTRO"],
-        y=df["ALTURA (CM)"],
-        mode="markers+lines",
-        name="Altura (cm)",
-        marker=dict(
-            size=14,
-            color="lightblue",
-            line=dict(width=2, color="#12527c")
-        ),
-        line=dict(color="#12527c", width=2),
-        hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Altura:</b> %{y:.1f} cm<extra></extra>"
-    ))
+def calcular_rango_visual(df_grasa, rango_color, margen=1, rango_minimo=5):
+    """
+    Calcula cmin y cmax ajustados automáticamente según los valores reales y el semáforo.
+    
+    Args:
+        df_grasa: Serie de datos de grasa (%)
+        rango_color: Lista de tuplas [(valor, color)]
+        margen: Margen extra para cubrir valores extremos.
+        rango_minimo: Diferencia mínima entre cmin y cmax para visualización correcta.
+    Returns:
+        cmin, cmax
+    """
+    grasa_min = df_grasa.min()
+    grasa_max = df_grasa.max()
 
-    # Etiquetas personalizadas del eje X
-    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
-    años_unicos = df_fechas_unicas.dt.year.unique()
+    semaforo_min = min(valor for valor, _ in rango_color)
+    semaforo_max = max(valor for valor, _ in rango_color)
 
-    if len(años_unicos) == 1:
-        tickvals = df_fechas_unicas
-        ticktext = df_fechas_unicas.dt.strftime("%b")
-    else:
-        tickvals = df_fechas_unicas
-        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
+    # Ajustar con margen si los datos reales superan los rangos definidos
+    cmin = min(grasa_min - margen, semaforo_min)
+    cmax = max(grasa_max + margen, semaforo_max)
 
-    # Anotación de máximo más reciente
-    if not df.empty:
-        max_valor = df["ALTURA (CM)"].max()
-        fila_max = df[df["ALTURA (CM)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-        maxl = util.traducir("Max",idioma)
-        fig.add_annotation(
-            x=fila_max["FECHA REGISTRO"],
-            y=fila_max["ALTURA (CM)"],
-            text=f"{maxl}: {fila_max['ALTURA (CM)']:.1f} cm",
-            showarrow=True,
-            arrowhead=2,
-            ax=0,
-            ay=-30,
-            bgcolor="gray",
-            font=dict(color="white")
-        )
+    # Asegurar un rango mínimo visible
+    if cmax - cmin < rango_minimo:
+        delta = (rango_minimo - (cmax - cmin)) / 2
+        cmin -= delta
+        cmax += delta
 
-    title_layout = "ALTURA (CM)" if barras else "Evolución de la Altura (cm)"
-    fig.update_layout(
-        title=util.traducir(title_layout, idioma).upper(),
-        xaxis_title=None,
-        yaxis_title=util.traducir("ALTURA (CM)", idioma),
-        template="plotly_white",
-        xaxis=dict(
-            tickmode="array",
-            tickvals=tickvals,
-            ticktext=ticktext,
-            showticklabels=not barras
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.3,
-            xanchor="center",
-            x=0.5
-        )
-    )
+    return round(cmin, 2), round(cmax, 2)
 
-    st.plotly_chart(fig, use_container_width=True)
-
-    return fig
+def asignar_color_grasa(valor, rango_color):
+    if pd.isna(valor):
+        return "gray"
+    
+    for i in range(len(rango_color) - 1):
+        v_min, color = rango_color[i]
+        v_max, _ = rango_color[i + 1]
+        if v_min <= valor < v_max:
+            return color
+    # Si supera el último rango
+    return rango_color[-1][1]
 
 def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es", barras=False):
     df = pd.DataFrame(df_antropometria)
@@ -103,12 +116,10 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         tickvals = df_fechas_unicas
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
-    grasa_min = df["GRASA (%)"].min()
-    grasa_max = df["GRASA (%)"].max()
-    cmin = min(3, grasa_min - 1 if grasa_min < 3 else grasa_min)
-    cmax = max(25, grasa_max + 1 if grasa_max > 25 else grasa_max)
-    if cmax - cmin < 5:
-        cmax = cmin + 5
+    gender = "H"
+    rango_color = get_range(gender)
+    cmin, cmax = calcular_rango_visual(df["GRASA (%)"], rango_color)
+    colorscale = get_color_scale(cmin, cmax, rango_color)
 
     #st.text(min(1,(28 - cmin)/(cmax - cmin)))
     color_lineas = {
@@ -147,27 +158,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     if "GRASA (%)" in df.columns:
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
-        colores_puntos = []
-
-        for valor in y_vals:
-            if pd.isna(valor):
-                colores_puntos.append("gray")
-            elif valor >= 20 or valor < 5:
-                colores_puntos.append("#FF0000")
-            elif valor < 7:
-                colores_puntos.append("#FFA500")
-            elif valor < 9:
-                colores_puntos.append("#FFFF00")
-            elif valor < 14:
-                colores_puntos.append("#7CFC00")
-            elif valor < 15:
-                colores_puntos.append("#006400")
-            elif valor < 18:
-                colores_puntos.append("#FFFF00")
-            elif valor < 20:
-                colores_puntos.append("#FFA500")
-            else:
-                colores_puntos.append("#FF0000")
+        colores_puntos = y_vals.apply(lambda x: asignar_color_grasa(x, rango_color))
 
         if barras or len(y_vals) == 1:
             #st.text(x_vals)
@@ -179,7 +170,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 marker_color=colores_puntos,
                 offsetgroup="grasa",
                 yaxis="y2",
-                text=y_vals.apply(lambda x: f"{x:.1f} %"),
+                text=y_vals.apply(lambda x: f"{x:.2f} %"),
                 textposition="inside",
                 textfont=dict(size=size),
                 hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>GRASA (%):</b> %{y:.1f} %<extra></extra>"
@@ -200,7 +191,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         if not df_filtro.empty:
             max_valor = df_filtro["GRASA (%)"].max()
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-            text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.1f} %"
+            text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.2f} %"
 
             if not barras:
                 fig.add_annotation(
@@ -249,20 +240,6 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     # Colorbar lateral
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
-        colorscale = [
-            [(3 - cmin)/(cmax - cmin), "#FF0000"],
-            [(6 - cmin)/(cmax - cmin), "#FFA500"],
-            [(7 - cmin)/(cmax - cmin), "#FFFF00"],
-            [(8 - cmin)/(cmax - cmin), "#006400"],
-            [(10 - cmin)/(cmax - cmin), "#7CFC00"],
-            [(14 - cmin)/(cmax - cmin), "#006400"],
-            [(15 - cmin)/(cmax - cmin), "#FFFF00"],
-            [(18 - cmin)/(cmax - cmin), "#FFA500"],
-            [(20 - cmin)/(cmax - cmin), "#FF0000"],
-            [(25 - cmin)/(cmax - cmin), "#FF0000"],
-            [min(1,(30 - cmin)/(cmax - cmin)), "#FF0000"]
-        ]
-        
         fig.add_trace(go.Heatmap(
             z=[[0]],
             x=[df["FECHA REGISTRO"].min()],
@@ -284,7 +261,6 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             ),
             hoverinfo="skip"
         ))
-
 
     title_layout = "PESO Y % GRASA" if barras else "Evolución del Peso y % Grasa"
 
@@ -397,3 +373,82 @@ def mostrar_percentiles_coloreados(jugador: dict, percentiles: dict):
     #styled_df = df.style.apply(color_fila, axis=1)
 
     st.dataframe(df)
+
+def get_height_graph(df_altura, idioma="es", barras=False):
+    df = pd.DataFrame(df_altura)
+    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
+    df = df.sort_values(by="FECHA REGISTRO")
+
+    if "ALTURA (CM)" not in df.columns:
+        st.warning("No se encontró la columna 'ALTURA (CM)' en los datos.")
+        return None
+
+    fig = go.Figure()
+
+    # Traza principal de altura con burbujas
+    fig.add_trace(go.Scatter(
+        x=df["FECHA REGISTRO"],
+        y=df["ALTURA (CM)"],
+        mode="markers+lines",
+        name="Altura (cm)",
+        marker=dict(
+            size=14,
+            color="lightblue",
+            line=dict(width=2, color="#12527c")
+        ),
+        line=dict(color="#12527c", width=2),
+        hovertemplate="<b>Fecha:</b> %{x|%d-%m-%Y}<br><b>Altura:</b> %{y:.1f} cm<extra></extra>"
+    ))
+
+    # Etiquetas personalizadas del eje X
+    df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
+    años_unicos = df_fechas_unicas.dt.year.unique()
+
+    if len(años_unicos) == 1:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b")
+    else:
+        tickvals = df_fechas_unicas
+        ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
+
+    # Anotación de máximo más reciente
+    if not df.empty:
+        max_valor = df["ALTURA (CM)"].max()
+        fila_max = df[df["ALTURA (CM)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
+        maxl = util.traducir("Max",idioma)
+        fig.add_annotation(
+            x=fila_max["FECHA REGISTRO"],
+            y=fila_max["ALTURA (CM)"],
+            text=f"{maxl}: {fila_max['ALTURA (CM)']:.1f} cm",
+            showarrow=True,
+            arrowhead=2,
+            ax=0,
+            ay=-30,
+            bgcolor="gray",
+            font=dict(color="white")
+        )
+
+    title_layout = "ALTURA (CM)" if barras else "Evolución de la Altura (cm)"
+    fig.update_layout(
+        title=util.traducir(title_layout, idioma).upper(),
+        xaxis_title=None,
+        yaxis_title=util.traducir("ALTURA (CM)", idioma),
+        template="plotly_white",
+        xaxis=dict(
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext,
+            showticklabels=not barras
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.3,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    return fig
