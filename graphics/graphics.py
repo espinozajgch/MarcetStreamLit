@@ -106,10 +106,11 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     grasa_min = df["GRASA (%)"].min()
     grasa_max = df["GRASA (%)"].max()
     cmin = min(3, grasa_min - 1 if grasa_min < 3 else grasa_min)
-    cmax = max(27, grasa_max + 1 if grasa_max > 27 else grasa_max)
+    cmax = max(25, grasa_max + 1 if grasa_max > 25 else grasa_max)
     if cmax - cmin < 5:
         cmax = cmin + 5
 
+    #st.text(min(1,(28 - cmin)/(cmax - cmin)))
     color_lineas = {
         "PESO (KG)": "#2989d2",
         "GRASA (%)": "#12527c"
@@ -248,27 +249,29 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     # Colorbar lateral
     if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
+        colorscale = [
+            [(3 - cmin)/(cmax - cmin), "#FF0000"],
+            [(6 - cmin)/(cmax - cmin), "#FFA500"],
+            [(7 - cmin)/(cmax - cmin), "#FFFF00"],
+            [(8 - cmin)/(cmax - cmin), "#006400"],
+            [(10 - cmin)/(cmax - cmin), "#7CFC00"],
+            [(14 - cmin)/(cmax - cmin), "#006400"],
+            [(15 - cmin)/(cmax - cmin), "#FFFF00"],
+            [(18 - cmin)/(cmax - cmin), "#FFA500"],
+            [(20 - cmin)/(cmax - cmin), "#FF0000"],
+            [(25 - cmin)/(cmax - cmin), "#FF0000"],
+            [min(1,(30 - cmin)/(cmax - cmin)), "#FF0000"]
+        ]
+        
         fig.add_trace(go.Heatmap(
             z=[[0]],
             x=[df["FECHA REGISTRO"].min()],
             y=[(cmin + cmax) / 2],
-            colorscale=[
-                [(3 - cmin)/(cmax - cmin), "#FF0000"],
-                [(6 - cmin)/(cmax - cmin), "#FFA500"],
-                [(7 - cmin)/(cmax - cmin), "#FFFF00"],
-                [(8 - cmin)/(cmax - cmin), "#006400"],
-                [(10 - cmin)/(cmax - cmin), "#7CFC00"],
-                [(14 - cmin)/(cmax - cmin), "#006400"],
-                [(15 - cmin)/(cmax - cmin), "#FFFF00"],
-                [(18 - cmin)/(cmax - cmin), "#FFA500"],
-                [(20 - cmin)/(cmax - cmin), "#FF0000"],
-                [(27 - cmin)/(cmax - cmin), "#FF0000"],
-            ],
             zmin=cmin,
             zmax=cmax,
+            colorscale=colorscale,
             showscale=True,
             colorbar=dict(
-                #title=dict(text=util.traducir("GRASA (%)", idioma), side="right"),
                 orientation="v",
                 y=-0.02,
                 yanchor="bottom",
@@ -281,6 +284,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             ),
             hoverinfo="skip"
         ))
+
 
     title_layout = "PESO Y % GRASA" if barras else "Evolución del Peso y % Grasa"
 

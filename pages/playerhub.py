@@ -174,7 +174,7 @@ else:
                     # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
                     df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columns] == 0).all(axis=1)]
                     #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
-                    #st.dataframe(df_anthropometrics)
+                    
                     st.markdown("📆 **Ultímas Mediciones**")
 
                     if categoria == "Juvenil":
