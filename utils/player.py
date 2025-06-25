@@ -115,7 +115,11 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
                 st.metric(label=f":{color}[Categoría]", value=f" {util.traducir(categoria.upper(), idioma).capitalize()}", border=True)
                 st.metric(label=f":{color}[F. Nacimiento]", value=f"{fnacimiento}", border=True)
                 
-                categoria = "Juvenil"
+                if isinstance(edad, (int, float)) and edad >= 16:
+                    categoria = "Juvenil"
+                else:
+                    categoria = "Cadete"
+
                 equipo = "A"
 
             else:
