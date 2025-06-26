@@ -80,8 +80,6 @@ if on:
 else:
     df_datos_filtrado = util.get_filters(df_datos_final)
 
-
-
 with st.expander("Configuración Avanzada"):
 
     col1, col2, col3 = st.columns([1,1,2])
