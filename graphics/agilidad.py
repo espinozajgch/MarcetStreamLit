@@ -6,53 +6,83 @@ import matplotlib.pyplot as plt
 from utils import util
 
 ESCALAS_COLOR_AGILIDAD = {
-    "H": [
-        [0.0, "#7CFC00"],
-        [0.6, "#006400"],
-        [0.7, "#FFD700"],   # Amarillo
-        [0.8, "#FFA500"],  # Naranja
-        [1.0, "#FF4500"]    # Rojo
-    ],
-    "M": [
-        [0.0, "#7CFC00"],
-        [0.3, "#006400"],
-        [0.4, "#FFA500"],
-        [0.5, "#FF4500"],
-        [0.6, "#FF4500"],
-        [1.0, "#FF4500"]
-    ]
+    "H": {
+        "cadete": [
+            [0.0, "#7CFC00"],
+            [0.6, "#006400"],
+            [0.7, "#FFD700"],
+            [0.8, "#FFA500"],
+            [1.0, "#FF4500"]
+        ],
+        "juvenil": [
+            [0.0, "#7CFC00"],
+            [0.6, "#006400"],
+            [0.7, "#FFD700"],
+            [0.8, "#FFA500"],
+            [1.0, "#FF4500"]
+        ]
+    },
+    "M": {
+        "cadete": [
+            [0.0, "#7CFC00"],
+            [0.40, "#006400"],
+            [0.50, "#FFD700"],
+            [0.60, "#FFA500"],
+            [0.70, "#FF4500"],
+            [1.0, "#FF4500"]
+        ],
+        "juvenil": [
+            [0.0, "#7CFC00"],
+            [0.30, "#006400"],
+            [0.40, "#FFD700"],
+            [0.55, "#FFA500"],
+            [0.70, "#FF4500"],
+            [1.0, "#FF4500"]
+        ]
+    }
 }
 
-def get_escala_color_agilidad_genero(genero: str) -> list:
+def get_escala_color_agilidad(genero: str, categoria: str) -> list:
     """
-    Retorna la escala de colores de sprint según el género.
+    Retorna la escala de colores de agilidad según el género y categoría.
     """
-    return ESCALAS_COLOR_AGILIDAD.get(genero.upper(), ESCALAS_COLOR_AGILIDAD["H"])
+    genero = genero.upper()
+    categoria = categoria.lower()
+    return ESCALAS_COLOR_AGILIDAD.get(genero, {}).get(categoria, ESCALAS_COLOR_AGILIDAD["H"]["juvenil"])
 
-def calcular_color_diferencia_agilidad(diferencia: float, genero: str = "H") -> str:
+def calcular_color_diferencia_agilidad(diferencia: float, genero: str = "H", categoria: str = "juvenil") -> str:
     """
-    Determina el color correspondiente a un porcentaje de diferencia en agilidad según el género.
+    Determina el color correspondiente a un porcentaje de diferencia en agilidad según género y categoría.
 
     Args:
         diferencia (float): Diferencia porcentual.
         genero (str): Género del jugador ('H' o 'M').
+        categoria (str): Categoría ('cadete', 'juvenil', etc.)
 
     Returns:
         str: Código hexadecimal del color correspondiente.
     """
-    escala = get_escala_color_agilidad_genero(genero)
+    escala = get_escala_color_agilidad(genero, categoria)
+
+    if pd.isna(diferencia) or not escala:
+        # Siempre devolver el color del peor umbral (último en la escala) si no hay dato válido
+        return escala[-1][1]
     
-    # Normalizamos el valor entre 0.0 y 1.0 según la lógica esperada
-    max_dif = 10.0  # Puedes ajustar este valor si el rango real es distinto
+    # Normaliza la diferencia al rango [0, 1]
+    max_dif = 10.0
     valor_normalizado = min(diferencia / max_dif, 1.0)
 
     for i in range(1, len(escala)):
-        if valor_normalizado <= escala[i][0]:
+        if valor_normalizado < escala[i][0]:
             return escala[i - 1][1]
 
-    return escala[-1][1]  # Por defecto, devuelve el último color (rojo)
- 
-def get_agilidad_colorbar_agregada(fig, y_min, y_max, gender):
+    return escala[-1][1]
+
+def get_agilidad_colorbar_agregada(fig, y_min, y_max, gender, categoria):
+    escala = get_escala_color_agilidad(gender, categoria)
+    tickvals = [round(umbral * 10, 2) for umbral, _ in escala]
+    ticktext = [str(round(umbral * 10, 1)) for umbral, _ in escala]
+
     fig.add_trace(go.Scatter(
         x=[None],
         y=[None],
@@ -61,14 +91,12 @@ def get_agilidad_colorbar_agregada(fig, y_min, y_max, gender):
             size=0,
             color=[10],
             cmin=0,
-            cmax=12,
-            colorscale=get_escala_color_agilidad_genero(gender),
+            cmax=round(tickvals[-1] + 1, 1),
+            colorscale=escala,
             colorbar=dict(
                 title=dict(text="DIF %"),
-                #orientation="v",
-                #ticks="outside",
-                tickvals=[0, 3, 5, 8, 10, 12],
-                ticktext=["0", "3", "5", "8", "10", "12"],
+                tickvals=tickvals,
+                ticktext=ticktext,
                 tickfont=dict(size=12, color="black"),
                 thickness=20,
                 len=1,
@@ -186,11 +214,14 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             diferencia = (abs(dom - nd) / nd) * 100
             color = calcular_color_diferencia_agilidad(diferencia, gender)
 
-            if 0 <= diferencia <= 10:
+            if diferencia < 1:
+                y_pos = 0.5
+            elif 0 <= diferencia <= 10:
                 y_pos = ymin + (diferencia / 12) * (ymax - ymin)
             else:
-                y_pos = 3.5
+                y_pos = 3
 
+            diferenciat = util.traducir("DIFERENCIA %", idioma);
             fig.add_trace(go.Scatter(
                 x=[fecha],
                 y=[y_pos],
@@ -200,7 +231,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 textfont=dict(size=sizet, color="black"),
                 textposition="middle center",
                 showlegend=not added_to_legend,
-                name=util.traducir("DIFERENCIA %", idioma),
+                name=f"{diferenciat} ({cat_label})",
                 hoverinfo="skip"
             ))
             added_to_legend = True
@@ -234,7 +265,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         )
     )
 
-    fig = get_agilidad_colorbar_agregada(fig, ymin, ymax, gender)
+    fig = get_agilidad_colorbar_agregada(fig, ymin, ymax, gender, categoria)
 
     st.plotly_chart(fig, use_container_width=True)
     return fig

@@ -1058,6 +1058,7 @@ def get_rgb_from_categoria(val):
 def get_demarcaciones():
     MAPA_DEMARCACIONES = {
         "PORTERO": "POR",
+        "PORTERA": "POR",
         "DEFENSA CENTRAL": "DFC",
         "CENTRAL": "DFC",
         "LATERAL DERECHO": "LD",
@@ -1070,6 +1071,7 @@ def get_demarcaciones():
         "LATERAL DERECHO": "ED",
         "LATERAL": "LA",             
         "DELANTERO": "DC",
+        "DELANTERA": "DC",
         "NO DISPONIBLE": "ND"
     }
 
@@ -1718,6 +1720,24 @@ TRADUCCIONES = {
     },
 
     # Demarcaciones
+    "PORTERA": {
+        "en": "GOALKEEPER",
+        "it": "PORTIERA",
+        "de": "TORHÜTERIN",
+        "fr": "GARDIENNE",
+        "ca": "PORTERA",
+        "pt": "GOLEIRA",
+        "ar": "حارسة مرمى"
+    },
+    "DELANTERA": {
+        "en": "FORWARD",
+        "it": "ATTACCANTE",
+        "de": "STÜRMERIN",
+        "fr": "ATTAQUANTE",
+        "ca": "DAVANTERA",
+        "pt": "ATACANTE",
+        "ar": "مهاجمة"
+    },
     "PORTERO": {
         "en": "GOALKEEPER", "it": "PORTIERE", "de": "TORWART", "fr": "GARDIEN", "ca": "PORTER",
         "pt": "GOLEIRO", "ar": "حارس مرمى"
@@ -2018,14 +2038,34 @@ TRADUCCIONES = {
     },
     #AGILIDAD
     "La jugadora presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección.": {
+        "es": "La jugadora presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección.",
         "en": "The player shows an adequate level of functional symmetry (<5%) between both legs in change of direction.",
-        "it": "Il giocatore presenta un livello adeguato di simmetria funzionale (<5%) tra entrambe le gambe nel cambio di direzione.",
-        "de": "Der Spieler weist ein angemessenes Maß an funktioneller Symmetrie (<5 %) zwischen beiden Beinen bei Richtungswechseln auf.",
-        "fr": "Le joueur présente un niveau adéquat de symétrie fonctionnelle (<5 %) entre les deux jambes lors du changement de direction.",
-        "ca": "El jugador presenta un nivell adequat de simetria funcional (<5%) entre ambdues cames en el canvi de direcció.",
-        "pt": "O jogador apresenta um nível adequado de simetria funcional (<5%) entre as duas pernas na mudança de direção.",
-        "ar": "يُظهر اللاعب مستوى مناسبًا من التماثل الوظيفي (<5٪) بين الساقين عند تغيير الاتجاه.",
-        "es": "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección."
+        "it": "La giocatrice presenta un livello adeguato di simmetria funzionale (<5%) tra entrambe le gambe nel cambio di direzione.",
+        "de": "Die Spielerin weist ein angemessenes Maß an funktioneller Symmetrie (<5 %) zwischen beiden Beinen bei Richtungswechseln auf.",
+        "fr": "La joueuse présente un niveau adéquat de symétrie fonctionnelle (<5 %) entre les deux jambes lors du changement de direction.",
+        "ca": "La jugadora presenta un nivell adequat de simetria funcional (<5%) entre ambdues cames en el canvi de direcció.",
+        "pt": "A jogadora apresenta um nível adequado de simetria funcional (<5%) entre ambas as pernas na mudança de direção.",
+        "ar": "تُظهر اللاعبة مستوى مناسبًا من التناسق الوظيفي (<5%) بين الساقين عند تغيير الاتجاه."
+    },
+    "La jugadora presenta un nivel de simetría funcional adecuado (<4%) entre ambas piernas en el cambio de dirección.": {
+        "es": "La jugadora presenta un nivel de simetría funcional adecuado (<4%) entre ambas piernas en el cambio de dirección.",
+        "en": "The player shows an adequate level of functional symmetry (<4%) between both legs in change of direction.",
+        "it": "La giocatrice presenta un livello adeguato di simmetria funzionale (<4%) tra entrambe le gambe nel cambio di direzione.",
+        "de": "Die Spielerin weist ein angemessenes Maß an funktioneller Symmetrie (<4 %) zwischen beiden Beinen bei Richtungswechseln auf.",
+        "fr": "La joueuse présente un niveau adéquat de symétrie fonctionnelle (<4 %) entre les deux jambes lors du changement de direction.",
+        "ca": "La jugadora presenta un nivell adequat de simetria funcional (<4%) entre ambdues cames en el canvi de direcció.",
+        "pt": "A jogadora apresenta um nível adequado de simetria funcional (<4%) entre ambas as pernas na mudança de direção.",
+        "ar": "تُظهر اللاعبة مستوى مناسبًا من التناسق الوظيفي (<4%) بين الساقين عند تغيير الاتجاه."
+    },
+   "La jugadora presenta un nivel de simetría funcional adecuado (<3%) entre ambas piernas en el cambio de dirección.": {
+        "es": "La jugadora presenta un nivel de simetría funcional adecuado (<3%) entre ambas piernas en el cambio de dirección.",
+        "en": "The player shows an adequate level of functional symmetry (<3%) between both legs in change of direction.",
+        "it": "La giocatrice presenta un livello adeguato di simmetria funzionale (<3%) tra entrambe le gambe nel cambio di direzione.",
+        "de": "Die Spielerin weist ein angemessenes Maß an funktioneller Symmetrie (<3 %) zwischen beiden Beinen bei Richtungswechseln auf.",
+        "fr": "La joueuse présente un niveau adéquat de symétrie fonctionnelle (<3 %) entre les deux jambes lors du changement de direction.",
+        "ca": "La jugadora presenta un nivell adequat de simetria funcional (<3%) entre ambdues cames en el canvi de direcció.",
+        "pt": "A jogadora apresenta um nível adequado de simetria funcional (<3%) entre ambas as pernas na mudança de direção.",
+        "ar": "تُظهر اللاعبة مستوى مناسبًا من التناسق الوظيفي (<3%) بين الساقين عند تغيير الاتجاه."
     },
     "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección.": {
         "en": "The player shows an adequate level of functional symmetry (<5%) between both legs in change of direction.",
@@ -2057,6 +2097,26 @@ TRADUCCIONES = {
         "ar": "الاختلاف >10٪ في تغيير الاتجاه يشير إلى:\n- ضعف في القوة اللامركزية و/أو الطاقة التفاعلية.\n- الحاجة لتحسين تقنية الإيقاف.\n- زيادة خطر الإصابة العضلية الهيكلية، خاصة في عضلات الفخذ الخلفية والرباط الصليبي الأمامي.\n- ضعف القدرة على تنفيذ الحركات المتفجرة (كالتفافات، تمويهات، مراوغات).\n\nننصح بخطة تدريب أحادية الساق مخصصة للساق الأضعف.",
         "es": "Asimetría >10% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva.\n- Necesidad de mejora de la técnica de frenado.\n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
     },
+    "Asimetría >7% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva.\n- Necesidad de mejora de la técnica de frenado.\n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria.": {
+        "en": "Asymmetry >7% in change of direction represents:\n- Deficit in eccentric strength and/or reactive power.\n- Need to improve braking technique.\n- Increased risk of musculoskeletal injury, especially hamstrings and ACL.\n- Limitation in ability to perform explosive actions (turns, feints, dribbles).\n\nWe recommend a specific unilateral training plan for the weaker leg.",
+        "it": "Asimmetria >7% nel cambio di direzione rappresenta:\n- Deficit di forza eccentrica e/o potenza reattiva.\n- Necessità di migliorare la tecnica di frenata.\n- Maggior rischio di infortuni muscoloscheletrici, soprattutto agli ischiocrurali e al LCA.\n- Limitazione nella capacità di eseguire azioni esplosive (cambi di direzione, finte, dribbling).\n\nRaccomandiamo un piano di allenamento unilaterale specifico per la gamba più debole.",
+        "de": "Asymmetrie >7 % bei Richtungswechseln bedeutet:\n- Defizit an exzentrischer Kraft und/oder Reaktivkraft.\n- Notwendigkeit zur Verbesserung der Bremstechnik.\n- Erhöhtes Risiko für muskuloskelettale Verletzungen, insbesondere an den hinteren Oberschenkelmuskeln und dem Kreuzband.\n- Eingeschränkte Fähigkeit zu explosiven Bewegungen (Drehungen, Finten, Dribblings).\n\nWir empfehlen ein spezielles einseitiges Trainingsprogramm für das schwächere Bein.",
+        "fr": "Asymétrie >7 % lors du changement de direction indique :\n- Déficit de force excentrique et/ou de puissance réactive.\n- Besoin d'améliorer la technique de freinage.\n- Risque accru de blessure musculo-squelettique, notamment des ischio-jambiers et du LCA.\n- Capacité limitée à effectuer des actions explosives (tours, feintes, dribbles).\n\nNous recommandons un plan d'entraînement unilatéral spécifique pour la jambe déficitaire.",
+        "ca": "Asimetria >7% en el canvi de direcció representa:\n- Dèficit de força excèntrica i/o potència reactiva.\n- Necessitat de millorar la tècnica de frenada.\n- Augment del risc de lesió musculoesquelètica, especialment en isquiotibials i LCA.\n- Limitació de la capacitat per realitzar accions explosives (girs, fintes, driblatges).\n\nRecomanem un pla específic d'entrenament unilateral per a la cama deficitària.",
+        "pt": "Assimetria >7% na mudança de direção representa:\n- Déficit de força excêntrica e/ou potência reativa.\n- Necessidade de melhorar a técnica de frenagem.\n- Maior risco de lesão musculoesquelética, especialmente nos isquiotibiais e LCA.\n- Limitação na capacidade de realizar ações explosivas (giros, fintas, dribles).\n\nRecomendamos um plano de treino unilateral específico para a perna mais fraca.",
+        "ar": "الاختلاف >7٪ في تغيير الاتجاه يشير إلى:\n- ضعف في القوة اللامركزية و/أو الطاقة التفاعلية.\n- الحاجة لتحسين تقنية الإيقاف.\n- زيادة خطر الإصابة العضلية الهيكلية، خاصة في عضلات الفخذ الخلفية والرباط الصليبي الأمامي.\n- ضعف القدرة على تنفيذ الحركات المتفجرة (كالتفافات، تمويهات، مراوغات).\n\nننصح بخطة تدريب أحادية الساق مخصصة للساق الأضعف.",
+        "es": "Asimetría >7% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva.\n- Necesidad de mejora de la técnica de frenado.\n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+    },
+    "Asimetría > 5.5% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva\n- Necesidad de mejora de la técnica de frenado \n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings)\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria.": {
+        "en": "Asymmetry > 5.5% in change of direction represents:\n- Deficit in eccentric strength and/or reactive power\n- Need to improve braking technique\n- Increased risk of musculoskeletal injury, especially hamstrings and ACL\n- Limitation in ability to perform explosive actions (turns, feints, dribbles)\n\nWe recommend a specific unilateral training plan for the weaker leg.",
+        "it": "Asimmetria >5,5% nel cambio di direzione rappresenta:\n- Deficit di forza eccentrica e/o potenza reattiva\n- Necessità di migliorare la tecnica di frenata\n- Maggior rischio di infortuni muscoloscheletrici, soprattutto agli ischiocrurali e al LCA\n- Limitazione nella capacità di eseguire azioni esplosive (cambi di direzione, finte, dribbling)\n\nRaccomandiamo un piano di allenamento unilaterale specifico per la gamba più debole.",
+        "de": "Asymmetrie >5,5 % bei Richtungswechseln bedeutet:\n- Defizit an exzentrischer Kraft und/oder Reaktivkraft\n- Notwendigkeit zur Verbesserung der Bremstechnik\n- Erhöhtes Risiko für muskuloskelettale Verletzungen, insbesondere an den hinteren Oberschenkelmuskeln und dem Kreuzband\n- Eingeschränkte Fähigkeit zu explosiven Bewegungen (Drehungen, Finten, Dribblings)\n\nWir empfehlen ein spezielles einseitiges Trainingsprogramm für das schwächere Bein.",
+        "fr": "Asymétrie >5,5 % lors du changement de direction indique :\n- Déficit de force excentrique et/ou de puissance réactive\n- Besoin d'améliorer la technique de freinage\n- Risque accru de blessure musculo-squelettique, notamment des ischio-jambiers et du LCA\n- Capacité limitée à effectuer des actions explosives (tours, feintes, dribbles)\n\nNous recommandons un plan d'entraînement unilatéral spécifique pour la jambe déficitaire.",
+        "ca": "Asimetria >5,5% en el canvi de direcció representa:\n- Dèficit de força excèntrica i/o potència reactiva\n- Necessitat de millorar la tècnica de frenada\n- Augment del risc de lesió musculoesquelètica, especialment en isquiotibials i LCA\n- Limitació de la capacitat per realitzar accions explosives (girs, fintes, driblatges)\n\nRecomanem un pla específic d'entrenament unilateral per a la cama deficitària.",
+        "pt": "Assimetria >5,5% na mudança de direção representa:\n- Déficit de força excêntrica e/ou potência reativa\n- Necessidade de melhorar a técnica de frenagem\n- Maior risco de lesão musculoesquelética, especialmente nos isquiotibiais e LCA\n- Limitação na capacidade de realizar ações explosivas (giros, fintas, dribles)\n\nRecomendamos um plano de treino unilateral específico para a perna mais fraca.",
+        "ar": "الاختلاف >5.5٪ في تغيير الاتجاه يشير إلى:\n- ضعف في القوة اللامركزية و/أو الطاقة التفاعلية\n- الحاجة لتحسين تقنية الإيقاف\n- زيادة خطر الإصابة العضلية الهيكلية، خاصة في عضلات الفخذ الخلفية والرباط الصليبي الأمامي\n- ضعف القدرة على تنفيذ الحركات المتفجرة (كالتفافات، تمويهات، مراوغات)\n\nننصح بخطة تدريب أحادية الساق مخصصة للساق الأضعف.",
+        "es": "Asimetría > 5.5% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva\n- Necesidad de mejora de la técnica de frenado \n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings)\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+    },
     "FECHA": {
         "es": "FECHA",
         "en": "DATE",
@@ -2080,6 +2140,34 @@ TRADUCCIONES = {
         "ca": "Percentatges > 15% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista esportiu.",
         "pt": "Porcentagens > 15% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista esportivo.",
         "ar": "تشير النسب > 15٪ من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
+    },
+    "Porcentajes > 17% de grasa corporal representa:\n"
+    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+    "- Acelera la aparición de fatiga.\n"
+    "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+    "- Afecta parámetros hormonales y metabólicos.\n"
+    "- Recomendamos realizar un seguimiento con un nutricionista deportivo.": {
+        "en": "Percentages > 17% of body fat represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerates onset of fatigue.\n- Decreases energy efficiency and physical performance.\n- Affects hormonal and metabolic parameters.\n- We recommend follow-up with a sports nutritionist.",
+        "it": "Percentuali > 17% di grasso corporeo rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelera la comparsa della fatica.\n- Riduce l'efficienza energetica e le prestazioni fisiche.\n- Influenza i parametri ormonali e metabolici.\n- Si consiglia un follow-up con un nutrizionista sportivo.",
+        "de": "Prozentsätze > 17% Körperfett bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigt das Auftreten von Ermüdung.\n- Verringert die Energieeffizienz und die körperliche Leistungsfähigkeit.\n- Beeinträchtigt hormonelle und metabolische Parameter.\n- Wir empfehlen eine Nachsorge mit einem Sporternährungsberater.",
+        "fr": "Des pourcentages > 17 % de masse grasse corporelle représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Accélère l'apparition de la fatigue.\n- Diminue l'efficacité énergétique et les performances physiques.\n- Affecte les paramètres hormonaux et métaboliques.\n- Nous recommandons un suivi avec un nutritionniste sportif.",
+        "ca": "Percentatges > 17% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista esportiu.",
+        "pt": "Porcentagens > 17% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista esportivo.",
+        "ar": "تشير النسب > 15٪ من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
+    },
+    "Porcentajes > 15% de grasa corporal representa:\n"
+    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+    "- Acelera la aparición de fatiga.\n"
+    "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+    "- Afecta parámetros hormonales y metabólicos.\n"
+    "- Recomendamos realizar un seguimiento con un nutricionista.": {
+        "en": "Percentages > 15% of body fat represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerates onset of fatigue.\n- Decreases energy efficiency and physical performance.\n- Affects hormonal and metabolic parameters.\n- We recommend follow-up with a nutritionist.",
+        "it": "Percentuali > 15% di grasso corporeo rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelera la comparsa della fatica.\n- Riduce l'efficienza energetica e le prestazioni fisiche.\n- Influenza i parametri ormonali e metabolici.\n- Si consiglia un follow-up con un nutrizionista.",
+        "de": "Prozentsätze > 15% Körperfett bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigt das Auftreten von Ermüdung.\n- Verringert die Energieeffizienz und die körperliche Leistungsfähigkeit.\n- Beeinträchtigt hormonelle und metabolische Parameter.\n- Wir empfehlen eine Nachsorge mit einem Sporternährungsberater.",
+        "fr": "Des pourcentages > 15 % de masse grasse corporelle représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Accélère l'apparition de la fatigue.\n- Diminue l'efficacité énergétique et les performances physiques.\n- Affecte les paramètres hormonaux et métaboliques.\n- Nous recommandons un suivi avec un nutritionniste.",
+        "ca": "Percentatges > 15% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista.",
+        "pt": "Porcentagens > 15% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista.",
+        "ar": "تشير النسب > 15 من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
     },
     "Porcentajes > 17% de grasa corporal representa:\n"
     "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
@@ -2181,7 +2269,7 @@ def get_observacion_grasa(grasa, categoria, gender):
     elif "cadete" in categoria:
         if grasa > 17:
             return (
-                "Porcentajes > 18% de grasa corporal representa:\n"
+                "Porcentajes > 17% de grasa corporal representa:\n"
                 "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
                 "- Acelera la aparición de fatiga.\n"
                 "- Disminuye la eficiencia energética y el rendimiento físico.\n"
@@ -2336,14 +2424,46 @@ def get_observacion_sprint(valor_sprint, categoria):
 
     return ""
 
-def get_observacion_agilidad(valor_asimetria):
+def get_observacion_agilidad(valor_asimetria, genero="H", categoria="juvenil"):
     """
     Devuelve una observación interpretativa basada en el porcentaje de asimetría funcional
-    (diferencia entre piernas en el cambio de dirección), sin diferenciar por categoría.
+    entre ambas piernas, considerando género y categoría.
     """
     if valor_asimetria is None or pd.isna(valor_asimetria):
         return ""
 
+    genero = genero.upper()
+    categoria = categoria.lower()
+    
+    if genero == "M":
+        if categoria == "cadete":
+            
+            if valor_asimetria < 4:
+                return "La jugadora presenta un nivel de simetría funcional adecuado (< 4%) entre ambas piernas en el cambio de dirección."
+            elif valor_asimetria <= 6:
+                return (
+                    "Ligera asimetría funcional entre ambas piernas en el cambio de dirección.\n"
+                    "Es recomendable aplicar estrategias preventivas para evitar que afecte el rendimiento o aumente el riesgo de lesión."
+                )
+            else:
+                return (
+                    "Asimetría >7% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva.\n- Necesidad de mejora de la técnica de frenado.\n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings).\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+                )
+
+        elif categoria == "juvenil":
+            if valor_asimetria < 3:
+                return "La jugadora presenta un nivel de simetría funcional adecuado (< 3%) entre ambas piernas en el cambio de dirección."
+            elif valor_asimetria < 5.5:
+                return (
+                    "Ligera asimetría funcional entre ambas piernas en el cambio de dirección.\n"
+                    "Es recomendable aplicar estrategias preventivas para evitar que afecte el rendimiento o aumente el riesgo de lesión."
+                )
+            else:
+                return (
+                    "Asimetría > 5.5% en el cambio de dirección representa:\n- Déficit de fuerza excéntrica y/o potencia reactiva\n- Necesidad de mejora de la técnica de frenado \n- Incremento en el riesgo de lesión musculoesquelética, sobre todo en isquiosurales y LCA.\n- Limitación de la capacidad de realizar acciones explosivas (con giros, fintas, driblings)\n\nRecomendamos un plan específico de entrenamiento unilateral de la pierna deficitaria."
+                )
+
+    # Default masculino
     if valor_asimetria <= 5:
         return (
             "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección."
@@ -2353,7 +2473,7 @@ def get_observacion_agilidad(valor_asimetria):
             "Ligera asimetría funcional entre ambas piernas en el cambio de dirección.\n"
             "Aunque se encuentra dentro de un rango aceptable, es recomendable aplicar estrategias preventivas para evitar que esta diferencia aumente y afecte el rendimiento o aumente el riesgo de lesión."
         )
-    else:  # valor_asimetria > 8
+    else:
         return (
             "Asimetría >10% en el cambio de dirección representa:\n"
             "- Déficit de fuerza excéntrica y/o potencia reactiva.\n"

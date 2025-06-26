@@ -258,9 +258,9 @@ def generate_pdf_simple(
             pdf.add_plotly_figure(fig, "", x=x-3, y=y_grafico-3, w=99, h=55, idioma=idioma)
 
         # Observaciones inmediatamente debajo
-        y_obs = pdf.get_y() + 52
+        y_obs = pdf.get_y() + 51
         obs_width = 92
-        obs_height_max = 10
+        obs_height_max = 13
         obs_line_height = 3
 
         for col in range(2):

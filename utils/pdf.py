@@ -555,7 +555,7 @@ class PDF(FPDF):
 
         # Posiciones base
         x_start = self.get_x()
-        y_start = self.get_y() - 1
+        y_start = self.get_y() - 3
 
         col_width = 60  # ajustable
 
@@ -571,9 +571,9 @@ class PDF(FPDF):
             self.set_xy(x, y_start + (3 if simple else 6))
 
             if(idioma == "ar"):
-                self.set_font("Amiri", "B", 16 if simple else 18)
+                self.set_font("Amiri", "B", 15 if simple else 18)
             else:
-                self.set_font("Helvetica", "B", 16 if simple else 18)
+                self.set_font("Helvetica", "B", 15 if simple else 18)
 
             self.set_text_color(0, 51, 102) # Azul oscuro
             self.cell(col_width, 10, f"{value:.2f}", align="C")

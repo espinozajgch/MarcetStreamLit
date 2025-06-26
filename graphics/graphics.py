@@ -85,8 +85,6 @@ def get_color_scale(genero, categoria, cmin, cmax):
         escala.append([1, semaforo[-1][1]])
     return escala
 
-
-
 def calcular_rango_visual(df_grasa, rango_color, margen=1, rango_minimo=5):
     grasa_min = df_grasa.min()
     grasa_max = df_grasa.max()
@@ -108,16 +106,27 @@ def calcular_rango_visual(df_grasa, rango_color, margen=1, rango_minimo=5):
 def asignar_color_grasa(valor, genero, categoria):
     if pd.isna(valor):
         return "gray"
-    
+
     genero = genero.upper()
     categoria = categoria.lower()
     semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
-    
-    for umbral, color in semaforo:
-        if valor < umbral:
-            return color
-    return semaforo[-1][1]  # último color si supera el mayor umbral
 
+    # Asegurar que esté ordenado
+    semaforo = sorted(semaforo, key=lambda x: x[0])
+
+    for idx in range(1, len(semaforo)):
+        lim_inf, color_inf = semaforo[idx - 1]
+        lim_sup, _ = semaforo[idx]
+
+        if lim_inf <= valor < lim_sup:
+            return color_inf
+
+    # Si es menor que el primer umbral, devolver el color del primer umbral
+    if valor < semaforo[0][0]:
+        return semaforo[0][1]
+
+    # Si supera todos los umbrales, devolver el color del último umbral
+    return semaforo[-1][1]
 
 def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es", barras=False, gender="H", cat_label="U19"):
     df = pd.DataFrame(df_antropometria)
@@ -180,7 +189,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
         colores_puntos = y_vals.apply(lambda x: asignar_color_grasa(x, gender, categoria))
-
+        st.text(categoria)
         if barras or len(y_vals) <= 2:
             #st.text(x_vals)
             size = 20 if len(x_vals) <= 2 else 14

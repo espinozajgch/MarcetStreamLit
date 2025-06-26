@@ -129,7 +129,6 @@ with st.expander("Configuración Avanzada"):
     else:
         tipo_reporte_bool = False
 
-
 # Promedios
 ###################################################
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
@@ -221,8 +220,7 @@ else:
                     
                     with col4:
                         act = df_anthropometrics[fecha_registro].iloc[0]
-                        st.metric(f"Último Registro",act)
-
+                        st.metric("Último Registro", act)
 
                     observacion = util.get_observacion_grasa(gact, categoria.lower(), gender)
                     observacion = util.traducir(observacion, idioma)
@@ -534,29 +532,35 @@ else:
                 if not todos_ceros:
                     
                     df_agilty = df_agilty[~(df_agilty[columns] == 0).any(axis=1)]
+                    diferencia = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
                     #percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
                         act = df_agilty[columns[0]].iloc[0]
-                        ant = df_agilty[columns[0]].iloc[1] if len(df_agilty) > 1 else 0
-                        variacion = act - ant
+                        antd = df_agilty[columns[0]].iloc[1] if len(df_agilty) > 1 else 0
+                        variacion = act - antd
                         st.metric(columns[0].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
                         
                     with col2:
                         act = df_agilty[columns[1]].iloc[0]
-                        ant = df_agilty[columns[1]].iloc[1] if len(df_agilty) > 1 else 0
-                        variacion = act - ant
+                        antnd = df_agilty[columns[1]].iloc[1] if len(df_agilty) > 1 else 0
+                        variacion = act - antnd
                         st.metric(columns[1].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
 
                     with col3:
-                        act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
-                        st.metric(f"Último Registro",act)
+                        diferencia_ant = 0 if pd.isna(antd) or antd == 0 else round((abs(antd - antnd) / antd) * 100, 2)
+                        variacion = diferencia - diferencia_ant
+                        st.metric("% Diferencia", f'{float(diferencia):,.2f} %', f'{float(variacion):,.2f}', delta_color="inverse")
 
-                    diferencia = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
-                    observacion = util.get_observacion_agilidad(valor_asimetria=diferencia)
+                    with col4:
+                        act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
+                        st.metric("Último Registro", act)
+
+                    #st.text(diferencia)
+                    observacion = util.get_observacion_agilidad(valor_asimetria=diferencia, genero=gender, categoria=categoria)
                     observacion = util.traducir(observacion, idioma)
                     observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
                     #st.text(diferencia)

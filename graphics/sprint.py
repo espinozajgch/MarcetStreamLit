@@ -32,8 +32,8 @@ SPRINT_CONFIG = {
         "juvenil": {
             "rango": (4.4, 6.3),
             "escala_colores": [
-                [0.0, "lightgreen"],
-                [0.35, "green"],
+                [0.0, "#7CFC00"],
+                [0.35, "#006400"],
                 [0.55, "#FFD700"],
                 [0.75, "#FFA500"],
                 [1.0, "#FF4500"]
@@ -42,8 +42,8 @@ SPRINT_CONFIG = {
         "cadete": {
             "rango": (4.6, 6.5),
             "escala_colores": [
-                [0.0, "lightgreen"],
-                [0.35, "green"],
+                [0.0, "#7CFC00"],
+                [0.35, "#006400"],
                 [0.55, "#FFD700"],
                 [0.75, "#FFA500"],
                 [1.0, "#FF4500"]
@@ -69,7 +69,7 @@ def get_escala_colores_sprint(categoria: str, genero: str = "H") -> list:
     genero = genero.upper()
     categoria = categoria.lower()
     return SPRINT_CONFIG.get(genero, {}).get(categoria, {}).get("escala_colores", [
-        [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
+        [0.0, "#7CFC00"], [0.25, "#006400"], [0.5, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
     ])
 
 def get_sprint_graph(
@@ -173,26 +173,12 @@ def get_sprint_graph(
         # Rango por categoría
         base_min, base_max = get_rango_sprint(categoria, gender)
         escala_colores = get_escala_colores_sprint(categoria, gender)
-
-        # rango_categoria = {
-        #     "Juvenil": (4.4, 6.3),
-        #     "Cadete": (4.6, 6.5)
-        # }
-        # base_min, base_max = rango_categoria.get(categoria.capitalize(), (4.4, 6.3))
-        
-        # escala_colores = [
-        #     [0.0, "lightgreen"], [0.35, "green"], [0.55, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
-        # ] if categoria.lower() in ["juvenil", "cadete"] else [
-        #     [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
-        # ]
-
+        #st.text(escala_colores)
         y_min = min(base_min, tiempo_min)
         y_max = max(base_max, tiempo_max)
         margen = (y_max - y_min) * 0.5
         y_min -= margen
         y_max += margen
-
-
 
         #if barras:
         size = 20 if df_metric_time[metrica_tiempo].notna().sum() == 1 else 14

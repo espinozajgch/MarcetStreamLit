@@ -54,11 +54,16 @@ def get_cmj_color_scale(genero, categoria):
 def asignar_color_cmj(valor, genero, categoria):
     if pd.isna(valor):
         return "gray"
+    
     escala = get_cmj_color_scale(genero, categoria)
-    for umbral, color in escala:
-        if valor < umbral:
+
+    # Recorremos en orden descendente para que el primer umbral menor o igual al valor se aplique
+    for umbral_min, color in reversed(escala):
+        if valor >= umbral_min:
             return color
-    return escala[-1][1] if escala else "gray"
+
+    # Si no cumple ningún umbral (menor que todos), usamos el color del más bajo
+    return escala[0][1] if escala else "gray"
 
 def get_color_scale(genero, categoria, cmin, cmax):
     genero = genero.upper()
