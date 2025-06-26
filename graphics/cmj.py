@@ -7,43 +7,43 @@ from utils import util
 
 CMJ_SEMAFORO = {
     "H": {
-        "cadete": [
-            (15, "#FF0000"),
-            (25, "#FF0000"),
-            (27, "#FFA500"),
-            (30, "#FFFF00"),
-            (33, "#006400"),
-            (35, "#7CFC00"),
-            (50, "#7CFC00")
-        ],
         "juvenil": [
             (15, "#FF0000"),
-            (31, "#FF0000"),
-            (33, "#FFA500"),
-            (35, "#FFFF00"),
-            (39, "#006400"),
-            (41, "#7CFC00"),
+            (32, "#FFA500"),
+            (34, "#FFFF00"),
+            (37, "#006400"),
+            (39, "#7CFC00"),
+            (45, "#7CFC00"),
+            (50, "#7CFC00")
+        ],
+        "cadete": [
+            (15, "#FF0000"),
+            (26, "#FFA500"),
+            (29, "#FFFF00"),
+            (32, "#006400"),
+            (35, "#7CFC00"),
+            (42, "#7CFC00"),
             (50, "#7CFC00")
         ]
     },
     "M": {
-        "cadete": [
-            (15, "#FF0000"),
-            (25, "#FF0000"),
-            (27, "#FFA500"),
-            (30, "#FFFF00"),
-            (33, "#006400"),
-            (35, "#7CFC00"),
-            (50, "#7CFC00")
-        ],
         "juvenil": [
             (15, "#FF0000"),
-            (31, "#FF0000"),
-            (33, "#FFA500"),
-            (35, "#FFFF00"),
-            (39, "#006400"),
-            (41, "#7CFC00"),
-            (50, "#7CFC00")
+            (21, "#FF0000"),
+            (22, "#FFA500"),
+            (23, "#FFFF00"),
+            (24, "#006400"),
+            (25, "#7CFC00"),
+            (35, "#7CFC00")
+        ],
+        "cadete": [
+            (15, "#FF0000"),
+            (18, "#FF0000"),
+            (19, "#FFA500"),
+            (20, "#FFFF00"),
+            (21, "#006400"),
+            (22, "#7CFC00"),
+            (35, "#7CFC00")
         ]
     }
 }
@@ -84,17 +84,17 @@ def get_color_scale(genero, categoria, cmin, cmax):
 #         return max(0, min(1, round((v - cmin) / (cmax - cmin), 4)))
 #     return [[norm(umbral), color] for umbral, color in escala]
 
-def calcular_rango_cmj(valores, escala):
+def calcular_rango_cmj(valores, escala, genero):
     if not escala:
         return min(valores), max(valores)
     umbrales = [umbral for umbral, _ in escala]
     minimo = min(15, min(umbrales)) - 1
-    maximo = max(50, max(umbrales)) + 1
+    maximo = max(50 if genero == "H" else 40, max(umbrales)) + 1
     if maximo - minimo < 10:
         maximo = minimo + 10
     return minimo, maximo
 
-def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False, gender="H", cat_label="U19"):
+def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False, gender="H", cat_label="U19"):
     df = pd.DataFrame(df_cmj)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
     df = df.sort_values(by=columna_fecha_registro)
@@ -112,21 +112,6 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     color_linea = {metricas[0]: "#163B5B"}
     color_promedio = {metricas[0]: "green"}
 
-    promedio_row = df_promedios_cmj[
-        (df_promedios_cmj["CATEGORIA"] == categoria) &
-        (df_promedios_cmj["EQUIPO"] == equipo)
-    ]
-
-    promedios = {}
-    if not promedio_row.empty:
-        for metrica in metricas:
-            if metrica in promedio_row.columns:
-                valor = promedio_row[metrica].values[0]
-                if pd.notna(valor):
-                    promedios[metrica] = valor
-    else:
-        st.warning("No se encontraron promedios de CMJ para la categoría y equipo especificados.")
-
     id_vars = [columna_fecha_registro] if columna_x == columna_fecha_registro else [columna_fecha_registro, columna_x]
     df_melted = df.melt(id_vars=id_vars, value_vars=metricas, var_name="MÉTRICA", value_name="VALOR").dropna()
 
@@ -134,10 +119,11 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     valores = df_melted["VALOR"].tolist() + list(promedios.values())
 
     # --- Rango dinámico con base entre 20-50 ---
+    maxg = (50 if gender == "H" else 35)
     cmj_min = min(valores)
     cmj_max = max(valores)
     cmin = min(15, cmj_min - 1 if cmj_min < 20 else cmj_min)
-    cmax = max(50, cmj_max + 1 if cmj_max > 50 else cmj_max)
+    cmax = max(maxg, cmj_max + 1 if cmj_max > maxg else cmj_max)
     if cmax - cmin < 10:
         cmax = cmin + 10
 
@@ -253,7 +239,7 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
             tickvals=tickvals,
             ticktext=ticktext,
             type="category" if barras else "date",
-            showticklabels=not barras
+            showticklabels=not barras and len(tickvals) > 1
         ),
         yaxis=dict(
             title=util.traducir("ALTURA DE SALTO (CM)", idioma),

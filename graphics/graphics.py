@@ -10,19 +10,6 @@ from utils import util
 # Define rangos y colores semáforo por género
 SEMAFORO_GRASA = {
     "H": {
-        "cadete": [
-            (3, "#FF0000"),
-            (6, "#FFA500"),
-            (7, "#FFFF00"),
-            (8, "#006400"),
-            (9, "#7CFC00"),
-            (14, "#006400"),
-            (16, "#FFFF00"),
-            (17, "#FFA500"),
-            (19, "#FF0000"),
-            (22, "#FF0000"),
-            (25, "#FF0000")
-        ],
         "juvenil": [
             (3, "#FF0000"),
             (6, "#FFA500"),
@@ -33,34 +20,47 @@ SEMAFORO_GRASA = {
             (15, "#FFFF00"),
             (17, "#FFA500"),
             (18, "#FF0000"),
+            (22, "#FF0000"),
+            (25, "#FF0000")
+        ],
+        "cadete": [
+            (3, "#FF0000"),
+            (6, "#FFA500"),
+            (7, "#FFFF00"),
+            (8, "#006400"),
+            (9, "#7CFC00"),
+            (14, "#006400"),
+            (16, "#FFFF00"),
+            (17, "#FFA500"),
+            (19, "#FF0000"),
             (22, "#FF0000"),
             (25, "#FF0000")
         ]
     },
     "M": {
-        "cadete": [
+        "juvenil": [
             (3, "#FF0000"),
-            (6, "#FFA500"),
-            (7, "#FFFF00"),
-            (8, "#006400"),
-            (9, "#7CFC00"),
+            (7, "#FFA500"),
+            (8, "#FFFF00"),
+            (9, "#006400"),
+            (10, "#7CFC00"),
             (14, "#006400"),
             (16, "#FFFF00"),
-            (17, "#FFA500"),
-            (19, "#FF0000"),
+            (18, "#FFA500"),
+            (20, "#FF0000"),
             (22, "#FF0000"),
             (25, "#FF0000")
         ],
-        "juvenil": [
+        "cadete": [
             (3, "#FF0000"),
-            (6, "#FFA500"),
-            (7, "#FFFF00"),
-            (8, "#006400"),
+            (7, "#FFA500"),
+            (8, "#FFFF00"),
+            (9, "#006400"),
             (10, "#7CFC00"),
-            (14, "#006400"),
-            (15, "#FFFF00"),
-            (17, "#FFA500"),
-            (18, "#FF0000"),
+            (18, "#006400"),
+            (19, "#FFFF00"),
+            (20, "#FFA500"),
+            (21, "#FF0000"),
             (22, "#FF0000"),
             (25, "#FF0000")
         ]
@@ -181,7 +181,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         y_vals = df["GRASA (%)"]
         colores_puntos = y_vals.apply(lambda x: asignar_color_grasa(x, gender, categoria))
 
-        if barras or len(y_vals) == 1:
+        if barras or len(y_vals) <= 2:
             #st.text(x_vals)
             size = 20 if len(x_vals) <= 2 else 14
             fig.add_trace(go.Bar(
@@ -214,7 +214,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
             text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.2f} %"
 
-            if not barras:
+            if not barras and len(y_vals) > 2:
                 fig.add_annotation(
                     x=fila_max["FECHA REGISTRO"],
                     y=fila_max["GRASA (%)"],
@@ -293,7 +293,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
-            showticklabels=not barras
+            showticklabels=not barras and len(tickvals) > 2
         ),
         yaxis=dict(
             title=util.traducir("PESO (KG)", idioma),

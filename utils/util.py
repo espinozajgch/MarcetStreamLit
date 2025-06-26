@@ -1096,32 +1096,145 @@ def convertir_m_s_a_km_h(df, metricas_m_s):
 
     return df
 
-def calcular_promedios_filtrados(df, columnas_a_verificar):
+def calcular_promedios_filtrados(df, columnas_a_verificar, categorial, equipol, equipo_promedio):
     """
-    Calcula el promedio por CATEGORIA y EQUIPO, ignorando valores 0 y NaN por columna.
+    Calcula el promedio por GENERO, CATEGORIA y EQUIPO, ignorando valores 0 y NaN por columna.
+    Asigna valores manuales para hombres. Si no existen registros femeninos, los añade.
 
     Args:
         df (pd.DataFrame): DataFrame con los datos originales.
-        columnas_a_verificar (list): Lista de columnas sobre las que calcular promedios.
+        columnas_a_verificar (list): Columnas a calcular.
+        categorial (str): Nombre de la columna de categoría.
+        equipol (str): Nombre de la columna de equipo.
+        equipo_promedio (str): Equipo base para valores por defecto.
 
     Returns:
-        pd.DataFrame: DataFrame con los promedios filtrados.
+        pd.DataFrame: DataFrame con los promedios calculados y registros añadidos si es necesario.
     """
     filas_promedio = []
 
-    for (categoria, equipo), grupo in df.groupby(["CATEGORIA", "EQUIPO"]):
-        fila = {"CATEGORIA": categoria, "EQUIPO": equipo}
+    for (genero, categoria, equipo), grupo in df.groupby(["GENERO", "CATEGORIA", "EQUIPO"]):
+        fila = {
+            "GENERO": genero,
+            "CATEGORIA": categoria,
+            "EQUIPO": equipo
+        }
         for columna in columnas_a_verificar:
-            # Asegurarse de que sean valores numéricos
             datos_columna = pd.to_numeric(grupo[columna], errors="coerce")
             datos_validos = datos_columna[(datos_columna != 0) & (~datos_columna.isna())]
             fila[columna] = datos_validos.mean() if not datos_validos.empty else np.nan
         filas_promedio.append(fila)
 
-    df_promedios = pd.DataFrame(filas_promedio)
-    df_promedios = df_promedios.round(2)
+    df_promedios = pd.DataFrame(filas_promedio).round(2)
+
+    # --- Valores manuales para Hombres ---
+    condiciones_h = {
+        "Cadete": {"DISTANCIA ACUMULADA (M)": 1400, "ALTURA-(CM)": 35.00, "TIEMPO 0-40M (SEG)": 5.7},
+        "Juvenil": {"DISTANCIA ACUMULADA (M)": 1900, "ALTURA-(CM)": 39.00, "TIEMPO 0-40M (SEG)": 5.2},
+    }
+
+    for categoria_val, valores in condiciones_h.items():
+        df_promedios.loc[
+            (df_promedios["GENERO"] == "H") &
+            (df_promedios[categorial] == categoria_val) &
+            (df_promedios[equipol] == equipo_promedio),
+            list(valores.keys())
+        ] = list(valores.values())
+
+    # --- Valores manuales para Mujeres (si no existen) ---
+    condiciones_m = {
+        "Cadete": {"DISTANCIA ACUMULADA (M)": 1400, "ALTURA-(CM)": 23.00, "TIEMPO 0-40M (SEG)": 5.7},
+        "Juvenil": {"DISTANCIA ACUMULADA (M)": 1900, "ALTURA-(CM)": 25.00, "TIEMPO 0-40M (SEG)": 5.2},
+    }
+
+    for categoria_val, valores in condiciones_m.items():
+        existe_femenino = (
+            ((df_promedios["GENERO"] == "M") &
+             (df_promedios[categorial] == categoria_val) &
+             (df_promedios[equipol] == equipo_promedio))
+            .any()
+        )
+
+        if not existe_femenino:
+            nueva_fila = {
+                "GENERO": "M",
+                "CATEGORIA": categoria_val,
+                "EQUIPO": equipo_promedio,
+                **{col: np.nan for col in columnas_a_verificar}  # Inicializar todas
+            }
+            nueva_fila.update(valores)
+            df_promedios = pd.concat([df_promedios, pd.DataFrame([nueva_fila])], ignore_index=True)
 
     return df_promedios
+
+def obtener_promedio_genero(df_promedios, categoria, equipo_promedio, columna, genero):
+    """
+    Devuelve el promedio filtrado por categoría, equipo y género.
+
+    Args:
+        df_promedios (DataFrame): DataFrame de promedios.
+        categoria (str): Categoría ("Cadete", "Juvenil", etc.).
+        equipo_promedio (str): Nombre del equipo promedio.
+        columna (str): Columna métrica a consultar.
+        genero (str): "H" o "M".
+
+    Returns:
+        float or None: Promedio si existe, de lo contrario None.
+    """
+    filtro = (
+        (df_promedios["GENERO"] == genero) &
+        (df_promedios["CATEGORIA"] == categoria) &
+        (df_promedios["EQUIPO"] == equipo_promedio)
+    )
+
+    valores = df_promedios.loc[filtro, columna]
+
+    if not valores.empty:
+        return float(valores.values[0])
+    else:
+        return None
+
+def obtener_promedios_metricas_genero(df_promedios, categoria, equipo, metricas, genero, tipo="CMJ"):
+    """
+    Filtra el DataFrame por CATEGORIA, EQUIPO y GENERO, y devuelve un diccionario con los valores promedio
+    por cada métrica solicitada.
+
+    Args:
+        df_promedios (DataFrame): DataFrame con promedios.
+        categoria (str): Categoría del jugador (e.g., 'Juvenil', 'Cadete').
+        equipo (str): Nombre del equipo.
+        metricas (list): Lista de columnas a evaluar.
+        genero (str): 'H' o 'M'.
+        tipo (str): Para identificar el contexto del aviso (CMJ, Sprint, etc.)
+
+    Returns:
+        dict: Diccionario con métricas y sus valores promedio si existen.
+    """
+    # Forzar tipos seguros
+    for col in ["GENERO", "CATEGORIA", "EQUIPO"]:
+        if col in df_promedios.columns:
+            df_promedios[col] = df_promedios[col].astype(str)
+
+    filtro = (
+        (df_promedios["GENERO"] == genero) &
+        (df_promedios["CATEGORIA"] == categoria) &
+        (df_promedios["EQUIPO"] == equipo)
+    )
+
+    promedio_row = df_promedios.loc[filtro]
+    #st.text(metricas)
+    promedios = {}
+    if not promedio_row.empty:
+        for metrica in metricas:
+            if metrica in promedio_row.columns:
+                valor = promedio_row[metrica].values[0]
+                if pd.notna(valor):
+                    promedios[metrica] = float(valor)
+    else:
+        st.warning(f"No se encontraron promedios de {tipo} para la categoría, equipo y género especificados.")
+
+    return promedios
+
 
 TRADUCCIONES = {
     "PESO Y % GRASA": {
@@ -1904,6 +2017,16 @@ TRADUCCIONES = {
         "es": "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\nNecesidad de trabajo técnico de zancada y frecuencia de paso.\nEs fundamental mejorar tu potencia en tramos cortos y largos."
     },
     #AGILIDAD
+    "La jugadora presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección.": {
+        "en": "The player shows an adequate level of functional symmetry (<5%) between both legs in change of direction.",
+        "it": "Il giocatore presenta un livello adeguato di simmetria funzionale (<5%) tra entrambe le gambe nel cambio di direzione.",
+        "de": "Der Spieler weist ein angemessenes Maß an funktioneller Symmetrie (<5 %) zwischen beiden Beinen bei Richtungswechseln auf.",
+        "fr": "Le joueur présente un niveau adéquat de symétrie fonctionnelle (<5 %) entre les deux jambes lors du changement de direction.",
+        "ca": "El jugador presenta un nivell adequat de simetria funcional (<5%) entre ambdues cames en el canvi de direcció.",
+        "pt": "O jogador apresenta um nível adequado de simetria funcional (<5%) entre as duas pernas na mudança de direção.",
+        "ar": "يُظهر اللاعب مستوى مناسبًا من التماثل الوظيفي (<5٪) بين الساقين عند تغيير الاتجاه.",
+        "es": "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección."
+    },
     "El jugador presenta un nivel de simetría funcional adecuado (<5%) entre ambas piernas en el cambio de dirección.": {
         "en": "The player shows an adequate level of functional symmetry (<5%) between both legs in change of direction.",
         "it": "Il giocatore presenta un livello adeguato di simmetria funzionale (<5%) tra entrambe le gambe nel cambio di direzione.",
@@ -1958,19 +2081,19 @@ TRADUCCIONES = {
         "pt": "Porcentagens > 15% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista esportivo.",
         "ar": "تشير النسب > 15٪ من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
     },
-    "Porcentajes > 15% de grasa corporal representa:\n"
+    "Porcentajes > 17% de grasa corporal representa:\n"
     "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
     "- Acelera la aparición de fatiga.\n"
     "- Disminuye la eficiencia energética y el rendimiento físico.\n"
     "- Afecta parámetros hormonales y metabólicos.\n"
     "- Recomendamos realizar un seguimiento con un nutricionista.": {
-        "en": "Percentages > 15% of body fat represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerates onset of fatigue.\n- Decreases energy efficiency and physical performance.\n- Affects hormonal and metabolic parameters.\n- We recommend follow-up with a nutritionist.",
-        "it": "Percentuali > 15% di grasso corporeo rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelera la comparsa della fatica.\n- Riduce l'efficienza energetica e le prestazioni fisiche.\n- Influenza i parametri ormonali e metabolici.\n- Si consiglia un follow-up con un nutrizionista.",
-        "de": "Prozentsätze > 15% Körperfett bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigt das Auftreten von Ermüdung.\n- Verringert die Energieeffizienz und die körperliche Leistungsfähigkeit.\n- Beeinträchtigt hormonelle und metabolische Parameter.\n- Wir empfehlen eine Nachsorge mit einem Sporternährungsberater.",
-        "fr": "Des pourcentages > 15 % de masse grasse corporelle représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Accélère l'apparition de la fatigue.\n- Diminue l'efficacité énergétique et les performances physiques.\n- Affecte les paramètres hormonaux et métaboliques.\n- Nous recommandons un suivi avec un nutritionniste.",
-        "ca": "Percentatges > 15% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista.",
-        "pt": "Porcentagens > 15% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista.",
-        "ar": "تشير النسب > 15٪ من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
+        "en": "Percentages > 17% of body fat represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerates onset of fatigue.\n- Decreases energy efficiency and physical performance.\n- Affects hormonal and metabolic parameters.\n- We recommend follow-up with a nutritionist.",
+        "it": "Percentuali > 17% di grasso corporeo rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelera la comparsa della fatica.\n- Riduce l'efficienza energetica e le prestazioni fisiche.\n- Influenza i parametri ormonali e metabolici.\n- Si consiglia un follow-up con un nutrizionista.",
+        "de": "Prozentsätze > 17% Körperfett bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigt das Auftreten von Ermüdung.\n- Verringert die Energieeffizienz und die körperliche Leistungsfähigkeit.\n- Beeinträchtigt hormonelle und metabolische Parameter.\n- Wir empfehlen eine Nachsorge mit einem Sporternährungsberater.",
+        "fr": "Des pourcentages > 17 % de masse grasse corporelle représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Accélère l'apparition de la fatigue.\n- Diminue l'efficacité énergétique et les performances physiques.\n- Affecte les paramètres hormonaux et métaboliques.\n- Nous recommandons un suivi avec un nutritionniste.",
+        "ca": "Percentatges > 17% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista.",
+        "pt": "Porcentagens > 17% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista.",
+        "ar": "تشير النسب > 17 من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
     },
     "Porcentajes menores al 7% de grasa corporal representan:\n"
     "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
@@ -1985,11 +2108,31 @@ TRADUCCIONES = {
         "ca": "Els percentatges de greix corporal inferiors al 7% representen:\n- Augment en la incidència de lesions musculoesquelètiques.\n- Aceleració en l'aparició de fatiga.\n- Disminució de l'eficiència energètica i del rendiment físic.\n- Alteracions en paràmetres hormonals i metabòlics.\n- Es recomana fer un seguiment amb un nutricionista esportiu.",
         "pt": "Porcentagens de gordura corporal abaixo de 7% representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Aceleração do aparecimento da fadiga.\n- Diminuição da eficiência energética e do desempenho físico.\n- Alterações em parâmetros hormonais e metabólicos.\n- Recomenda-se acompanhamento com um nutricionista esportivo.",
         "ar": "تشير النسب المئوية للدهون في الجسم التي تقل عن 7٪ إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع في ظهور التعب.\n- انخفاض في الكفاءة الطاقية والأداء البدني.\n- تغيرات في المعايير الهرمونية والتمثيل الغذائي.\n- يُوصى بالمتابعة مع اختصاصي تغذية رياضية."
+    },
+    "Porcentajes menores al 8% de grasa corporal representan:\n"
+    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+    "- Aceleración en la aparición de la fatiga.\n"
+    "- Disminución de la eficiencia energética y del rendimiento físico.\n"
+    "- Alteraciones en parámetros hormonales y metabólicos.\n"
+    "- Se recomienda realizar un seguimiento con un nutricionista deportivo.": {
+        "en": "Body fat percentages below 8% represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerated onset of fatigue.\n- Decrease in energy efficiency and physical performance.\n- Alterations in hormonal and metabolic parameters.\n- Follow-up with a sports nutritionist is recommended.",
+        "it": "Percentuali di grasso corporeo inferiori al 8% rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelerazione dell'insorgenza della fatica.\n- Riduzione dell'efficienza energetica e delle prestazioni fisiche.\n- Alterazioni nei parametri ormonali e metabolici.\n- Si raccomanda un follow-up con un nutrizionista sportivo.",
+        "de": "Körperfettanteile unter 8% bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigter Beginn von Ermüdung.\n- Verringerte Energieeffizienz und körperliche Leistungsfähigkeit.\n- Veränderungen hormoneller und metabolischer Parameter.\n- Eine Nachsorge durch einen Sporternährungsberater wird empfohlen.",
+        "fr": "Des pourcentages de graisse corporelle inférieurs à 8 % représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Apparition accélérée de la fatigue.\n- Diminution de l'efficacité énergétique et des performances physiques.\n- Altérations des paramètres hormonaux et métaboliques.\n- Un suivi avec un nutritionniste sportif est recommandé.",
+        "ca": "Els percentatges de greix corporal inferiors al 8% representen:\n- Augment en la incidència de lesions musculoesquelètiques.\n- Aceleració en l'aparició de fatiga.\n- Disminució de l'eficiència energètica i del rendiment físic.\n- Alteracions en paràmetres hormonals i metabòlics.\n- Es recomana fer un seguiment amb un nutricionista esportiu.",
+        "pt": "Porcentagens de gordura corporal abaixo de 8% representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Aceleração do aparecimento da fadiga.\n- Diminuição da eficiência energética e do desempenho físico.\n- Alterações em parâmetros hormonais e metabólicos.\n- Recomenda-se acompanhamento com um nutricionista esportivo.",
+        "ar": "تشير النسب المئوية للدهون في الجسم التي تقل عن 7٪ إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع في ظهور التعب.\n- انخفاض في الكفاءة الطاقية والأداء البدني.\n- تغيرات في المعايير الهرمونية والتمثيل الغذائي.\n- يُوصى بالمتابعة مع اختصاصي تغذية رياضية."
+    },
+    "Excelente estado de potencia de miembro inferior para el fútbol femenino": {
+        "es": "Excelente estado de potencia de miembro inferior para el fútbol femenino",
+        "en": "Excellent lower limb power condition for women's football",
+        "it": "Eccellente condizione di potenza degli arti inferiori per il calcio femminile",
+        "de": "Ausgezeichneter Zustand der Beinmuskulatur für Frauenfußball",
+        "fr": "Excellente condition de puissance des membres inférieurs pour le football féminin",
+        "ca": "Excel·lent estat de potència dels membres inferiors per al futbol femení",
+        "pt": "Excelente condição de potência dos membros inferiores para o futebol feminino",
+        "ar": "حالة ممتازة لقوة الأطراف السفلية لكرة القدم النسائية"
     }
-
-
-
-
 }
 
 def traducir(texto, idioma="es"):
@@ -2002,30 +2145,9 @@ def traducir_lista(palabras, idioma_destino="en"):
         palabras_traducidas.append(traduccion)
     return palabras_traducidas
 
-def get_observacion_grasa(grasa, categoria):
+def get_observacion_grasa(grasa, categoria, gender):
 
-    if "cadete" in categoria:
-        if grasa > 15:
-            return (
-                "Porcentajes > 15% de grasa corporal representa:\n"
-                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
-                "- Acelera la aparición de fatiga.\n"
-                "- Disminuye la eficiencia energética y el rendimiento físico.\n"
-                "- Afecta parámetros hormonales y metabólicos.\n"
-                "- Recomendamos realizar un seguimiento con un nutricionista deportivo.")
-        elif grasa < 7:
-            return (
-                "Porcentajes menores al 7% de grasa corporal representan:\n"
-                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
-                "- Aceleración en la aparición de la fatiga.\n"
-                "- Disminución de la eficiencia energética y del rendimiento físico.\n"
-                "- Alteraciones en parámetros hormonales y metabólicos.\n"
-                "- Se recomienda realizar un seguimiento con un nutricionista deportivo."
-            )
-        else:
-            return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
-        
-    elif "juvenil" in categoria:
+    if "juvenil" in categoria:
         if grasa > 15:
             return (
                 "Porcentajes > 15% de grasa corporal representa:\n"
@@ -2035,8 +2157,39 @@ def get_observacion_grasa(grasa, categoria):
                 "- Afecta parámetros hormonales y metabólicos.\n"
                 "- Recomendamos realizar un seguimiento con un nutricionista.")
         elif grasa < 7:
+            if gender == "H":
+                return (
+                    "Porcentajes menores al 7% de grasa corporal representan:\n"
+                    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                    "- Aceleración en la aparición de la fatiga.\n"
+                    "- Disminución de la eficiencia energética y del rendimiento físico.\n"
+                    "- Alteraciones en parámetros hormonales y metabólicos.\n"
+                    "- Se recomienda realizar un seguimiento con un nutricionista deportivo."
+                )
+            else:
+                return (
+                    "Porcentajes menores al 8% de grasa corporal representan:\n"
+                    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                    "- Aceleración en la aparición de la fatiga.\n"
+                    "- Disminución de la eficiencia energética y del rendimiento físico.\n"
+                    "- Alteraciones en parámetros hormonales y metabólicos.\n"
+                    "- Se recomienda realizar un seguimiento con un nutricionista deportivo."
+                )
+        else:
+            return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
+    
+    elif "cadete" in categoria:
+        if grasa > 17:
             return (
-                "Porcentajes menores al 7% de grasa corporal representan:\n"
+                "Porcentajes > 18% de grasa corporal representa:\n"
+                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                "- Acelera la aparición de fatiga.\n"
+                "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+                "- Afecta parámetros hormonales y metabólicos.\n"
+                "- Recomendamos realizar un seguimiento con un nutricionista deportivo.")
+        elif grasa < 8:
+            return (
+                "Porcentajes menores al 8% de grasa corporal representan:\n"
                 "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
                 "- Aceleración en la aparición de la fatiga.\n"
                 "- Disminución de la eficiencia energética y del rendimiento físico.\n"
@@ -2045,10 +2198,11 @@ def get_observacion_grasa(grasa, categoria):
             )
         else:
             return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
+        
     
     return ""
 
-def get_observacion_cmj(valor_cmj, categoria):
+def get_observacion_cmj(valor_cmj, categoria, gender):
     """
     Devuelve una frase interpretativa para el test de CMJ según la categoría ('Juvenil' o 'Cadete')
     y el valor de salto (en cm).
@@ -2060,40 +2214,82 @@ def get_observacion_cmj(valor_cmj, categoria):
     categoria = categoria.lower()
 
     if "juvenil" in categoria:
-        if valor_cmj > 36:
-            return (
-                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\n"
-                "El objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
-            )
-        elif 32 < valor_cmj <= 36:
-            return (
-                "Mejorar la eficiencia en la técnica de salto.\n"
-                "Necesidad de trabajo de potencia de tren inferior."
-            )
-        elif valor_cmj <= 32:
-            return (
-                "Masa muscular insuficiente.\n"
-                "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
-                "Mejorar la técnica de salto."
-            )
-
+        if gender == "H":
+            if valor_cmj > 36:
+                return (
+                    "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\n"
+                    "El objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
+                )
+            elif 32 < valor_cmj <= 36:
+                return (
+                    "Mejorar la eficiencia en la técnica de salto.\n"
+                    "Necesidad de trabajo de potencia de tren inferior."
+                )
+            elif valor_cmj <= 32:
+                return (
+                    "Masa muscular insuficiente.\n"
+                    "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
+                    "Mejorar la técnica de salto."
+                )
+        elif gender == "M":
+            if valor_cmj >= 34:
+                return (
+                    "Excelente estado de potencia de miembro inferior para el fútbol femenino"
+                    )
+            elif 24 < valor_cmj < 34:
+                return (
+                    "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\n"
+                    "El objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
+                )
+            elif 23 <= valor_cmj < 24:
+                return (
+                    "Mejorar la eficiencia en la técnica de salto.\n"
+                    "Necesidad de trabajo de potencia de tren inferior."
+                )
+            elif valor_cmj <= 22:
+                return (
+                    "Masa muscular insuficiente.\n"
+                    "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
+                    "Mejorar la técnica de salto."
+                )
     elif "cadete" in categoria:
-        if valor_cmj > 30:
-            return (
-                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento."
-            )
-        elif 26 < valor_cmj <= 30:
-            return (
-                "Mejorar la eficiencia en la técnica de salto.\n"
-                "Necesidad de trabajo de potencia de tren inferior."
-            )
-        elif valor_cmj <= 26:
-            return (
-                "Masa muscular insuficiente.\n"
-                "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
-                "Mejorar la técnica de salto."
-            )
-
+        if gender == "H":
+            if valor_cmj > 30:
+                return (
+                    "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento."
+                )
+            elif 26 < valor_cmj <= 30:
+                return (
+                    "Mejorar la eficiencia en la técnica de salto.\n"
+                    "Necesidad de trabajo de potencia de tren inferior."
+                )
+            elif valor_cmj <= 26:
+                return (
+                    "Masa muscular insuficiente.\n"
+                    "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
+                    "Mejorar la técnica de salto."
+                )
+        elif gender == "M":
+            if valor_cmj >= 31:
+                return (
+                    "Excelente estado de potencia de miembro inferior para el fútbol femenino"
+                    )
+            elif 23 <= valor_cmj <= 30:
+                return (
+                    "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento.\n"
+                    "El objetivo es mejorar la eficiencia en la técnica de salto y mantener o incrementar levemente el rendimiento."
+                )
+            elif 20 <= valor_cmj <= 22:
+                return (
+                    "Mejorar la eficiencia en la técnica de salto.\n"
+                    "Necesidad de trabajo de potencia de tren inferior."
+                )
+            elif valor_cmj <= 19:
+                return (
+                    "Masa muscular insuficiente.\n"
+                    "Necesidad de trabajo de fuerza y potencia de tren inferior.\n"
+                    "Mejorar la técnica de salto."
+                )
     return ""
 
 def get_observacion_sprint(valor_sprint, categoria):

@@ -10,8 +10,8 @@ SPRINT_CONFIG = {
         "juvenil": {
             "rango": (4.4, 6.3),
             "escala_colores": [
-                [0.0, "lightgreen"],
-                [0.35, "green"],
+                [0.0, "#7CFC00"],
+                [0.35, "#006400"],
                 [0.55, "#FFD700"],
                 [0.75, "#FFA500"],
                 [1.0, "#FF4500"]
@@ -20,8 +20,8 @@ SPRINT_CONFIG = {
         "cadete": {
             "rango": (4.6, 6.5),
             "escala_colores": [
-                [0.0, "lightgreen"],
-                [0.35, "green"],
+                [0.0, "#7CFC00"],
+                [0.35, "#006400"],
                 [0.55, "#FFD700"],
                 [0.75, "#FFA500"],
                 [1.0, "#FF4500"]
@@ -287,7 +287,7 @@ def get_sprint_graph(
             tickvals=tickvals,
             ticktext=ticktext,
             type="category" if barras else "date",
-            showticklabels=not barras
+            showticklabels=not barras and len(tickvals) > 1
         ),
         yaxis=dict(
             title=util.traducir("TIEMPO (SEG)", idioma),

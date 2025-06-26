@@ -62,6 +62,16 @@ df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos,
 df_datos_filtrado = pd.DataFrame()
 # Filtros
 ###################################################
+genero = ["Masculino", "Femenino"]
+gender_type = st.radio("Genero", genero, horizontal=True)
+
+if gender_type == "Masculino":
+    gender_type = "H"
+else:
+    gender_type = "M"
+
+df_datos_final = df_datos_final[df_datos_final["GENERO"] == gender_type]
+
 on = st.toggle("Solo Jugadores con Test Realizados")
 if on:
     df_sesiones = util.sesiones_por_test(df_data_test_final, test_cat)
@@ -70,7 +80,10 @@ if on:
 else:
     df_datos_filtrado = util.get_filters(df_datos_final)
 
+
+
 with st.expander("Configuración Avanzada"):
+
     col1, col2, col3 = st.columns([1,1,2])
     with col1:
         fecha_inicio = st.date_input(
@@ -108,8 +121,8 @@ with st.expander("Configuración Avanzada"):
     idioma = idioma_map[seleccion]
 
     #st.divider()
-    idiomas = ["Simple", "Avanzado"]
-    tipo_reporte = st.radio("Tipo Reporte", idiomas, horizontal=True)
+    type_report = ["Simple", "Avanzado"]
+    tipo_reporte = st.radio("Tipo Reporte", type_report, horizontal=True)
 
     if tipo_reporte == "Simple":
         tipo_reporte_bool = True
@@ -121,15 +134,8 @@ with st.expander("Configuración Avanzada"):
 ###################################################
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
-df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar)
-
-df_promedios.loc[(df_promedios[categorial] == "Cadete") & (df_promedios[equipol] == equipo_promedio), "DISTANCIA ACUMULADA (M)"] = float(1700)
-df_promedios.loc[(df_promedios[categorial] == "Cadete") & (df_promedios[equipol] == equipo_promedio), "ALTURA-(CM)"] = float(36.00)
-df_promedios.loc[(df_promedios[categorial] == "Cadete") & (df_promedios[equipol] == equipo_promedio), "TIEMPO 0-40M (SEG)"] = float(5.7)
-
-df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol] == equipo_promedio), "DISTANCIA ACUMULADA (M)"] = float(2100)
-df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol] == equipo_promedio), "ALTURA-(CM)"] = float(41.00)
-df_promedios.loc[(df_promedios[categorial] == "Juvenil") & (df_promedios[equipol] == equipo_promedio), "TIEMPO 0-40M (SEG)"] = float(5.1)
+df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, categorial, equipol, equipo_promedio)
+#st.dataframe(df_promedios)
 ###################################################
 
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
@@ -180,12 +186,20 @@ else:
                     st.markdown("📆 **Ultímas Mediciones**")
 
                     if categoria == "Juvenil":
-                        zona_optima_min = 9
-                        zona_optima_max = 13   
+                        if gender == "H":
+                            zona_optima_min = 8
+                            zona_optima_max = 14   
+                        elif gender == "M":
+                            zona_optima_min = 9
+                            zona_optima_max = 14
                     elif categoria == "Cadete":
-                        zona_optima_min = 10
-                        zona_optima_max = 13  
-                    
+                        if gender == "H":
+                            zona_optima_min = 8
+                            zona_optima_max = 16  
+                        elif gender == "M":
+                            zona_optima_min = 8
+                            zona_optima_max = 14  
+
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
                         act = df_anthropometrics[columns[0]].iloc[0]
@@ -210,7 +224,7 @@ else:
                         st.metric(f"Último Registro",act)
 
 
-                    observacion = util.get_observacion_grasa(gact, categoria.lower())
+                    observacion = util.get_observacion_grasa(gact, categoria.lower(), gender)
                     observacion = util.traducir(observacion, idioma)
                     
                     if(gact < 7) or (gact > 15):
@@ -299,18 +313,13 @@ else:
 
                     with col3:
                         act = df_cmj[fecha_registro].iloc[0]
-                        st.metric(f"Último Registro",act)
+                        st.metric("Último Registro", act)
 
-                    promedio_cmj = df_promedios.loc[
-                    (df_promedios[categorial] == categoria) & (df_promedios[equipol] == equipo_promedio),
-                    columns[0]].values[0] if not df_promedios.loc[
-                    (df_promedios[categorial] == categoria) & (df_promedios[equipol] == equipo_promedio),
-                    columns[0]].empty else None
-
-                    promedio_cmj = float(promedio_cmj)
+                    #st.text(gender)
+                    promedio_cmj = util.obtener_promedio_genero(df_promedios, categoria, equipo_promedio, columns[0], gender)
                     cactc = float(cactc)
-
-                    observacion = util.get_observacion_cmj(cactc, categoria)
+                    #st.text(cactc)
+                    observacion = util.get_observacion_cmj(cactc, categoria, gender)
                     observacion = util.traducir(observacion, idioma)
                     observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
                     
@@ -337,7 +346,16 @@ else:
                     cola, colb = st.columns([2.5,1])
 
                     with cola:
-                        figcmj = cmjg.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma, tipo_reporte_bool, gender, cat_label)
+                        promedios = util.obtener_promedios_metricas_genero(
+                            df_promedios=df_promedios,
+                            categoria=categoria,
+                            equipo=equipo,
+                            metricas=[columns[0].upper()],
+                            genero=gender,
+                            tipo="CMJ"
+                        )
+                        
+                        figcmj = cmjg.get_cmj_graph(df_cmj, promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma, tipo_reporte_bool, gender, cat_label)
                     with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
