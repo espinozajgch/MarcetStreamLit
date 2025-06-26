@@ -534,7 +534,7 @@ class PDF(FPDF):
     #     import os
     #     os.remove(tmpfile_path)
 
-    def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es"):
+    def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es", simple=False):
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
@@ -546,7 +546,7 @@ class PDF(FPDF):
 
         #self.cell(0, 10, "Últimas Mediciones", ln=1)
 
-        self.ln(2)
+        self.ln(1.5)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
@@ -555,7 +555,7 @@ class PDF(FPDF):
 
         # Posiciones base
         x_start = self.get_x()
-        y_start = self.get_y() - 2
+        y_start = self.get_y() - 1
 
         col_width = 60  # ajustable
 
@@ -568,12 +568,12 @@ class PDF(FPDF):
             
             self.set_text_color(0, 0, 0)
             self.cell(col_width, 6, label, align="C")
-            self.set_xy(x, y_start + 6)
+            self.set_xy(x, y_start + (3 if simple else 6))
 
             if(idioma == "ar"):
-                self.set_font("Amiri", "B", 18)
+                self.set_font("Amiri", "B", 16 if simple else 18)
             else:
-                self.set_font("Helvetica", "B", 18)
+                self.set_font("Helvetica", "B", 16 if simple else 18)
 
             self.set_text_color(0, 51, 102) # Azul oscuro
             self.cell(col_width, 10, f"{value:.2f}", align="C")

@@ -138,8 +138,10 @@ else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
     
     # Sección datos de usuario
-    df_joined_filtrado, df_jugador, categoria, equipo = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
-    #st.dataframe(test_data_filtered)
+    df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
+    
+    cat_label = "U19" if categoria.lower() == "juvenil" else "U15"
+   
     if not df_datos_filtrado.empty:
         #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
         ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
@@ -168,7 +170,7 @@ else:
                 
                 df_anthropometrics = df_joined_filtrado[[fecha_registro] + columns]
                 df_anthropometrics = df_anthropometrics.reset_index(drop=True)
-    
+                #st.dataframe(df_anthropometrics)
                 if not util.columnas_sin_datos_utiles(df_anthropometrics, [fecha_registro]):
                     
                     # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
@@ -178,10 +180,10 @@ else:
                     st.markdown("📆 **Ultímas Mediciones**")
 
                     if categoria == "Juvenil":
-                        zona_optima_min = 10
-                        zona_optima_max = 12.5   
+                        zona_optima_min = 9
+                        zona_optima_max = 13   
                     elif categoria == "Cadete":
-                        zona_optima_min = 11
+                        zona_optima_min = 10
                         zona_optima_max = 13  
                     
                     col1, col2, col3, col4 = st.columns(4)
@@ -207,8 +209,10 @@ else:
                         act = df_anthropometrics[fecha_registro].iloc[0]
                         st.metric(f"Último Registro",act)
 
-                    observacion = util.get_observacion_grasa(gact)
+
+                    observacion = util.get_observacion_grasa(gact, categoria.lower())
                     observacion = util.traducir(observacion, idioma)
+                    
                     if(gact < 7) or (gact > 15):
                         st.warning(f"{observacion}", icon="⚠️")
                     else:
@@ -219,7 +223,8 @@ else:
                     figalt = graphics.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
 
                     df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool)
+                    
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -246,7 +251,6 @@ else:
                             columns[1]: [df_anthropometrics[columns[1]].mean(), df_anthropometrics[columns[1]].max(), df_anthropometrics[columns[1]].min()],
                             columns[2]: [df_anthropometrics[columns[2]].mean(), df_anthropometrics[columns[2]].max(), df_anthropometrics[columns[2]].min()],
                         }
-
                         stats_df = pd.DataFrame(stats, index=["Promedio", "Máximo", "Mínimo"])
 
                         st.markdown("📊 **Valores máximos, mínimos y promedio**")
@@ -333,7 +337,7 @@ else:
                     cola, colb = st.columns([2.5,1])
 
                     with cola:
-                        figcmj = cmjg.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma, tipo_reporte_bool)
+                        figcmj = cmjg.get_cmj_graph(df_cmj, df_promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma, tipo_reporte_bool, gender, cat_label)
                     with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
@@ -419,10 +423,10 @@ else:
                             st.warning(observacion, icon="⚠️")
 
                     if(act05t != 0) or (act05v != 0):
-                        figsp05 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool)
+                        figsp05 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
 
                     if(act040t != 0) or (act040v != 0):
-                        figsp040 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma, tipo_reporte_bool)
+                        figsp040 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
                 
                     st.divider()
                     st.markdown("📊 **Históricos**")
@@ -482,7 +486,7 @@ else:
                     cola, colb = st.columns([2.5,1.5])
 
                     #with cola:
-                    figyoyo = yoyog.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool)
+                    figyoyo = yoyog.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label)
                     #with colb:   
                     st.markdown("📊 **Históricos**")
                     styled_df = util.aplicar_semaforo(df_yoyo)
@@ -543,7 +547,7 @@ else:
                     else:
                         st.warning(observacion, icon="⚠️")
 
-                    figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool)
+                    figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
                     st.divider()
                     
                     st.markdown("📊 **Históricos**")
@@ -598,7 +602,7 @@ else:
 
                     cola, colb = st.columns([2.5,1])
                     with cola:
-                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool)
+                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label), 
                     with colb:    
                         st.markdown("📊 **Históricos**")
                         st.dataframe(df_rsa[[fecha_registro] + [columns[0]]]) 
@@ -607,7 +611,7 @@ else:
                     colc, cold = st.columns([2.5,1])
                     with colc:
                         #st.dataframe(df_promedios)
-                        figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool)
+                        figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label)
                     with cold:    
                         st.markdown("📊 **Históricos**")
                         st.dataframe(df_rsa[[fecha_registro] + [columns[1]]]) 

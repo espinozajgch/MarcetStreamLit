@@ -1943,7 +1943,52 @@ TRADUCCIONES = {
         "ca": "DATA",
         "pt": "DATA",
         "ar": "التاريخ"
+    },
+    "Porcentajes > 15% de grasa corporal representa:\n"
+    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+    "- Acelera la aparición de fatiga.\n"
+    "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+    "- Afecta parámetros hormonales y metabólicos.\n"
+    "- Recomendamos realizar un seguimiento con un nutricionista deportivo.": {
+        "en": "Percentages > 15% of body fat represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerates onset of fatigue.\n- Decreases energy efficiency and physical performance.\n- Affects hormonal and metabolic parameters.\n- We recommend follow-up with a sports nutritionist.",
+        "it": "Percentuali > 15% di grasso corporeo rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelera la comparsa della fatica.\n- Riduce l'efficienza energetica e le prestazioni fisiche.\n- Influenza i parametri ormonali e metabolici.\n- Si consiglia un follow-up con un nutrizionista sportivo.",
+        "de": "Prozentsätze > 15% Körperfett bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigt das Auftreten von Ermüdung.\n- Verringert die Energieeffizienz und die körperliche Leistungsfähigkeit.\n- Beeinträchtigt hormonelle und metabolische Parameter.\n- Wir empfehlen eine Nachsorge mit einem Sporternährungsberater.",
+        "fr": "Des pourcentages > 15 % de masse grasse corporelle représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Accélère l'apparition de la fatigue.\n- Diminue l'efficacité énergétique et les performances physiques.\n- Affecte les paramètres hormonaux et métaboliques.\n- Nous recommandons un suivi avec un nutritionniste sportif.",
+        "ca": "Percentatges > 15% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista esportiu.",
+        "pt": "Porcentagens > 15% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista esportivo.",
+        "ar": "تشير النسب > 15٪ من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
+    },
+    "Porcentajes > 15% de grasa corporal representa:\n"
+    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+    "- Acelera la aparición de fatiga.\n"
+    "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+    "- Afecta parámetros hormonales y metabólicos.\n"
+    "- Recomendamos realizar un seguimiento con un nutricionista.": {
+        "en": "Percentages > 15% of body fat represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerates onset of fatigue.\n- Decreases energy efficiency and physical performance.\n- Affects hormonal and metabolic parameters.\n- We recommend follow-up with a nutritionist.",
+        "it": "Percentuali > 15% di grasso corporeo rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelera la comparsa della fatica.\n- Riduce l'efficienza energetica e le prestazioni fisiche.\n- Influenza i parametri ormonali e metabolici.\n- Si consiglia un follow-up con un nutrizionista.",
+        "de": "Prozentsätze > 15% Körperfett bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigt das Auftreten von Ermüdung.\n- Verringert die Energieeffizienz und die körperliche Leistungsfähigkeit.\n- Beeinträchtigt hormonelle und metabolische Parameter.\n- Wir empfehlen eine Nachsorge mit einem Sporternährungsberater.",
+        "fr": "Des pourcentages > 15 % de masse grasse corporelle représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Accélère l'apparition de la fatigue.\n- Diminue l'efficacité énergétique et les performances physiques.\n- Affecte les paramètres hormonaux et métaboliques.\n- Nous recommandons un suivi avec un nutritionniste.",
+        "ca": "Percentatges > 15% de greix corporal representa:\n- Augment de la incidència de lesions musculoesquelètiques.\n- Accelera l'aparició de fatiga.\n- Disminueix l'eficiència energètica i el rendiment físic.\n- Afecta els paràmetres hormonals i metabòlics.\n- Es recomana un seguiment amb un nutricionista.",
+        "pt": "Porcentagens > 15% de gordura corporal representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Acelera o aparecimento da fadiga.\n- Diminui a eficiência energética e o desempenho físico.\n- Afeta os parâmetros hormonais e metabólicos.\n- Recomendamos acompanhamento com um nutricionista.",
+        "ar": "تشير النسب > 15٪ من الدهون في الجسم إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع ظهور التعب.\n- انخفاض الكفاءة الطاقية والأداء البدني.\n- يؤثر على المعايير الهرمونية والتمثيل الغذائي.\n- نوصي بالمتابعة مع أخصائي تغذية رياضي."
+    },
+    "Porcentajes menores al 7% de grasa corporal representan:\n"
+    "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+    "- Aceleración en la aparición de la fatiga.\n"
+    "- Disminución de la eficiencia energética y del rendimiento físico.\n"
+    "- Alteraciones en parámetros hormonales y metabólicos.\n"
+    "- Se recomienda realizar un seguimiento con un nutricionista deportivo.": {
+        "en": "Body fat percentages below 7% represent:\n- Increase in musculoskeletal injury incidence.\n- Accelerated onset of fatigue.\n- Decrease in energy efficiency and physical performance.\n- Alterations in hormonal and metabolic parameters.\n- Follow-up with a sports nutritionist is recommended.",
+        "it": "Percentuali di grasso corporeo inferiori al 7% rappresentano:\n- Aumento dell'incidenza di lesioni muscoloscheletriche.\n- Accelerazione dell'insorgenza della fatica.\n- Riduzione dell'efficienza energetica e delle prestazioni fisiche.\n- Alterazioni nei parametri ormonali e metabolici.\n- Si raccomanda un follow-up con un nutrizionista sportivo.",
+        "de": "Körperfettanteile unter 7% bedeuten:\n- Erhöhte Häufigkeit von muskuloskelettalen Verletzungen.\n- Beschleunigter Beginn von Ermüdung.\n- Verringerte Energieeffizienz und körperliche Leistungsfähigkeit.\n- Veränderungen hormoneller und metabolischer Parameter.\n- Eine Nachsorge durch einen Sporternährungsberater wird empfohlen.",
+        "fr": "Des pourcentages de graisse corporelle inférieurs à 7 % représentent :\n- Augmentation de l'incidence des blessures musculo-squelettiques.\n- Apparition accélérée de la fatigue.\n- Diminution de l'efficacité énergétique et des performances physiques.\n- Altérations des paramètres hormonaux et métaboliques.\n- Un suivi avec un nutritionniste sportif est recommandé.",
+        "ca": "Els percentatges de greix corporal inferiors al 7% representen:\n- Augment en la incidència de lesions musculoesquelètiques.\n- Aceleració en l'aparició de fatiga.\n- Disminució de l'eficiència energètica i del rendiment físic.\n- Alteracions en paràmetres hormonals i metabòlics.\n- Es recomana fer un seguiment amb un nutricionista esportiu.",
+        "pt": "Porcentagens de gordura corporal abaixo de 7% representam:\n- Aumento na incidência de lesões musculoesqueléticas.\n- Aceleração do aparecimento da fadiga.\n- Diminuição da eficiência energética e do desempenho físico.\n- Alterações em parâmetros hormonais e metabólicos.\n- Recomenda-se acompanhamento com um nutricionista esportivo.",
+        "ar": "تشير النسب المئوية للدهون في الجسم التي تقل عن 7٪ إلى:\n- زيادة في حدوث الإصابات العضلية الهيكلية.\n- تسريع في ظهور التعب.\n- انخفاض في الكفاءة الطاقية والأداء البدني.\n- تغيرات في المعايير الهرمونية والتمثيل الغذائي.\n- يُوصى بالمتابعة مع اختصاصي تغذية رياضية."
     }
+
+
+
 
 }
 
@@ -1957,15 +2002,51 @@ def traducir_lista(palabras, idioma_destino="en"):
         palabras_traducidas.append(traduccion)
     return palabras_traducidas
 
-def get_observacion_grasa(grasa):
-    if grasa > 15:
-        return ("Grasa corporal >15%: mayor riesgo de lesiones, fatiga precoz, menor eficiencia y rendimiento físico.\n"
-                "Recomendamos seguimiento con nutricionista deportivo.\n")
-    elif grasa < 7:
-        return ("Grasa <7%: riesgo de lesiones, fatiga y desequilibrio hormonal.\n"
-                "Recomendamos seguimiento con nutricionista deportivo.")
-    else:
-        return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
+def get_observacion_grasa(grasa, categoria):
+
+    if "cadete" in categoria:
+        if grasa > 15:
+            return (
+                "Porcentajes > 15% de grasa corporal representa:\n"
+                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                "- Acelera la aparición de fatiga.\n"
+                "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+                "- Afecta parámetros hormonales y metabólicos.\n"
+                "- Recomendamos realizar un seguimiento con un nutricionista deportivo.")
+        elif grasa < 7:
+            return (
+                "Porcentajes menores al 7% de grasa corporal representan:\n"
+                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                "- Aceleración en la aparición de la fatiga.\n"
+                "- Disminución de la eficiencia energética y del rendimiento físico.\n"
+                "- Alteraciones en parámetros hormonales y metabólicos.\n"
+                "- Se recomienda realizar un seguimiento con un nutricionista deportivo."
+            )
+        else:
+            return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
+        
+    elif "juvenil" in categoria:
+        if grasa > 15:
+            return (
+                "Porcentajes > 15% de grasa corporal representa:\n"
+                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                "- Acelera la aparición de fatiga.\n"
+                "- Disminuye la eficiencia energética y el rendimiento físico.\n"
+                "- Afecta parámetros hormonales y metabólicos.\n"
+                "- Recomendamos realizar un seguimiento con un nutricionista.")
+        elif grasa < 7:
+            return (
+                "Porcentajes menores al 7% de grasa corporal representan:\n"
+                "- Aumento en la incidencia de lesiones músculoesqueléticas.\n"
+                "- Aceleración en la aparición de la fatiga.\n"
+                "- Disminución de la eficiencia energética y del rendimiento físico.\n"
+                "- Alteraciones en parámetros hormonales y metabólicos.\n"
+                "- Se recomienda realizar un seguimiento con un nutricionista deportivo."
+            )
+        else:
+            return "Tu nivel de grasa corporal está en el rango ideal para un futbolista de alto rendimiento."
+    
+    return ""
 
 def get_observacion_cmj(valor_cmj, categoria):
     """
@@ -1999,7 +2080,7 @@ def get_observacion_cmj(valor_cmj, categoria):
     elif "cadete" in categoria:
         if valor_cmj > 30:
             return (
-                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento"
+                "Tu nivel en el CMJ está dentro del rango óptimo de rendimiento."
             )
         elif 26 < valor_cmj <= 30:
             return (

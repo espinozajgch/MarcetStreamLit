@@ -97,7 +97,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
         #pdf.section_title("COMPOSICIÓN CORPORAL")
         pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
-        pdf.ln(5)
+        pdf.ln(2)
     # Inicializar contador de gráficos y sección actual
     contador_graficos = 0
     primer_grafico_insertado = False
@@ -217,7 +217,7 @@ def generate_pdf_simple(
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
         pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
-        pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
+        pdf.add_last_measurements(altura, peso, grasa, idioma=idioma, simple=True)
 
     graficos = []
     if figs_dict.get("Peso y Grasa"):
@@ -260,7 +260,7 @@ def generate_pdf_simple(
         # Observaciones inmediatamente debajo
         y_obs = pdf.get_y() + 52
         obs_width = 92
-        obs_height_max = 7
+        obs_height_max = 10
         obs_line_height = 3
 
         for col in range(2):

@@ -5,6 +5,73 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
+SPRINT_CONFIG = {
+    "H": {
+        "juvenil": {
+            "rango": (4.4, 6.3),
+            "escala_colores": [
+                [0.0, "lightgreen"],
+                [0.35, "green"],
+                [0.55, "#FFD700"],
+                [0.75, "#FFA500"],
+                [1.0, "#FF4500"]
+            ]
+        },
+        "cadete": {
+            "rango": (4.6, 6.5),
+            "escala_colores": [
+                [0.0, "lightgreen"],
+                [0.35, "green"],
+                [0.55, "#FFD700"],
+                [0.75, "#FFA500"],
+                [1.0, "#FF4500"]
+            ]
+        }
+    },
+    "M": {
+        "juvenil": {
+            "rango": (4.4, 6.3),
+            "escala_colores": [
+                [0.0, "lightgreen"],
+                [0.35, "green"],
+                [0.55, "#FFD700"],
+                [0.75, "#FFA500"],
+                [1.0, "#FF4500"]
+            ]
+        },
+        "cadete": {
+            "rango": (4.6, 6.5),
+            "escala_colores": [
+                [0.0, "lightgreen"],
+                [0.35, "green"],
+                [0.55, "#FFD700"],
+                [0.75, "#FFA500"],
+                [1.0, "#FF4500"]
+            ]
+        }
+    }
+}
+
+
+
+def get_rango_sprint(categoria: str, genero: str = "H") -> tuple:
+    """
+    Retorna el rango (mínimo, máximo) para sprint en función de género y categoría.
+    """
+    genero = genero.upper()
+    categoria = categoria.lower()
+    return SPRINT_CONFIG.get(genero, {}).get(categoria, {}).get("rango", (4.4, 6.3))
+
+def get_escala_colores_sprint(categoria: str, genero: str = "H") -> list:
+    """
+    Retorna la escala de colores para el sprint según género y categoría.
+    """
+    genero = genero.upper()
+    categoria = categoria.lower()
+    return SPRINT_CONFIG.get(genero, {}).get(categoria, {}).get("escala_colores", [
+        [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
+    ])
+
 def get_sprint_graph(
     df_sprint,
     df_promedios,
@@ -14,7 +81,9 @@ def get_sprint_graph(
     metrica_velocidad,
     columnas_fecha_registro,
     idioma="es",
-    barras=False
+    barras=False,
+    cat_label="U19",
+    gender="H"
 ):
     df = df_sprint.copy()
     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors='coerce')
@@ -102,11 +171,20 @@ def get_sprint_graph(
         tiempo_max = df_metric_time[metrica_tiempo].max()
 
         # Rango por categoría
-        rango_categoria = {
-            "Juvenil": (4.4, 6.3),
-            "Cadete": (4.6, 6.5)
-        }
-        base_min, base_max = rango_categoria.get(categoria.capitalize(), (4.4, 6.3))
+        base_min, base_max = get_rango_sprint(categoria, gender)
+        escala_colores = get_escala_colores_sprint(categoria, gender)
+
+        # rango_categoria = {
+        #     "Juvenil": (4.4, 6.3),
+        #     "Cadete": (4.6, 6.5)
+        # }
+        # base_min, base_max = rango_categoria.get(categoria.capitalize(), (4.4, 6.3))
+        
+        # escala_colores = [
+        #     [0.0, "lightgreen"], [0.35, "green"], [0.55, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
+        # ] if categoria.lower() in ["juvenil", "cadete"] else [
+        #     [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
+        # ]
 
         y_min = min(base_min, tiempo_min)
         y_max = max(base_max, tiempo_max)
@@ -114,11 +192,7 @@ def get_sprint_graph(
         y_min -= margen
         y_max += margen
 
-        escala_colores = [
-            [0.0, "lightgreen"], [0.35, "green"], [0.55, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
-        ] if categoria.lower() in ["juvenil", "cadete"] else [
-            [0.0, "lightgreen"], [0.25, "green"], [0.5, "yellow"], [0.75, "orange"], [1.0, "red"]
-        ]
+
 
         #if barras:
         size = 20 if df_metric_time[metrica_tiempo].notna().sum() == 1 else 14
@@ -140,23 +214,6 @@ def get_sprint_graph(
             textfont=dict(size=size),
             hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
         ))
-        # else:
-        #     fig.add_trace(go.Scatter(
-        #         x=df_metric_time[columna_x],
-        #         y=df_metric_time[metrica_tiempo],
-        #         mode="markers+lines",
-        #         name=util.traducir(metrica_tiempo, idioma),
-        #         marker=dict(
-        #             size=10,
-        #             color=df_metric_time[metrica_tiempo],
-        #             colorscale=escala_colores,
-        #             cmin=y_min,
-        #             cmax=y_max
-        #         ),
-        #         line=dict(color="gray", width=2),
-        #         yaxis="y1",
-        #         hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
-        #     ))
 
         if not barras and len(df_metric_time) > 1:
             fila_min = df_metric_time[df_metric_time[metrica_tiempo] == df_metric_time[metrica_tiempo].min()].iloc[0]
@@ -186,7 +243,7 @@ def get_sprint_graph(
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{util.traducir('TIEMPO OPTIMO', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
+                name=f"{util.traducir('TIEMPO OPTIMO', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
                 line=dict(color=color_promedio, dash="dash", width=2),
                 showlegend=True
             ))

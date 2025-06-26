@@ -5,7 +5,31 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_agilidad_colorbar_agregada(fig, y_min, y_max):
+ESCALAS_COLOR_SPRINT = {
+    "H": [
+        [0.0, "#A8E6A1"],   # Verde claro
+        [0.45, "#4CAF50"],  # Verde medio
+        [0.6, "#FFEB3B"],   # Amarillo
+        [0.75, "#FFA500"],  # Naranja
+        [1.0, "#F44336"]    # Rojo
+    ],
+    "M": [
+        [0.0, "#A8E6A1"],
+        [0.45, "#4CAF50"],
+        [0.6, "#FFEB3B"],
+        [0.75, "#FFA500"],
+        [1.0, "#F44336"]
+    ]
+}
+
+def get_escala_color_sprint_genero(genero: str) -> list:
+    """
+    Retorna la escala de colores de sprint según el género.
+    """
+    return ESCALAS_COLOR_SPRINT.get(genero.upper(), ESCALAS_COLOR_SPRINT["H"])
+
+
+def get_agilidad_colorbar_agregada(fig, y_min, y_max, gender):
     fig.add_trace(go.Scatter(
         x=[None],
         y=[None],
@@ -15,13 +39,7 @@ def get_agilidad_colorbar_agregada(fig, y_min, y_max):
             color=[10],
             cmin=0,
             cmax=12,
-            colorscale=[
-                [0.0, "#A8E6A1"],
-                [0.45, "#4CAF50"],
-                [0.6, "#FFEB3B"],
-                [0.75, "#FFA500"],
-                [1.0, "#F44336"]
-            ],
+            colorscale=get_escala_color_sprint_genero(gender),
             colorbar=dict(
                 title=dict(text="DIF %"),
                 #orientation="v",
@@ -44,7 +62,6 @@ def get_agilidad_colorbar_agregada(fig, y_min, y_max):
     ))
     return fig
 
-
 def calcular_color_diferencia_agilidad(diferencia):
     if diferencia < 5:
         return "#A8E6A1"  # Verde Manzana
@@ -57,8 +74,7 @@ def calcular_color_diferencia_agilidad(diferencia):
     else:
         return "#F44336"  # Rojo
 
-
-def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es", barras=False):
+def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es", barras=False, cat_label="U19", gender="H"):
 
     df = pd.DataFrame(df_agility)
     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors="coerce")
@@ -152,18 +168,18 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         fecha = row[columna_x]
         dom = row.get(metricas[0], None)
         nd = row.get(metricas[1], None)
-        sizet = 20 if len(df) == 1 else 14
-        sizec = 50 if len(df) == 1 else 20
+        sizet = 20 if len(df) == 1 else 13
+        sizec = 55 if len(df) == 1 else 40
 
         if pd.notna(dom) and pd.notna(nd) and nd != 0:
             
-            diferencia = ((dom - nd) / nd) * 100
+            diferencia = (abs(dom - nd) / nd) * 100
             color = calcular_color_diferencia_agilidad(diferencia)
 
             if 0 <= diferencia <= 10:
                 y_pos = ymin + (diferencia / 12) * (ymax - ymin)
             else:
-                y_pos = ((ymin + ymax) / 2)
+                y_pos = 3.5
 
             fig.add_trace(go.Scatter(
                 x=[fecha],
@@ -209,7 +225,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
     )
 
     # Añadir barra lateral de colores
-    fig = get_agilidad_colorbar_agregada(fig, ymin, ymax)
+    fig = get_agilidad_colorbar_agregada(fig, ymin, ymax, gender)
 
     st.plotly_chart(fig, use_container_width=True)
     return fig
@@ -417,7 +433,7 @@ def get_diferencia_agilidad(df_agility, metricas, columna_fecha):
         fecha = row.get(columna_fecha)
 
         if pd.notna(dom) and pd.notna(nd) and nd != 0:
-            diferencia = ((dom - nd) / nd) * 100
+            diferencia = (abs(dom - nd) / nd) * 100
             diferencias.append({
                 "fecha": fecha,
                 "diferencia_%": round(diferencia, 2)

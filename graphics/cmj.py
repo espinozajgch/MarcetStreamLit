@@ -5,7 +5,96 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False):
+CMJ_SEMAFORO = {
+    "H": {
+        "cadete": [
+            (15, "#FF0000"),
+            (25, "#FF0000"),
+            (27, "#FFA500"),
+            (30, "#FFFF00"),
+            (33, "#006400"),
+            (35, "#7CFC00"),
+            (50, "#7CFC00")
+        ],
+        "juvenil": [
+            (15, "#FF0000"),
+            (31, "#FF0000"),
+            (33, "#FFA500"),
+            (35, "#FFFF00"),
+            (39, "#006400"),
+            (41, "#7CFC00"),
+            (50, "#7CFC00")
+        ]
+    },
+    "M": {
+        "cadete": [
+            (15, "#FF0000"),
+            (25, "#FF0000"),
+            (27, "#FFA500"),
+            (30, "#FFFF00"),
+            (33, "#006400"),
+            (35, "#7CFC00"),
+            (50, "#7CFC00")
+        ],
+        "juvenil": [
+            (15, "#FF0000"),
+            (31, "#FF0000"),
+            (33, "#FFA500"),
+            (35, "#FFFF00"),
+            (39, "#006400"),
+            (41, "#7CFC00"),
+            (50, "#7CFC00")
+        ]
+    }
+}
+
+def get_cmj_color_scale(genero, categoria):
+    return CMJ_SEMAFORO.get(genero.upper(), {}).get(categoria.lower(), [])
+
+def asignar_color_cmj(valor, genero, categoria):
+    if pd.isna(valor):
+        return "gray"
+    escala = get_cmj_color_scale(genero, categoria)
+    for umbral, color in escala:
+        if valor < umbral:
+            return color
+    return escala[-1][1] if escala else "gray"
+
+def get_color_scale(genero, categoria, cmin, cmax):
+    genero = genero.upper()
+    categoria = categoria.lower()
+    semaforo = get_cmj_color_scale(genero, categoria)
+
+    def norm(v):
+        return max(0, min(1, round((v - cmin) / (cmax - cmin), 4)))
+
+    escala = []
+    for umbral, color in semaforo:
+        escala.append([norm(umbral), color])
+    if escala[-1][0] < 1:
+        escala.append([1, semaforo[-1][1]])
+    return escala
+
+
+# def obtener_colorscale_cmj(genero, categoria, cmin, cmax):
+#     escala = get_cmj_color_scale(genero, categoria)
+#     if not escala:
+#         return []
+#     def norm(v):
+#         return max(0, min(1, round((v - cmin) / (cmax - cmin), 4)))
+#     return [[norm(umbral), color] for umbral, color in escala]
+
+def calcular_rango_cmj(valores, escala):
+    if not escala:
+        return min(valores), max(valores)
+    umbrales = [umbral for umbral, _ in escala]
+    minimo = min(15, min(umbrales)) - 1
+    maximo = max(50, max(umbrales)) + 1
+    if maximo - minimo < 10:
+        maximo = minimo + 10
+    return minimo, maximo
+
+def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False, gender="H", cat_label="U19"):
     df = pd.DataFrame(df_cmj)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
     df = df.sort_values(by=columna_fecha_registro)
@@ -55,46 +144,12 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
     tickvals = df["FECHA TEXTO"].unique().tolist() if barras else fechas_unicas
     ticktext = tickvals if barras else fechas_unicas.dt.strftime(formato_fecha)
 
-    es_cadete = "cadete" in categoria.lower()
-
     for metrica in metricas:
         df_filtro = df_melted[df_melted["MÉTRICA"] == metrica]
         x_vals = df_filtro[columna_x].tolist()
         y_vals = df_filtro["VALOR"].tolist()
 
-        colores_puntos = []
-
-        for valor in y_vals:
-            if pd.isna(valor):
-                colores_puntos.append("gray")
-                continue
-
-            if es_cadete:
-                if valor > 33:
-                    colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 30 <= valor <= 33:
-                    colores_puntos.append("#006400")  # Verde Oscuro
-                elif 27 <= valor < 30:
-                    colores_puntos.append("#FFFF00")  # Amarillo
-                elif 25 <= valor < 27:
-                    colores_puntos.append("#FFA500")  # Naranja
-                elif valor < 25:
-                    colores_puntos.append("#FF0000")  # Rojo
-                else:
-                    colores_puntos.append("gray")
-            else:  # Juvenil
-                if valor > 39:
-                    colores_puntos.append("#7CFC00")  # Verde Manzana
-                elif 35 <= valor <= 38:
-                    colores_puntos.append("#006400")  # Verde Oscuro
-                elif 33 <= valor < 35:
-                    colores_puntos.append("#FFFF00")  # Amarillo
-                elif 31 <= valor < 33:
-                    colores_puntos.append("#FFA500")  # Naranja
-                elif valor < 31:
-                    colores_puntos.append("#FF0000")  # Rojo
-                else:
-                    colores_puntos.append("gray")
+        colores_puntos = [asignar_color_cmj(v, gender, categoria) for v in y_vals]
 
         if barras or len(y_vals) == 1:
             ancho_barra = 0.2 if len(x_vals) == 1 else 0.3
@@ -158,37 +213,12 @@ def get_cmj_graph(df_cmj, df_promedios_cmj, categoria, equipo, metricas, columna
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('ALTURA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} {equipo})".upper(),
+            name=f"{util.traducir('ALTURA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
     # --- Colorbar lateral según categoría ---
-    if es_cadete:
-        colorscale = [
-            [(15 - cmin) / (cmax - cmin), "#FF0000"],
-            [(24 - cmin) / (cmax - cmin), "#FF0000"],
-            [(25 - cmin) / (cmax - cmin), "#FFA500"],
-            [(26 - cmin) / (cmax - cmin), "#FFA500"],
-            [(27 - cmin) / (cmax - cmin), "#FFFF00"],
-            [(29 - cmin) / (cmax - cmin), "#FFFF00"],
-            [(30 - cmin) / (cmax - cmin), "#006400"],
-            [(32 - cmin) / (cmax - cmin), "#006400"],
-            [(33 - cmin) / (cmax - cmin), "#7CFC00"],
-            [(50 - cmin) / (cmax - cmin), "#7CFC00"]
-        ]
-    else:
-        colorscale = [
-            [(15 - cmin) / (cmax - cmin), "#FF0000"],
-            [(30 - cmin) / (cmax - cmin), "#FF0000"],
-            [(31 - cmin) / (cmax - cmin), "#FFA500"],
-            [(32 - cmin) / (cmax - cmin), "#FFA500"],
-            [(33 - cmin) / (cmax - cmin), "#FFFF00"],
-            [(34 - cmin) / (cmax - cmin), "#FFFF00"],
-            [(35 - cmin) / (cmax - cmin), "#006400"],
-            [(38 - cmin) / (cmax - cmin), "#006400"],
-            [(39 - cmin) / (cmax - cmin), "#7CFC00"],
-            [(50 - cmin) / (cmax - cmin), "#7CFC00"]
-        ]
+    colorscale = get_color_scale(gender, categoria, cmin, cmax)
 
     fig.add_trace(go.Scatter(
         x=[None], y=[None],

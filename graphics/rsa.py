@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False):
+def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False, cat_label="U19"):
     df = pd.DataFrame(df_rsa)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y")
     df = df.sort_values(by=columna_fecha_registro)
@@ -119,7 +119,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
         fig_tiempo.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{tl} ({promedio} {categoria} {equipo})".upper(),
+            name=f"{tl} ({promedio} {cat_label})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
@@ -208,7 +208,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     st.plotly_chart(fig_tiempo, use_container_width=True)
     return fig_tiempo
 
-def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, fecha_registro, idioma="es", barras=False):
+def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, fecha_registro, idioma="es", barras=False, cat_label="U19"):
     df = df_rsa.copy()
     df[fecha_registro] = pd.to_datetime(df[fecha_registro], format="%d/%m/%Y", errors="coerce")
     df = df.sort_values(by=fecha_registro)
@@ -309,7 +309,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{vl} ({promedio} {categoria_trad} {equipo})".upper(),
+            name=f"{vl} ({promedio} {cat_label})".upper(),
             line=dict(color=color_promedio, dash="dash")
         ))
 

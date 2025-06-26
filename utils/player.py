@@ -135,4 +135,4 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
     else:
         st.warning("⚠️ No se encontró ningún ID válido en los datos filtrados.")
 
-    return df_joined_filtrado, df_jugador, categoria, equipo
+    return df_joined_filtrado, df_jugador, categoria, equipo, genero

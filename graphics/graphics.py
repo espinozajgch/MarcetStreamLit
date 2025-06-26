@@ -6,79 +6,98 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
+
 # Define rangos y colores semáforo por género
 SEMAFORO_GRASA = {
-    "H": [
-        (3, "#FF0000"),   # Rojo
-        (6, "#FFA500"),   # Naranja
-        (7, "#FFFF00"),   # Amarillo
-        (8, "#006400"),   # Verde oscuro
-        (10, "#7CFC00"),  # Verde claro
-        (14, "#006400"),
-        (15, "#FFFF00"),
-        (18, "#FFA500"),
-        (20, "#FF0000"),
-        (25, "#FF0000")
-    ],
-    "M": [
-        (3, "#FF0000"),
-        (6, "#FFA500"),
-        (7, "#FFFF00"),
-        (8, "#006400"),
-        (10, "#7CFC00"),
-        (14, "#006400"),
-        (15, "#FFFF00"),
-        (18, "#FFA500"),
-        (20, "#FF0000"),
-        (25, "#FF0000")
-    ]
+    "H": {
+        "cadete": [
+            (3, "#FF0000"),
+            (6, "#FFA500"),
+            (7, "#FFFF00"),
+            (8, "#006400"),
+            (9, "#7CFC00"),
+            (14, "#006400"),
+            (16, "#FFFF00"),
+            (17, "#FFA500"),
+            (19, "#FF0000"),
+            (22, "#FF0000"),
+            (25, "#FF0000")
+        ],
+        "juvenil": [
+            (3, "#FF0000"),
+            (6, "#FFA500"),
+            (7, "#FFFF00"),
+            (8, "#006400"),
+            (10, "#7CFC00"),
+            (14, "#006400"),
+            (15, "#FFFF00"),
+            (17, "#FFA500"),
+            (18, "#FF0000"),
+            (22, "#FF0000"),
+            (25, "#FF0000")
+        ]
+    },
+    "M": {
+        "cadete": [
+            (3, "#FF0000"),
+            (6, "#FFA500"),
+            (7, "#FFFF00"),
+            (8, "#006400"),
+            (9, "#7CFC00"),
+            (14, "#006400"),
+            (16, "#FFFF00"),
+            (17, "#FFA500"),
+            (19, "#FF0000"),
+            (22, "#FF0000"),
+            (25, "#FF0000")
+        ],
+        "juvenil": [
+            (3, "#FF0000"),
+            (6, "#FFA500"),
+            (7, "#FFFF00"),
+            (8, "#006400"),
+            (10, "#7CFC00"),
+            (14, "#006400"),
+            (15, "#FFFF00"),
+            (17, "#FFA500"),
+            (18, "#FF0000"),
+            (22, "#FF0000"),
+            (25, "#FF0000")
+        ]
+    },
 }
 
-def get_range(gender):
-    return SEMAFORO_GRASA.get(gender.upper(), SEMAFORO_GRASA["H"])
+def get_range(genero, categoria):
+    return SEMAFORO_GRASA.get(genero.upper(), {}).get(categoria.lower(), [])
 
-def get_color_scale(cmin, cmax, rango_color):
-    def norm(valor):
-        return round((valor - cmin) / (cmax - cmin), 4)
-    
-    scale = []
-    for valor, color in rango_color:
-        escala_norm = norm(valor)
-        if 0 <= escala_norm <= 1:
-            scale.append([escala_norm, color])
-        elif escala_norm < 0:
-            scale.append([0, color])
-        elif escala_norm > 1:
-            scale.append([1, color])
-    
-    # Asegura el 100% del rango para evitar barras incompletas
-    if scale[-1][0] < 1:
-        scale.append([1, scale[-1][1]])
-    return scale
+def get_color_scale(genero, categoria, cmin, cmax):
+    genero = genero.upper()
+    categoria = categoria.lower()
+    semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
+
+    def norm(v):
+        return max(0, min(1, round((v - cmin) / (cmax - cmin), 4)))
+
+    escala = []
+    for umbral, color in semaforo:
+        escala.append([norm(umbral), color])
+    if escala[-1][0] < 1:
+        escala.append([1, semaforo[-1][1]])
+    return escala
+
+
 
 def calcular_rango_visual(df_grasa, rango_color, margen=1, rango_minimo=5):
-    """
-    Calcula cmin y cmax ajustados automáticamente según los valores reales y el semáforo.
-    
-    Args:
-        df_grasa: Serie de datos de grasa (%)
-        rango_color: Lista de tuplas [(valor, color)]
-        margen: Margen extra para cubrir valores extremos.
-        rango_minimo: Diferencia mínima entre cmin y cmax para visualización correcta.
-    Returns:
-        cmin, cmax
-    """
     grasa_min = df_grasa.min()
     grasa_max = df_grasa.max()
 
-    semaforo_min = min(valor for valor, _ in rango_color)
-    semaforo_max = max(valor for valor, _ in rango_color)
+    semaforo_vals = [umbral for umbral, _ in rango_color]
+    semaforo_min = min(semaforo_vals)
+    semaforo_max = max(semaforo_vals)
 
-    # Ajustar con margen si los datos reales superan los rangos definidos
     cmin = min(grasa_min - margen, semaforo_min)
     cmax = max(grasa_max + margen, semaforo_max)
 
-    # Asegurar un rango mínimo visible
     if cmax - cmin < rango_minimo:
         delta = (rango_minimo - (cmax - cmin)) / 2
         cmin -= delta
@@ -86,19 +105,21 @@ def calcular_rango_visual(df_grasa, rango_color, margen=1, rango_minimo=5):
 
     return round(cmin, 2), round(cmax, 2)
 
-def asignar_color_grasa(valor, rango_color):
+def asignar_color_grasa(valor, genero, categoria):
     if pd.isna(valor):
         return "gray"
     
-    for i in range(len(rango_color) - 1):
-        v_min, color = rango_color[i]
-        v_max, _ = rango_color[i + 1]
-        if v_min <= valor < v_max:
+    genero = genero.upper()
+    categoria = categoria.lower()
+    semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
+    
+    for umbral, color in semaforo:
+        if valor < umbral:
             return color
-    # Si supera el último rango
-    return rango_color[-1][1]
+    return semaforo[-1][1]  # último color si supera el mayor umbral
 
-def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es", barras=False):
+
+def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona_optima_max, idioma="es", barras=False, gender="H", cat_label="U19"):
     df = pd.DataFrame(df_antropometria)
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
     df = df.sort_values(by="FECHA REGISTRO")
@@ -116,12 +137,12 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         tickvals = df_fechas_unicas
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
-    gender = "H"
-    rango_color = get_range(gender)
+    rango_color = get_range(gender, categoria)
     cmin, cmax = calcular_rango_visual(df["GRASA (%)"], rango_color)
-    colorscale = get_color_scale(cmin, cmax, rango_color)
-
-    #st.text(min(1,(28 - cmin)/(cmax - cmin)))
+    #colores_puntos = df["GRASA (%)"].apply(lambda x: asignar_color_grasa(x, gender, categoria))
+    colorscale = get_color_scale(gender, categoria, cmin, cmax)
+    
+    #st.text(gender)
     color_lineas = {
         "PESO (KG)": "#2989d2",
         "GRASA (%)": "#12527c"
@@ -158,7 +179,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     if "GRASA (%)" in df.columns:
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
-        colores_puntos = y_vals.apply(lambda x: asignar_color_grasa(x, rango_color))
+        colores_puntos = y_vals.apply(lambda x: asignar_color_grasa(x, gender, categoria))
 
         if barras or len(y_vals) == 1:
             #st.text(x_vals)
@@ -233,7 +254,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{util.traducir('ZONA OPTIMA %', idioma)} ({util.traducir('PROMEDIO', idioma)} {util.traducir(categoria.upper(), idioma)} A)".upper(),
+                name=f"{util.traducir('ZONA OPTIMA %', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
@@ -299,6 +320,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     st.plotly_chart(fig, use_container_width=True)
     return fig
+
 
 def generar_tabla_imc_personalizada(categoria_jugador, path="tabla_imc_personalizada.png"):
     rangos = ["MENOR A 18.49", "18.50 A 24.99", "25 A 29.99", "30 A 34.99", "35 A 39.99", "MAYOR A 40"]

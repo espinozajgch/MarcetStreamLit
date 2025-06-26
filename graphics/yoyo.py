@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
 
-def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro, idioma="es", barras=False):
+def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro, idioma="es", barras=False, cat_label="U19"):
     df = pd.DataFrame(df_yoyo)
     df[columna_fecha_registro] = pd.to_datetime(df[columna_fecha_registro], format="%d/%m/%Y", errors='coerce')
     df = df[[columna_fecha_registro, metrica]].dropna().sort_values(columna_fecha_registro)
@@ -101,7 +101,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('DISTANCIA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {categoria} {equipo})".upper(),
+            name=f"{util.traducir('DISTANCIA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
