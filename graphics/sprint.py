@@ -30,23 +30,23 @@ SPRINT_CONFIG = {
     },
     "M": {
         "juvenil": {
-            "rango": (4.4, 6.3),
+            "rango": (5.5, 7.0),
             "escala_colores": [
-                [0.0, "#7CFC00"],
-                [0.35, "#006400"],
-                [0.55, "#FFD700"],
-                [0.75, "#FFA500"],
-                [1.0, "#FF4500"]
+                [0.0, "#7CFC00"],   # Verde Manzana
+                [0.53, "#006400"],  # Verde Oscuro (6.3 → (6.3-5.5)/1.5 ≈ 0.53)
+                [0.6, "#FFD700"],   # Amarillo (6.4)
+                [0.67, "#FFA500"],  # Naranja (6.5)
+                [1.0, "#FF4500"]    # Rojo (>7)
             ]
         },
         "cadete": {
-            "rango": (4.6, 6.5),
+            "rango": (6.0, 7.0),
             "escala_colores": [
-                [0.0, "#7CFC00"],
-                [0.35, "#006400"],
-                [0.55, "#FFD700"],
-                [0.75, "#FFA500"],
-                [1.0, "#FF4500"]
+                [0.0, "#7CFC00"],   # Verde Manzana
+                [0.5, "#006400"],   # Verde Oscuro
+                [0.6, "#FFD700"],   # Amarillo
+                [0.7, "#FFA500"],   # Naranja
+                [1.0, "#FF4500"]    # Rojo
             ]
         }
     }
@@ -74,7 +74,7 @@ def get_escala_colores_sprint(categoria: str, genero: str = "H") -> list:
 
 def get_sprint_graph(
     df_sprint,
-    df_promedios,
+    promedio_row,
     categoria,
     equipo,
     metrica_tiempo,
@@ -154,11 +154,9 @@ def get_sprint_graph(
             )
 
     # === TIEMPO ===
-    promedio_row = df_promedios[
-        (df_promedios["CATEGORIA"] == categoria) &
-        (df_promedios["EQUIPO"] == equipo)
-    ]
-    prom_tiempo = promedio_row[metrica_tiempo].values[0] if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None
+    prom_tiempo = promedio_row.get(metrica_tiempo, None)
+    #prom_tiempo = (promedio_row[metrica_tiempo].values[0]if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None)
+    #prom_tiempo = promedio_row[metrica_tiempo].values[0] if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None
     prom_tiempo = prom_tiempo if pd.notna(prom_tiempo) else None
 
     cols_time = [columnas_fecha_registro, metrica_tiempo]

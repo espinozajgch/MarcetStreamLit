@@ -93,6 +93,19 @@ def generarLogin(conn):
         
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
+            st.markdown("""
+                <style>
+                    [data-testid="stSidebar"] {
+                        display: none;
+                        visibility: hidden;
+                    },
+                    [data-testid="st-emotion-cache-169dgwr edtmxes15"] {
+                        display: none;
+                        visibility: hidden;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
             with st.form('frmLogin'):
                 parUsuario = st.text_input('Usuario')
                 parPassword = st.text_input('Password', type='password')

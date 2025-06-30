@@ -1145,8 +1145,8 @@ def calcular_promedios_filtrados(df, columnas_a_verificar, categorial, equipol, 
 
     # --- Valores manuales para Mujeres (si no existen) ---
     condiciones_m = {
-        "Cadete": {"DISTANCIA ACUMULADA (M)": 1400, "ALTURA-(CM)": 23.00, "TIEMPO 0-40M (SEG)": 5.7},
-        "Juvenil": {"DISTANCIA ACUMULADA (M)": 1900, "ALTURA-(CM)": 25.00, "TIEMPO 0-40M (SEG)": 5.2},
+        "Cadete": {"DISTANCIA ACUMULADA (M)": 1400, "ALTURA-(CM)": 23.00, "TIEMPO 0-40M (SEG)": 6.4},
+        "Juvenil": {"DISTANCIA ACUMULADA (M)": 1900, "ALTURA-(CM)": 25.00, "TIEMPO 0-40M (SEG)": 6.2},
     }
 
     for categoria_val, valores in condiciones_m.items():

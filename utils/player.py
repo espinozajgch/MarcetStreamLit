@@ -89,6 +89,7 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
 
         with col1:
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
+            profile_image = "female" if genero == "M" else "male"
             #url_directa = convert_drive_url(url_drive)
             
             if url_drive is not None and url_drive != "No Disponible":
@@ -100,10 +101,10 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
                     #st.image(response.content, width=150)
                 else:
                     #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
-                    st.image("assets/images/profile.png", width=180)
+                    st.image(f"assets/images/{profile_image}.png", width=180)
             else:
                     #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
-                    st.image("assets/images/profile.png", width=180)
+                    st.image(f"assets/images/{profile_image}.png", width=180)
         with col2:
 
             if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):

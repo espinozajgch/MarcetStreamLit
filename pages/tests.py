@@ -41,7 +41,6 @@ player_data_filtered = player_data_filtered.reset_index(drop=True)
 	
 #st.dataframe(player_data_filtered)
 
-
 col1, col2, col3 = st.columns([1,1,2])
 with col1:
 	fecha_inicio = st.date_input(
@@ -86,6 +85,7 @@ elif fecha_fin > fecha_inicio:
 	
 	if not test_data_filtered.empty:
 		df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas)
+		df_nuevo.drop(columns=["anio", "mes"], inplace=True)
 	else:
 		st.warning("⚠️ No existen datos de pruebas fisicas para el periodo seleccionado.")
 		st.stop()
@@ -95,13 +95,20 @@ elif fecha_fin > fecha_inicio:
 elif fecha_inicio == fecha_fin:
 	fecha_formateada = fecha_inicio.strftime("%d/%m/%Y")
 	test_data_filtered = test_data[test_data["FECHA REGISTRO"] == fecha_formateada]
-	test_data_filtered = test_data_filtered[test_data_filtered["ID"].isin(player_data_filtered["ID"])]
+
+	#st.dataframe(test_data_filtered)
+
+	test_data_filtered = test_data_filtered.merge(
+    player_data_filtered[["JUGADOR", "CATEGORIA", "EQUIPO"]],on=["JUGADOR", "CATEGORIA", "EQUIPO"],how="inner")
+
+	#test_data_filtered = test_data_filtered[test_data_filtered["ID"].isin(player_data_filtered["ID"])]
 	#test_data_filtered = util.filtrar_por_rango_fechas(test_data, "FECHA REGISTRO", fecha_inicio, fecha_fin)
 	
 	#if test_data_filtered.empty:
 	#	st.text("fechas iguales")
 	df_nuevo = util.get_new(player_data_filtered, test_data_filtered, columnas_usadas, fecha_formateada)
-		
+	df_nuevo.drop(columns=["anio", "mes"], inplace=True)
+	
 
 columnas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO']
 if len(metricas) > 0:

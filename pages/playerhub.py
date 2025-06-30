@@ -133,6 +133,7 @@ with st.expander("Configuración Avanzada"):
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
 df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, categorial, equipol, equipo_promedio)
 #st.dataframe(df_promedios)
+
 ###################################################
 
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
@@ -436,11 +437,23 @@ else:
                         else:
                             st.warning(observacion, icon="⚠️")
 
+
+                    promedios_sprint = util.obtener_promedios_metricas_genero(
+                            df_promedios=df_promedios,
+                            categoria=categoria,
+                            equipo=equipo,
+                            metricas=[columns[2].upper()],
+                            genero=gender,
+                            tipo="SPRINT 0-40m"
+                        )
+                    
+                    #st.dataframe(promedios_sprint)
+
                     if(act05t != 0) or (act05v != 0):
-                        figsp05 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        figsp05 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
 
                     if(act040t != 0) or (act040v != 0):
-                        figsp040 = sprintg.get_sprint_graph(df_sprint, df_promedios, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        figsp040 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
                 
                     st.divider()
                     st.markdown("📊 **Históricos**")
