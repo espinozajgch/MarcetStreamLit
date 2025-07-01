@@ -103,7 +103,7 @@ with st.expander("Configuración Avanzada"):
     test_data_filtered = util.filtrar_por_rango_fechas(df_data_test_final, fecha_registro, fecha_inicio, fecha_fin)
 
     #st.divider()
-    idiomas = ["Español", "Inglés", "Francés", "Italiano", "Alemán", "Catalán", "Portugues", "Arabe"]
+    idiomas = ["Español", "Inglés", "Francés", "Italiano", "Alemán", "Catalán", "Portugues"]
     idioma_map = {
         "Español": "es",
         "Inglés": "en",
@@ -112,7 +112,7 @@ with st.expander("Configuración Avanzada"):
         "Alemán": "de",
         "Catalán": "ca",
         "Portugues": "pt",
-        "Arabe": "ar"
+        #"Arabe": "ar"
     }
 
     seleccion = st.radio("Selecciona un idioma:", idiomas, horizontal=True)
@@ -543,7 +543,8 @@ else:
                 if not todos_ceros:
                     
                     df_agilty = df_agilty[~(df_agilty[columns] == 0).any(axis=1)]
-                    diferencia = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
+                    diferencias = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
+                    ultima_diferencia = diferencias[-1]["diferencia_%"] if diferencias else None
                     #percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
@@ -563,19 +564,19 @@ else:
 
                     with col3:
                         diferencia_ant = 0 if pd.isna(antd) or antd == 0 else round((abs(antd - antnd) / antd) * 100, 2)
-                        variacion = diferencia - diferencia_ant
-                        st.metric("% Diferencia", f'{float(diferencia):,.2f} %', f'{float(variacion):,.2f}', delta_color="inverse")
+                        variacion = ultima_diferencia - diferencia_ant
+                        st.metric("% Diferencia", f'{float(ultima_diferencia):,.2f} %', f'{float(variacion):,.2f}', delta_color="inverse")
 
                     with col4:
                         act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
                         st.metric("Último Registro", act)
 
                     #st.text(diferencia)
-                    observacion = util.get_observacion_agilidad(valor_asimetria=diferencia, genero=gender, categoria=categoria)
+                    observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
                     observacion = util.traducir(observacion, idioma)
                     observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
                     #st.text(diferencia)
-                    if diferencia <= 5:
+                    if ultima_diferencia <= 5:
                         st.success(observacion, icon="✅")
                     else:
                         st.warning(observacion, icon="⚠️")

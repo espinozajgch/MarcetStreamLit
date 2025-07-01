@@ -479,7 +479,7 @@ def get_diferencia_agilidad(df_agility, metricas, columna_fecha):
                 "diferencia_%": round(diferencia, 2)
             })
 
-    return diferencia
+    return diferencias
 
 def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es"):
 
