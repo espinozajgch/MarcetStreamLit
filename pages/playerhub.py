@@ -574,18 +574,19 @@ else:
                             act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
                             st.metric("Último Registro", act)
 
-                    #st.text(diferencia)
-                    observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
-                    observacion = util.traducir(observacion, idioma)
-                    observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
-                    #st.text(diferencia)
-                    if ultima_diferencia <= 5:
-                        st.success(observacion, icon="✅")
-                    else:
-                        st.warning(observacion, icon="⚠️")
+                    if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
+                        observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
+                        observacion = util.traducir(observacion, idioma)
+                        observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
+                        #st.text(diferencia)
+                        if ultima_diferencia <= 5:
+                            st.success(observacion, icon="✅")
+                        else:
+                            st.warning(observacion, icon="⚠️")
 
-                    figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
-                    st.divider()
+                        figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        st.divider()
+                        
                     
                     st.markdown("📊 **Históricos**")
                     st.dataframe(df_agilty)
