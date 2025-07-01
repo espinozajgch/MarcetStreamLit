@@ -551,25 +551,28 @@ else:
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
-                        act = df_agilty[columns[0]].iloc[0]
-                        antd = df_agilty[columns[0]].iloc[1] if len(df_agilty) > 1 else 0
-                        variacion = act - antd
-                        st.metric(columns[0].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
-                        
+                        if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
+                            act = df_agilty[columns[0]].iloc[0]
+                            antd = df_agilty[columns[0]].iloc[1] if len(df_agilty) > 1 else 0
+                            variacion = act - antd
+                            st.metric(columns[0].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
                     with col2:
-                        act = df_agilty[columns[1]].iloc[0]
-                        antnd = df_agilty[columns[1]].iloc[1] if len(df_agilty) > 1 else 0
-                        variacion = act - antnd
-                        st.metric(columns[1].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
+                        if not df_agilty.empty and not df_agilty[columns[1]].dropna().empty:
+                            act = df_agilty[columns[1]].iloc[0]
+                            antnd = df_agilty[columns[1]].iloc[1] if len(df_agilty) > 1 else 0
+                            variacion = act - antnd
+                            st.metric(columns[1].capitalize(),f'{float(act):,.2f}', f'{float(variacion):,.2f}', delta_color="inverse")
 
                     with col3:
-                        diferencia_ant = 0 if pd.isna(antd) or antd == 0 else round((abs(antd - antnd) / antd) * 100, 2)
-                        variacion = ultima_diferencia - diferencia_ant
-                        st.metric("% Diferencia", f'{float(ultima_diferencia):,.2f} %', f'{float(variacion):,.2f}', delta_color="inverse")
+                        if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
+                            diferencia_ant = 0 if pd.isna(antd) or antd == 0 else round((abs(antd - antnd) / antd) * 100, 2)
+                            variacion = ultima_diferencia - diferencia_ant
+                            st.metric("% Diferencia", f'{float(ultima_diferencia):,.2f} %', f'{float(variacion):,.2f}', delta_color="inverse")
 
                     with col4:
-                        act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
-                        st.metric("Último Registro", act)
+                        if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
+                            act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
+                            st.metric("Último Registro", act)
 
                     #st.text(diferencia)
                     observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
