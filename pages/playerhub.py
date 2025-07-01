@@ -537,7 +537,7 @@ else:
                 columns = list(test_cat.get(lista_columnas[4], []))
                 
                 df_agilty = df_joined_filtrado[[fecha_registro] + columns]
-                st.dataframe(df_agilty)
+                st.dataframe(df_joined_filtrado)
                 df_agilty = df_agilty.loc[~(df_agilty[columns].fillna(0) == 0).all(axis=1)]
                 todos_ceros = (df_agilty[columns] == 0).all().all()
 
