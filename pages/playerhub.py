@@ -321,21 +321,37 @@ else:
                     observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
                     
                     # Mostrar mensaje visual según el rango definido por categoría
-                    if categoria.lower() == "juvenil":
-                        if cactc > 36:
-                            st.success(observacion, icon="✅")
-                        elif 32 < cactc <= 36:
-                            st.warning(observacion, icon="⚠️")
-                        else:
-                            st.warning(observacion, icon="⚠️")
+                    if cactc is not None and pd.notna(cactc):
+                        #categoria = categoria.lower()
 
-                    elif categoria.lower() == "cadete":
-                        if cactc > 30:
-                            st.success(observacion, icon="✅")
-                        elif 26 < cactc <= 30:
-                            st.warning(observacion, icon="⚠️")
-                        else:
-                            st.warning(observacion, icon="⚠️")
+                        if gender == "M":
+                            if categoria.lower() == "juvenil":
+                                if cactc >= 23:
+                                    st.success(observacion, icon="✅")
+                                else:
+                                    st.warning(observacion, icon="⚠️")
+
+                            elif categoria.lower() == "cadete":
+                                if cactc >= 22:
+                                    st.success(observacion, icon="✅")
+                                else:  # cactc < 18
+                                    st.warning(observacion, icon="⚠️")
+                        elif genero == "H":
+                            if categoria.lower() == "juvenil":
+                                if cactc > 36:
+                                    st.success(observacion, icon="✅")
+                                elif 32 < cactc <= 36:
+                                    st.warning(observacion, icon="⚠️")
+                                else:
+                                    st.warning(observacion, icon="⚠️")
+
+                            elif categoria.lower() == "cadete":
+                                if cactc > 30:
+                                    st.success(observacion, icon="✅")
+                                elif 26 < cactc <= 30:
+                                    st.warning(observacion, icon="⚠️")
+                                else:
+                                    st.warning(observacion, icon="⚠️")
 
                     #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
 
@@ -421,33 +437,39 @@ else:
                         st.metric(f"Último Registro",act)
                         #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
-                    observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria)
+                    
+                    observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria, genero=gender)
                     observacion = util.traducir(observacion, idioma)
                     observaciones_dict["SPRINT (0-40M)"] = observacion
                     
-                    if categoria.lower() == "juvenil":
-                        if act040t < 5.2:
+                    act040t = float(act040t) if pd.notna(act040t) else None
+
+                    if act040t is not None:
+                        #categoria = categoria.lower()
+
+                        if gender == "H":
+                            umbral_bueno = 5.2 if "juvenil" in categoria.lower() else 5.9
+                        elif genero == "M":
+                            umbral_bueno = 5.5 if "juvenil" in categoria.lower() else 6.0
+                        else:
+                            umbral_bueno = 999  # valor de fallback por si hay un error
+
+                        if act040t < umbral_bueno:
                             st.success(observacion, icon="✅")
                         else:
                             st.warning(observacion, icon="⚠️")
 
-                    elif categoria.lower() == "cadete":
-                        if act040t < 5.9:
-                            st.success(observacion, icon="✅")
-                        else:
-                            st.warning(observacion, icon="⚠️")
-
-
+                    #st.text(columns[2].upper())
                     promedios_sprint = util.obtener_promedios_metricas_genero(
                             df_promedios=df_promedios,
-                            categoria=categoria,
+                            categoria=categoria.capitalize(),
                             equipo=equipo,
                             metricas=[columns[2].upper()],
                             genero=gender,
-                            tipo="SPRINT 0-40m"
+                            tipo="Sprint 0-40m"
                         )
                     
-                    #st.dataframe(promedios_sprint)
+                    #st.dataframe(df_promedios)
 
                     if(act05t != 0) or (act05v != 0):
                         figsp05 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)

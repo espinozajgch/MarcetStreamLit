@@ -2380,49 +2380,66 @@ def get_observacion_cmj(valor_cmj, categoria, gender):
                 )
     return ""
 
-def get_observacion_sprint(valor_sprint, categoria):
+def get_observacion_sprint(valor_sprint, categoria, genero):
     """
-    Devuelve una observación interpretativa según el valor del sprint (0-40m en segundos)
-    y la categoría ('Juvenil' o 'Cadete').
+    Devuelve una observación interpretativa según el valor del sprint (0-40m en segundos),
+    la categoría ('Juvenil' o 'Cadete') y el género ('H' o 'M').
     """
+
     if valor_sprint is None or pd.isna(valor_sprint):
         return ""
 
     categoria = categoria.lower()
+    genero = genero.upper()
 
-    if "juvenil" in categoria:
-        if valor_sprint < 5.2:
-            return "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
-        elif 5.2 <= valor_sprint < 5.8:
-            return (
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
-                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\n"
-                "Mejorar tu potencia en tramos cortos."
-            )
-        else:  # valor_sprint >= 5.8
-            return (
-                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\n"
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
-                "Es fundamental mejorar tu potencia en tramos cortos y largos."
-            )
+    texto_1 = "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
+    texto_2 = (
+        "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
+        "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\n"
+        "Mejorar tu potencia en tramos cortos."
+    )
+    texto_3 = (
+        "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\n"
+        "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
+        "Es fundamental mejorar tu potencia en tramos cortos y largos."
+    )
 
-    elif "cadete" in categoria:
-        if valor_sprint < 5.9:
-            return "Tu nivel de fuerza horizontal para el sprint es excelente para tu edad y categoría."
-        elif 5.9 <= valor_sprint < 6.2:
-            return (
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
-                "Identificar si el déficit está en la aceleración inicial o en la fase de velocidad máxima.\n"
-                "Mejorar tu potencia en tramos cortos."
-            )
-        else:  # valor_sprint >= 6.2
-            return (
-                "Tienes un margen muy grande de mejora en el trabajo de fuerza de tren inferior.\n"
-                "Necesidad de trabajo técnico de zancada y frecuencia de paso.\n"
-                "Es fundamental mejorar tu potencia en tramos cortos y largos."
-            )
+    if genero == "H":
+        if "juvenil" in categoria:
+            if valor_sprint < 5.2:
+                return texto_1
+            elif 5.2 <= valor_sprint < 5.8:
+                return texto_2
+            else:
+                return texto_3
+
+        elif "cadete" in categoria:
+            if valor_sprint < 5.9:
+                return texto_1
+            elif 5.9 <= valor_sprint < 6.2:
+                return texto_2
+            else:
+                return texto_3
+
+    elif genero == "M":
+        if "juvenil" in categoria:
+            if valor_sprint < 6.2:
+                return texto_1
+            elif 6.3 <= valor_sprint < 6.5:
+                return texto_2
+            else:
+                return texto_3
+
+        elif "cadete" in categoria:
+            if valor_sprint < 6.4:
+                return texto_1
+            elif 6.5 <= valor_sprint < 6.7:
+                return texto_2
+            else:
+                return texto_3
 
     return ""
+
 
 def get_observacion_agilidad(valor_asimetria, genero="H", categoria="juvenil"):
     """
