@@ -662,7 +662,7 @@ else:
 
                     cola, colb = st.columns([2.5,1])
                     with cola:
-                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label), 
+                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label) 
                     with colb:    
                         st.markdown("📊 **Históricos**")
                         st.dataframe(df_rsa[[fecha_registro] + [columns[0]]]) 
