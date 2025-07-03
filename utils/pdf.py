@@ -449,7 +449,7 @@ class PDF(FPDF):
         self.set_font("Arial", "I", 8)
         self.multi_cell(0, 5, "Índices calculados a partir de las mediciones antropométricas.")
 
-    def draw_gradient_scale(self, x=10, y=None, width=190, height=6, steps=100, invertido=False, idioma="es"):
+    def draw_gradient_scale(self, x=10, y=None, width=190, height=4, steps=100, invertido=False, idioma="es"):
         
         if y is None:
             y = self.get_y()
