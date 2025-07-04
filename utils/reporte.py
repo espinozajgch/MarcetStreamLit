@@ -40,15 +40,30 @@ def add_footer_con_texto(pdf, texto, idioma="es"):
     pdf.set_text_color(0, 0, 0)
     pdf.multi_cell(0, 5, texto)
 
+def add_observation(pdf, obs_text, idioma="es"):
+    """Add observations between section title and graphic"""
+    if not obs_text:
+        return
+    
+    # Add space after section title
+    pdf.ln(3)
+
+    # Set font style same as generate_pdf_simple
+    if idioma == "ar":
+        pdf.set_font("Amiri", "I", 6.6)
+    else:
+        pdf.set_font("Arial", "I", 6.6)
+    
+    pdf.set_text_color(0, 0, 0)  # Black text
+    pdf.multi_cell(190, 3, obs_text)
+    pdf.ln(3)  # Space between observation and graphic
+
 def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, 
                           df_rsa, figs_dict, fecha_actual, idioma="es", observaciones_dict=None):
     pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
     pdf.add_page()
     pdf.header()
     
-    #pdf.add_font("ArialUnicode", "", "assets/fonts/Amiri-0.111/Amiri-Regular.ttf", uni=True)
-    #pdf.set_font("ArialUnicode", "", 12)
-
     # Bloque de datos personales
     pdf.add_player_block(df_jugador, idioma=idioma)
 
@@ -81,7 +96,8 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
         ])
     ]
 
-    #st.dataframe(secciones)
+    if observaciones_dict is None:
+        observaciones_dict = {}
 
     # Comprobar si "COMPOSICIÓN CORPORAL" está en los gráficos seleccionados
     tiene_composicion = any(
@@ -94,10 +110,10 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-        #pdf.section_title("COMPOSICIÓN CORPORAL")
         pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
         pdf.ln(2)
+    
     # Inicializar contador de gráficos y sección actual
     contador_graficos = 0
     primer_grafico_insertado = False
@@ -109,12 +125,18 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
                 if fig is not None:
                     if not primer_grafico_insertado:
                         if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
-                            #pdf.section_title(nombre_seccion)
                             pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
                             seccion_ya_impresa.add(nombre_seccion)
-                        pdf.add_plotly_figure(fig, "", idioma=idioma)
-                        #obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
 
+                        # Add the graphic with smaller height to leave space for observations
+                        pdf.add_plotly_figure(fig, "", w=190, h=85, idioma=idioma)
+                        
+                        # Add observations immediately after the graphic
+                        obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
+                        if obs_text:
+                            add_observation(pdf, obs_text, idioma=idioma)
+                        
+                        # Add footer at the bottom
                         add_footer(pdf, idioma=idioma)
                         primer_grafico_insertado = True
                         continue
@@ -124,80 +146,30 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
                         pdf.ln(20)
 
                     if nombre_seccion not in seccion_ya_impresa:
-                        #pdf.section_title(nombre_seccion)
                         pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
                         seccion_ya_impresa.add(nombre_seccion)
 
-                    pdf.add_plotly_figure(fig, "", idioma=idioma)
+                    # Add the graphic with smaller height to leave space for observations
+                    pdf.add_plotly_figure(fig, "", w=190, h=85, idioma=idioma)
+                    
+                    # Add observations immediately after the graphic
+                    obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
+                    if obs_text:
+                        add_observation(pdf, obs_text, idioma=idioma)
+                    
                     contador_graficos += 1
 
                     if contador_graficos % 2 == 0:
+                        # Add footer for completed page
                         add_footer(pdf, idioma=idioma)
 
+    # Handle last page
     if contador_graficos % 2 == 1:
+        # Add footer for last page
         add_footer(pdf, idioma=idioma)
 
-    return pdf.output(dest='S') #.encode('utf-8')
+    return pdf.output(dest='S')
 
-# def generate_pdf_simple(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa, figs_dict, fecha_actual, idioma="es"):
-    
-#     pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
-#     pdf.add_page()
-#     pdf.header()
-#     pdf.add_player_block(df_jugador, idioma=idioma)
-
-#     seccion_ya_impresa = set()
-
-#     # Datos de medición (altura/peso/grasa)
-#     if df_anthropometrics is not None and not df_anthropometrics.empty:
-#         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
-#         peso = df_anthropometrics['PESO (KG)'].iloc[0]
-#         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-#         pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
-#         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
-
-#     # Preparar lista de figuras disponibles
-#     graficos = []
-#     if figs_dict.get("Peso y Grasa"):
-#         graficos.append(("Peso y % Grasa", figs_dict["Peso y Grasa"]))
-#     if figs_dict.get("CMJ"):
-#         graficos.append(("POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)", figs_dict["CMJ"]))
-#     if figs_dict.get("SPRINT 0-40"):
-#         graficos.append(("SPRINT (0-40M)", figs_dict["SPRINT 0-40"]))
-#     if figs_dict.get("AGILIDAD"):
-#         graficos.append(("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)", figs_dict["AGILIDAD"]))
-
-#     # Mostrar gráficos: 2 por fila
-#     i = 0
-#     while i < len(graficos):
-#         if i % 2 == 0:
-#             pdf.ln(5)
-
-#         y_titulo = pdf.get_y()
-
-#         for col in range(2):
-#             if i + col >= len(graficos):
-#                 break
-#             titulo, fig = graficos[i + col]
-#             x = 10 if col == 0 else 105
-#             pdf.set_xy(x, y_titulo)
-#             pdf.section_title(util.traducir(titulo.upper(), idioma), idioma, simple=True)
-
-#         #pdf.ln(5)
-#         y_grafico = pdf.get_y()
-
-#         for col in range(2):
-#             if i + col >= len(graficos):
-#                 break
-#             _, fig = graficos[i + col]
-#             x = 10 if col == 0 else 105
-#             pdf.add_plotly_figure(fig, "", x=x-3, y=y_grafico-2, w=99, h=55, idioma=idioma)
-
-#         pdf.ln(48)  # espacio para la fila de gráficos
-#         i += 2
-
-#     add_footer_con_texto(pdf, "", idioma=idioma)
-#     return pdf.output(dest='S')
 
 def generate_pdf_simple(
     df_jugador,
