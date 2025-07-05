@@ -5,7 +5,7 @@ import numpy as np
 import requests
 from datetime import datetime
 from utils.pdf import PDF
-from utils import util
+from utils import traslator
 from datetime import date
 
 def add_footer(pdf, invertido=False, idioma="es"):
@@ -30,7 +30,7 @@ def add_footer_con_texto(pdf, texto, idioma="es"):
     #pdf.set_font("Arial", "B", 11)
 
     pdf.set_text_color(0, 51, 102)  # Azul oscuro
-    pdf.cell(0, 6, util.traducir("Observaciones", idioma).upper(), ln=True)
+    pdf.cell(0, 6, traslator.traducir("Observaciones", idioma).upper(), ln=True)
 
     if(idioma == "ar"):
         pdf.set_font("Amiri", "", 10)
@@ -95,7 +95,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
         #pdf.section_title("COMPOSICIÓN CORPORAL")
-        pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
+        pdf.section_title(traslator.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
         pdf.ln(2)
     # Inicializar contador de gráficos y sección actual
@@ -110,7 +110,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
                     if not primer_grafico_insertado:
                         if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
                             #pdf.section_title(nombre_seccion)
-                            pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
+                            pdf.section_title(traslator.traducir(nombre_seccion, idioma), idioma)
                             seccion_ya_impresa.add(nombre_seccion)
                         pdf.add_plotly_figure(fig, "", idioma=idioma)
                         #obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
@@ -125,7 +125,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
 
                     if nombre_seccion not in seccion_ya_impresa:
                         #pdf.section_title(nombre_seccion)
-                        pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
+                        pdf.section_title(traslator.traducir(nombre_seccion, idioma), idioma)
                         seccion_ya_impresa.add(nombre_seccion)
 
                     pdf.add_plotly_figure(fig, "", idioma=idioma)
@@ -153,7 +153,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
 #         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
 #         peso = df_anthropometrics['PESO (KG)'].iloc[0]
 #         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-#         pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
+#         pdf.section_title(traslator.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
 #         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
 
 #     # Preparar lista de figuras disponibles
@@ -181,7 +181,7 @@ def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, 
 #             titulo, fig = graficos[i + col]
 #             x = 10 if col == 0 else 105
 #             pdf.set_xy(x, y_titulo)
-#             pdf.section_title(util.traducir(titulo.upper(), idioma), idioma, simple=True)
+#             pdf.section_title(traslator.traducir(titulo.upper(), idioma), idioma, simple=True)
 
 #         #pdf.ln(5)
 #         y_grafico = pdf.get_y()
@@ -216,7 +216,7 @@ def generate_pdf_simple(
         altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
         peso = df_anthropometrics['PESO (KG)'].iloc[0]
         grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-        pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
+        pdf.section_title(traslator.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
         pdf.add_last_measurements(altura, peso, grasa, idioma=idioma, simple=True)
 
     graficos = []
@@ -246,7 +246,7 @@ def generate_pdf_simple(
             titulo, _ = graficos[i + col]
             x = 10 if col == 0 else 105
             pdf.set_xy(x, y_titulo)
-            pdf.section_title(util.traducir(titulo.upper(), idioma), idioma, simple=True)
+            pdf.section_title(traslator.traducir(titulo.upper(), idioma), idioma, simple=True)
 
         # Gráficos
         y_grafico = pdf.get_y()

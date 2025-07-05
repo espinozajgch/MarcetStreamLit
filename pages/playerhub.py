@@ -15,6 +15,7 @@ import numpy as np
 import login as login
 from datetime import date
 import base64
+from utils import traslator
 
 st.set_page_config(
     page_title="PlayerHub",
@@ -222,7 +223,7 @@ else:
                         st.metric("Último Registro", act)
 
                     observacion = util.get_observacion_grasa(gact, categoria.lower(), gender)
-                    observacion = util.traducir(observacion, idioma)
+                    observacion = traslator.traducir(observacion, idioma)
                     
                     if(gact < 7) or (gact > 15):
                         st.warning(f"{observacion}", icon="⚠️")
@@ -317,7 +318,7 @@ else:
                     cactc = float(cactc)
                     #st.text(cactc)
                     observacion = util.get_observacion_cmj(cactc, categoria, gender)
-                    observacion = util.traducir(observacion, idioma)
+                    observacion = traslator.traducir(observacion, idioma)
                     observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
                     
                     # Mostrar mensaje visual según el rango definido por categoría
@@ -439,7 +440,7 @@ else:
                     
                     
                     observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria, genero=gender)
-                    observacion = util.traducir(observacion, idioma)
+                    observacion = traslator.traducir(observacion, idioma)
                     observaciones_dict["SPRINT (0-40M)"] = observacion
                     
                     act040t = float(act040t) if pd.notna(act040t) else None
@@ -598,7 +599,7 @@ else:
 
                     if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
                         observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
-                        observacion = util.traducir(observacion, idioma)
+                        observacion = traslator.traducir(observacion, idioma)
                         observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
                         #st.text(diferencia)
                         if ultima_diferencia <= 5:

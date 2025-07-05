@@ -7,9 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.1] - 15-06-2025
-
 ### Added
+- [PlayerHub](https://trello.com/c/yDmqFx1q/1-playerhub)
 - Mejoras Menu e inicio de sesión.
 - Ajuste de promedios en RSA.
 - Ajustes en Reportes

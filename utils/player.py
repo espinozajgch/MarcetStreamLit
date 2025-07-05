@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 from utils import util
 import re
-
-import re
+from utils import traslator
 
 def convert_drive_url(original_url):
     """
@@ -109,7 +108,7 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
 
             if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):
 
-                st.metric(label=f":{color}[Categoría]", value=f" {util.traducir(categoria.upper(), idioma).capitalize()}", border=True)
+                st.metric(label=f":{color}[Categoría]", value=f" {traslator.traducir(categoria.upper(), idioma).capitalize()}", border=True)
                 st.metric(label=f":{color}[F. Nacimiento]", value=f"{fnacimiento}", border=True)
                 
                 if isinstance(edad, (int, float)) and edad >= 16:
@@ -120,15 +119,15 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
                 equipo = "A"
 
             else:
-                st.metric(label=f":{color}[Categoria - Equipo]", value=f" {util.traducir(categoria.upper(), idioma).capitalize()} {equipo}", border=True)
+                st.metric(label=f":{color}[Categoria - Equipo]", value=f" {traslator.traducir(categoria.upper(), idioma).capitalize()} {equipo}", border=True)
                 st.metric(label=f":{color}[F. Nacimiento]", value=f"{fnacimiento}", border=True)
 
         with col3:
-            anios = util.traducir("años",idioma)
+            anios = traslator.traducir("años",idioma)
             if edad != unavailable:
                 edad = f"{edad:,.0f} {anios}"
             
-            st.metric(label=f":{color}[Posición]", value=f"{util.traducir(demarcacion.upper(), idioma).capitalize()}", border=True)
+            st.metric(label=f":{color}[Posición]", value=f"{traslator.traducir(demarcacion.upper(), idioma).capitalize()}", border=True)
             st.metric(label=f":{color}[Edad]", value=edad, border=True)
 
         #st.markdown(":green-badge[:material/check: Antropometria] :red-badge[:material/dangerous: CMJ] :gray-badge[Deprecated]")

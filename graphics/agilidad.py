@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
+from utils import traslator
 
 ESCALAS_COLOR_AGILIDAD = {
     "H": {
@@ -164,19 +165,19 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
-                name=util.traducir(metrica, idioma),
+                name=traslator.traducir(metrica, idioma),
                 marker_color=color,
                 text=[f"{val:.2f} seg" for val in y_vals],
                 textposition="auto",
                 textfont=dict(size=size),
-                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
         else:
             fig.add_trace(go.Scatter(
                 x=x_vals,
                 y=y_vals,
                 mode="lines+markers",
-                name=util.traducir(metrica, idioma),
+                name=traslator.traducir(metrica, idioma),
                 line=dict(color=color, width=3, dash=dash),
                 marker=dict(size=8, color=color),
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
@@ -185,7 +186,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         if (not df_metric.empty and len(df_metric) > 1) and not barras:
             min_val = df_metric[metrica].min()
             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-            maxl = util.traducir("Min ", idioma)
+            maxl = traslator.traducir("Min ", idioma)
             xshift_val = -20 if barras and metrica == metricas[0] else 20 if barras and metrica == metricas[1] else 0
             offset_y = -30 if metrica == metricas[1] else -60
             offset_x = 60 if metrica == metricas[1] else -60
@@ -221,7 +222,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             else:
                 y_pos = 3
 
-            diferenciat = util.traducir("DIFERENCIA %", idioma);
+            diferenciat = traslator.traducir("DIFERENCIA %", idioma);
             fig.add_trace(go.Scatter(
                 x=[fecha],
                 y=[y_pos],
@@ -241,7 +242,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 
     title_layout = "AGILIDAD (Pierna Izquierda y Pierna Derecha)" if barras else "Evolución de la Agilidad (Pierna Izquierda y Pierna Derecha)"
     fig.update_layout(
-        title=util.traducir(title_layout, idioma).upper(),
+        title=traslator.traducir(title_layout, idioma).upper(),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
@@ -250,7 +251,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             showticklabels=not barras
         ),
         yaxis=dict(
-            title=util.traducir("TIEMPO (SEG)", idioma),
+            title=traslator.traducir("TIEMPO (SEG)", idioma),
             range=[ymin, ymax],
             side="left"
         ),
@@ -323,19 +324,19 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 #             fig.add_trace(go.Bar(
 #                 x=x_vals,
 #                 y=y_vals,
-#                 name=util.traducir(metrica, idioma),
+#                 name=traslator.traducir(metrica, idioma),
 #                 marker_color=color,
 #                 text=[f"{val:.2f} seg" for val in y_vals],
 #                 textposition="auto",
 #                 textfont=dict(size=size),
-#                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+#                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
 #             ))
 #         else:
 #             fig.add_trace(go.Scatter(
 #                 x=x_vals,
 #                 y=y_vals,
 #                 mode="lines+markers",
-#                 name=util.traducir(metrica, idioma),
+#                 name=traslator.traducir(metrica, idioma),
 #                 line=dict(color=color, width=3, dash=dash),
 #                 marker=dict(size=8, color=color),
 #                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
@@ -344,7 +345,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 #         if (not df_metric.empty and len(df_metric) > 1) or not barras:
 #             min_val = df_metric[metrica].min()
 #             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-#             maxl = util.traducir("Min ", idioma)
+#             maxl = traslator.traducir("Min ", idioma)
 #             xshift_val = -20 if barras and metrica == metricas[0] else 20 if barras and metrica == metricas[1] else 0
 #             offset_y = -30 if metrica == metricas[1] else -60
 #             offset_x = 60 if metrica == metricas[1] else -60
@@ -378,7 +379,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 #                 textfont=dict(size=size,color="black"),
 #                 textposition="top center",
 #                 showlegend=not added_to_legend,
-#                 name=util.traducir("DIFERENCIA %", idioma),
+#                 name=traslator.traducir("DIFERENCIA %", idioma),
 #                 hoverinfo="skip"
 #             ))
 #             added_to_legend = True
@@ -422,7 +423,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 
 #     title_layout = "AGILIDAD (IZQ Y DER)" if barras else "Evolución de la Agilidad (IZQ y DER)"
 #     fig.update_layout(
-#         title=util.traducir(title_layout, idioma).upper(),
+#         title=traslator.traducir(title_layout, idioma).upper(),
 #         xaxis=dict(
 #             tickmode="array",
 #             tickvals=tickvals,
@@ -431,7 +432,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
 #             showticklabels=not barras
 #         ),
 #         yaxis=dict(
-#             title=util.traducir("TIEMPO (SEG)", idioma),
+#             title=traslator.traducir("TIEMPO (SEG)", idioma),
 #             range=[ymin, ymax],
 #             side="left"
 #         ),
@@ -533,7 +534,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
             x=x_vals,
             y=y_vals,
             mode="lines+markers",
-            name=util.traducir(metrica,idioma),
+            name=traslator.traducir(metrica,idioma),
             line=dict(color=color, width=3, dash=dash),
             marker=dict(size=8, color=color),
             hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
@@ -543,7 +544,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
         if not df_metric.empty:
             min_val = df_metric[metrica].min()
             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-            maxl = util.traducir("Max",idioma)
+            maxl = traslator.traducir("Max",idioma)
             offset_y = -40 if metrica == metricas[1] else -90
             fig.add_annotation(
                 x=fila_min[columnas_fecha_registro],
@@ -573,7 +574,7 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
                 text=f"{diferencia:.1f}%",
                 textposition="top center",
                 showlegend=not added_to_legend,  # solo la primera vez
-                name=util.traducir("DIFERENCIA %",idioma),
+                name=traslator.traducir("DIFERENCIA %",idioma),
                 hoverinfo="skip"
             ))
             added_to_legend = True
@@ -628,14 +629,14 @@ def get_agility_graph_combined(df_agility, df_promedios, categoria, equipo, metr
 
     # --- Layout final ---
     fig.update_layout(
-        title=util.traducir("Evolución de la Agilidad (IZQ y DER)", idioma),
+        title=traslator.traducir("Evolución de la Agilidad (IZQ y DER)", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title=util.traducir("TIEMPO (SEG)", idioma),
+            title=traslator.traducir("TIEMPO (SEG)", idioma),
             range=[ymin, ymax],
             side="left"
         ),

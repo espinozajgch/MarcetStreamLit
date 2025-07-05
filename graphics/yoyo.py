@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
+from utils import traslator
 
 def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, columna_fecha_registro, idioma="es", barras=False, cat_label="U19"):
     df = pd.DataFrame(df_yoyo)
@@ -71,7 +72,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         fig.add_trace(go.Bar(
             x=df[columna_x],
             y=df[metrica],
-            name=util.traducir(metrica, idioma),
+            name=traslator.traducir(metrica, idioma),
             marker_color=colores,
             text=[f"{v:.0f} m" for v in df[metrica]],
             textposition="inside",
@@ -84,7 +85,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             x=df[columna_x],
             y=df[metrica],
             mode="lines+markers",
-            name=util.traducir(metrica, idioma),
+            name=traslator.traducir(metrica, idioma),
             marker=dict(size=10, color=colores),
             line=dict(color="#1f77b4", width=3),
             hovertemplate="<b>Fecha:</b> %{x}<br><b>Valor:</b> %{y:.0f} m<extra></extra>"
@@ -101,7 +102,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('DISTANCIA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
+            name=f"{traslator.traducir('DISTANCIA OPTIMA', idioma)} ({traslator.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
             line=dict(color="green", dash="dash")
         ))
 
@@ -158,7 +159,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
     ))
 
     fig.update_layout(
-        title=util.traducir("Evolución de la Distancia Acumulada", idioma),
+        title=traslator.traducir("Evolución de la Distancia Acumulada", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=df[columna_x].tolist(),
@@ -167,7 +168,7 @@ def get_yoyo_graph(df_yoyo, df_promedios_yoyo, categoria, equipo, metrica, colum
             showticklabels=not barras
         ),
         yaxis=dict(
-            title=util.traducir(metrica, idioma),
+            title=traslator.traducir(metrica, idioma),
             range=[ymin, ymax]
         ),
         template="plotly_white",

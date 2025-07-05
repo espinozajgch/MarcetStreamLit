@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
+from utils import traslator
 
 SPRINT_CONFIG = {
     "H": {
@@ -115,24 +116,24 @@ def get_sprint_graph(
             fig.add_trace(go.Bar(
                 x=df_metric_vel[columna_x],
                 y=df_metric_vel[metrica_velocidad],
-                name=util.traducir(metrica_velocidad, idioma),
+                name=traslator.traducir(metrica_velocidad, idioma),
                 marker_color=color_linea,
                 offsetgroup="velocidad",
                 yaxis="y2",
                 text=df_metric_vel[metrica_velocidad].apply(lambda x: f"{x:.2f} m/s"),
                 textposition="inside",
                 textfont=dict(size=size),
-                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
+                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
         else:
             fig.add_trace(go.Scatter(
                 x=df_metric_vel[columna_x],
                 y=df_metric_vel[metrica_velocidad],
                 mode="lines+markers",
-                name=util.traducir(metrica_velocidad, idioma),
+                name=traslator.traducir(metrica_velocidad, idioma),
                 marker=dict(color=color_linea, size=10),
                 yaxis="y2",
-                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
+                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 
         #if not barras:
@@ -143,7 +144,7 @@ def get_sprint_graph(
                 x=fila_max[columna_x],
                 y=fila_max[metrica_velocidad],
                 yref="y2",
-                text=f"{util.traducir('Max', idioma)}: {fila_max[metrica_velocidad]:.2f} m/s",
+                text=f"{traslator.traducir('Max', idioma)}: {fila_max[metrica_velocidad]:.2f} m/s",
                 showarrow=True,
                 arrowhead=2,
                 ax=0 if barras else -60,
@@ -183,7 +184,7 @@ def get_sprint_graph(
         fig.add_trace(go.Bar(
             x=df_metric_time[columna_x],
             y=df_metric_time[metrica_tiempo],
-            name=util.traducir(metrica_tiempo, idioma),
+            name=traslator.traducir(metrica_tiempo, idioma),
             marker=dict(
                 color=df_metric_time[metrica_tiempo],
                 colorscale=escala_colores,
@@ -196,7 +197,7 @@ def get_sprint_graph(
             #text=df_metric_time[metrica_tiempo].round(2),
             textposition="inside",
             textfont=dict(size=size),
-            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
         ))
 
         if not barras and len(df_metric_time) > 1:
@@ -205,7 +206,7 @@ def get_sprint_graph(
                 x=fila_min[columna_x],
                 y=fila_min[metrica_tiempo],
                 yref="y1",
-                text=f"{util.traducir('Min', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
+                text=f"{traslator.traducir('Min', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
@@ -227,7 +228,7 @@ def get_sprint_graph(
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{util.traducir('TIEMPO OPTIMO', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
+                name=f"{traslator.traducir('TIEMPO OPTIMO', idioma)} ({traslator.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
                 line=dict(color=color_promedio, dash="dash", width=2),
                 showlegend=True
             ))
@@ -265,7 +266,7 @@ def get_sprint_graph(
     # === Layout final ===
     title_layout = "SPRINT" if barras else "Evolución del Sprint"
     fig.update_layout(
-        title=f"{util.traducir(title_layout, idioma).upper()} ({util.traducir(metrica_tiempo, idioma)} y {util.traducir(metrica_velocidad, idioma)})",
+        title=f"{traslator.traducir(title_layout, idioma).upper()} ({traslator.traducir(metrica_tiempo, idioma)} y {traslator.traducir(metrica_velocidad, idioma)})",
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
@@ -274,12 +275,12 @@ def get_sprint_graph(
             showticklabels=not barras and len(tickvals) > 1
         ),
         yaxis=dict(
-            title=util.traducir("TIEMPO (SEG)", idioma),
+            title=traslator.traducir("TIEMPO (SEG)", idioma),
             side="left" if not barras else "right",
             showgrid=True
         ),
         yaxis2=dict(
-            title=util.traducir("VELOCIDAD (M/S)", idioma),
+            title=traslator.traducir("VELOCIDAD (M/S)", idioma),
             overlaying="y",
             side="right" if not barras else "left",
             showgrid=False
@@ -375,19 +376,19 @@ def get_sprint_graph_vt(
             fig.add_trace(go.Bar(
                 x=df_metric_vel[columnas_fecha_registro],
                 y=df_metric_vel[metrica_velocidad],
-                name=util.traducir(metrica_velocidad, idioma),
+                name=traslator.traducir(metrica_velocidad, idioma),
                 marker_color=color_barra,
                 yaxis="y1",
                 text=df_metric_vel[metrica_velocidad].round(2),
                 textposition="inside",
                 textfont=dict(size=16,color="black"),
-                hovertemplate=f"<b>DATE:</b> %{{x|%d-%m-%Y}}<br><b>{util.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
+                hovertemplate=f"<b>DATE:</b> %{{x|%d-%m-%Y}}<br><b>{traslator.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 
             # Anotación del mejor registro
             max_val = df_metric_vel[metrica_velocidad].max()
             fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == max_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-            maxl = util.traducir("Max",idioma)
+            maxl = traslator.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_max[columnas_fecha_registro],
                 y=fila_max[metrica_velocidad],
@@ -412,8 +413,8 @@ def get_sprint_graph_vt(
                     layer="above"
                 )
 
-                promedio = util.traducir("PROMEDIO", idioma)
-                categoria = util.traducir(categoria.upper(), idioma)
+                promedio = traslator.traducir("PROMEDIO", idioma)
+                categoria = traslator.traducir(categoria.upper(), idioma)
 
                 fig.add_trace(go.Scatter(
                     x=[None], y=[None],
@@ -431,16 +432,16 @@ def get_sprint_graph_vt(
                 x=df_metric_time[columnas_fecha_registro],
                 y=df_metric_time[metrica_tiempo],
                 mode="lines+markers",
-                name=util.traducir(metrica_tiempo, idioma),
+                name=traslator.traducir(metrica_tiempo, idioma),
                 line=dict(color=color_linea, width=3),
                 marker=dict(size=8, color=color_linea),
                 yaxis="y2",
-                hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{util.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+                hovertemplate=f"<b>Fecha:</b> %{{x|%d-%m-%Y}}<br><b>{traslator.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
 
             min_val = df_metric_time[metrica_tiempo].min()
             fila_min = df_metric_time[df_metric_time[metrica_tiempo] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-            maxl = util.traducir("Max",idioma)
+            maxl = traslator.traducir("Max",idioma)
             fig.add_annotation(
                 x=fila_min[columnas_fecha_registro],
                 y=fila_min[metrica_tiempo],
@@ -490,24 +491,24 @@ def get_sprint_graph_vt(
             hoverinfo="skip"
         ))
 
-    title = util.traducir("Evolución del Sprint", idioma)
-    #metrica_tiempo = util.traducir(metrica_tiempo, idioma)
+    title = traslator.traducir("Evolución del Sprint", idioma)
+    #metrica_tiempo = traslator.traducir(metrica_tiempo, idioma)
     # --- Layout final ---
     fig.update_layout(
-        title=f"{title} ({util.traducir(metrica_tiempo, idioma)} y {util.traducir(metrica_velocidad, idioma)})",
+        title=f"{title} ({traslator.traducir(metrica_tiempo, idioma)} y {traslator.traducir(metrica_velocidad, idioma)})",
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext
         ),
         yaxis=dict(
-            title=util.traducir("VELOCIDAD (M/S)",idioma),
+            title=traslator.traducir("VELOCIDAD (M/S)",idioma),
             side="left",
             showgrid=True,
             range=[vel_min, vel_max]
         ),
         yaxis2=dict(
-            title=util.traducir("TIEMPO (SEG)",idioma),
+            title=traslator.traducir("TIEMPO (SEG)",idioma),
             overlaying="y",
             side="right",
             showgrid=False

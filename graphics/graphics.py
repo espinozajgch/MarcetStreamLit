@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
-
+from utils import traslator
 
 # Define rangos y colores semáforo por género
 SEMAFORO_GRASA = {
@@ -174,7 +174,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         fig.add_trace(go.Bar(
             x=df["FECHA REGISTRO"],
             y=df["PESO (KG)"],
-            name=util.traducir("PESO (KG)", idioma),
+            name=traslator.traducir("PESO (KG)", idioma),
             marker_color=color_lineas["PESO (KG)"],
             offsetgroup="peso",
             text=df["PESO (KG)"].apply(lambda x: f"{x:.2f} kg"),
@@ -196,7 +196,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
-                name=util.traducir("GRASA (%)", idioma),
+                name=traslator.traducir("GRASA (%)", idioma),
                 marker_color=colores_puntos,
                 offsetgroup="grasa",
                 yaxis="y2",
@@ -210,7 +210,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
                 x=x_vals,
                 y=y_vals,
                 mode="lines+markers",
-                name=util.traducir("GRASA (%)", idioma),
+                name=traslator.traducir("GRASA (%)", idioma),
                 line=dict(color="gray", width=3),
                 marker=dict(color=colores_puntos, size=10),
                 yaxis="y2",
@@ -221,7 +221,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         if not df_filtro.empty:
             max_valor = df_filtro["GRASA (%)"].max()
             fila_max = df_filtro[df_filtro["GRASA (%)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-            text = f"{util.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.2f} %"
+            text = f"{traslator.traducir('Max', idioma)}: {fila_max['GRASA (%)']:.2f} %" if not barras else f"{fila_max['GRASA (%)']:.2f} %"
 
             if not barras and len(y_vals) > 2:
                 fig.add_annotation(
@@ -263,7 +263,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             fig.add_trace(go.Scatter(
                 x=[None], y=[None],
                 mode="lines",
-                name=f"{util.traducir('ZONA OPTIMA %', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
+                name=f"{traslator.traducir('ZONA OPTIMA %', idioma)} ({traslator.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
                 line=dict(color="green", dash="dash"),
                 yaxis="y2"
             ))
@@ -295,7 +295,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
     title_layout = "PESO Y % GRASA" if barras else "Evolución del Peso y % Grasa"
 
     fig.update_layout(
-        title=util.traducir(title_layout, idioma).upper(),
+        title=traslator.traducir(title_layout, idioma).upper(),
         xaxis=dict(
             tickformat="%b",
             dtick="M1",
@@ -305,11 +305,11 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             showticklabels=not barras and len(tickvals) > 2
         ),
         yaxis=dict(
-            title=util.traducir("PESO (KG)", idioma),
+            title=traslator.traducir("PESO (KG)", idioma),
             side="left"
         ),
         yaxis2=dict(
-            title=util.traducir("GRASA (%)", idioma),
+            title=traslator.traducir("GRASA (%)", idioma),
             overlaying="y",
             side="right",
             showgrid=False,
@@ -446,7 +446,7 @@ def get_height_graph(df_altura, idioma="es", barras=False):
     if not df.empty:
         max_valor = df["ALTURA (CM)"].max()
         fila_max = df[df["ALTURA (CM)"] == max_valor].sort_values(by="FECHA REGISTRO", ascending=False).iloc[0]
-        maxl = util.traducir("Max",idioma)
+        maxl = traslator.traducir("Max",idioma)
         fig.add_annotation(
             x=fila_max["FECHA REGISTRO"],
             y=fila_max["ALTURA (CM)"],
@@ -461,9 +461,9 @@ def get_height_graph(df_altura, idioma="es", barras=False):
 
     title_layout = "ALTURA (CM)" if barras else "Evolución de la Altura (cm)"
     fig.update_layout(
-        title=util.traducir(title_layout, idioma).upper(),
+        title=traslator.traducir(title_layout, idioma).upper(),
         xaxis_title=None,
-        yaxis_title=util.traducir("ALTURA (CM)", idioma),
+        yaxis_title=traslator.traducir("ALTURA (CM)", idioma),
         template="plotly_white",
         xaxis=dict(
             tickmode="array",

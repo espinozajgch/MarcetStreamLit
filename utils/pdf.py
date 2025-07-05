@@ -6,6 +6,7 @@ from PIL import Image
 from io import BytesIO
 import tempfile
 import plotly.io as pio
+from utils import traslator
 
 class PDF(FPDF):
     def __init__(self, fecha_actual, idioma="es"):
@@ -55,7 +56,7 @@ class PDF(FPDF):
             self.set_font("Arial", "I", 8)
         
         self.set_xy(120, 8)
-        self.cell(80, 5, util.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
+        self.cell(80, 5, traslator.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
 
         # Título central
         if(self.idioma == "ar"):
@@ -65,11 +66,11 @@ class PDF(FPDF):
         
         self.set_text_color(249, 178, 51)  # amarillo
         self.set_xy(0, 14)
-        self.cell(210, 10, util.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
+        self.cell(210, 10, traslator.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
         
         self.set_text_color(0, 0, 0)
         self.set_xy(0, 24)
-        self.cell(210, 10, util.traducir("FECHA", self.idioma) + ":" + self.fecha_actual, align="C")
+        self.cell(210, 10, traslator.traducir("FECHA", self.idioma) + ":" + self.fecha_actual, align="C")
         
         #self.set_xy(0, 25)
         #self.cell(210, 10, self.idioma, align="C")
@@ -109,7 +110,6 @@ class PDF(FPDF):
             except Exception as e:
                 print("Error cargando imagen desde URL:", e)
 
-        
         elif foto_path and isinstance(foto_path, str):
             try:
                 self.image(foto_path, x=10, y=45, w=40)
@@ -137,13 +137,13 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "B", 10)
         self.set_xy(50, 55)
-        self.cell(37, 6, util.traducir("ID", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("ID", idioma)+":", 0)
         
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, str(util.traducir(data["ID"], idioma)).upper(), ln=True)
+        self.cell(50, 6, str(traslator.traducir(data["ID"], idioma)).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -151,14 +151,14 @@ class PDF(FPDF):
             self.set_font("Arial", "B", 10)
         self.set_x(50)
         
-        self.cell(37, 6, util.traducir("NACIONALIDAD", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("NACIONALIDAD", idioma)+":", 0)
         
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
         
-        self.cell(50, 6, data["NACIONALIDAD"].upper(), ln=True)
+        self.cell(50, 6, traslator.traducir_pais(data["NACIONALIDAD"].upper(), idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -166,7 +166,7 @@ class PDF(FPDF):
             self.set_font("Arial", "B", 10)
         
         self.set_x(50)
-        self.cell(37, 6, util.traducir("F. DE NACIMIENTO", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("F. DE NACIMIENTO", idioma)+":", 0)
         
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
@@ -180,7 +180,7 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(37, 6, util.traducir("EDAD", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("EDAD", idioma)+":", 0)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
@@ -193,13 +193,13 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "B", 10)
         self.set_x(50)
-        self.cell(37, 6, util.traducir("DEMARCACIÓN", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("DEMARCACIÓN", idioma)+":", 0)
         
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, util.traducir(data["DEMARCACION"], idioma).upper(), ln=True)
+        self.cell(50, 6, traslator.traducir(data["DEMARCACION"], idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -207,12 +207,12 @@ class PDF(FPDF):
             self.set_font("Arial", "B", 10)
         
         self.set_x(50)
-        self.cell(37, 6, util.traducir("CATEGORIA", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("CATEGORIA", idioma)+":", 0)
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, util.traducir(data["CATEGORIA"].upper(), idioma).upper(), ln=True)
+        self.cell(50, 6, traslator.traducir(data["CATEGORIA"].upper(), idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -220,13 +220,13 @@ class PDF(FPDF):
             self.set_font("Arial", "B", 10)
         
         self.set_x(50)
-        self.cell(37, 6, util.traducir("EQUIPO", idioma)+":", 0)
+        self.cell(37, 6, traslator.traducir("EQUIPO", idioma)+":", 0)
         
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, util.traducir(data["EQUIPO"], idioma).upper(), ln=True)
+        self.cell(50, 6, traslator.traducir(data["EQUIPO"], idioma).upper(), ln=True)
 
         # Imagen del campo (derecha)
         #self.image("assets/images/test/505.jpg", 130, 50, 70)
@@ -583,9 +583,9 @@ class PDF(FPDF):
         x2 = x1 + col_width + 0
         x3 = x2 + col_width + 0
 
-        add_metric(util.traducir("ALTURA (CM)",idioma), altura, x1, idioma)
-        add_metric(util.traducir("PESO (KG)",idioma), peso, x2, idioma)
-        add_metric(util.traducir("GRASA (%)",idioma), grasa, x3, idioma)
+        add_metric(traslator.traducir("ALTURA (CM)",idioma), altura, x1, idioma)
+        add_metric(traslator.traducir("PESO (KG)",idioma), peso, x2, idioma)
+        add_metric(traslator.traducir("GRASA (%)",idioma), grasa, x3, idioma)
 
         self.ln(7)  # salto tras bloque
 
