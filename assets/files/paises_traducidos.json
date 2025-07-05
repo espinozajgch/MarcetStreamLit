@@ -1,0 +1,668 @@
+{
+  "ALBANIA": {
+    "es": "Albania",
+    "en": "Albania",
+    "fr": "Albanie",
+    "it": "Albania",
+    "de": "Albanien",
+    "ca": "Albània",
+    "pt": "Albânia"
+  },
+  "ALEMANIA": {
+    "es": "Alemania",
+    "en": "Germany",
+    "fr": "Allemagne",
+    "it": "Germania",
+    "de": "Deutschland",
+    "ca": "Alemanya",
+    "pt": "Alemanha"
+  },
+  "ANDORRA": {
+    "es": "Andorra",
+    "en": "Andorra",
+    "fr": "Andorre",
+    "it": "Andorra",
+    "de": "Andorra",
+    "ca": "Andorra",
+    "pt": "Andorra"
+  },
+  "ARGENTINA": {
+    "es": "Argentina",
+    "en": "Argentina",
+    "fr": "Argentine",
+    "it": "Argentina",
+    "de": "Argentinien",
+    "ca": "Argentina",
+    "pt": "Argentina"
+  },
+  "ARMENIA": {
+    "es": "Armenia",
+    "en": "Armenia",
+    "fr": "Arménie",
+    "it": "Armenia",
+    "de": "Armenien",
+    "ca": "Armènia",
+    "pt": "Armênia"
+  },
+  "AUSTRALIA": {
+    "es": "Australia",
+    "en": "Australia",
+    "fr": "Australie",
+    "it": "Australia",
+    "de": "Australien",
+    "ca": "Austràlia",
+    "pt": "Austrália"
+  },
+  "AUSTRIA": {
+    "es": "Austria",
+    "en": "Austria",
+    "fr": "Autriche",
+    "it": "Austria",
+    "de": "Österreich",
+    "ca": "Àustria",
+    "pt": "Áustria"
+  },
+  "AZERBAIJAN": {
+    "es": "Azerbaijan",
+    "en": "Azerbaijan",
+    "fr": "Azerbaijan",
+    "it": "Azerbaijan",
+    "de": "Azerbaijan",
+    "ca": "Azerbaijan",
+    "pt": "Azerbaijan"
+  },
+  "BARBADOS": {
+    "es": "Barbados",
+    "en": "Barbados",
+    "fr": "Barbade",
+    "it": "Barbados",
+    "de": "Barbados",
+    "ca": "Barbados",
+    "pt": "Barbados"
+  },
+  "BENIN": {
+    "es": "Benin",
+    "en": "Benin",
+    "fr": "Benin",
+    "it": "Benin",
+    "de": "Benin",
+    "ca": "Benin",
+    "pt": "Benin"
+  },
+  "BOLIVIA": {
+    "es": "Bolivia",
+    "en": "Bolivia",
+    "fr": "Bolivie",
+    "it": "Bolivia",
+    "de": "Bolivien",
+    "ca": "Bolívia",
+    "pt": "Bolívia"
+  },
+  "BOSNIA Y HERZEGOVINA": {
+    "es": "Bosnia y Herzegovina",
+    "en": "Bosnia and Herzegovina",
+    "fr": "Bosnie-Herzégovine",
+    "it": "Bosnia ed Erzegovina",
+    "de": "Bosnien und Herzegowina",
+    "ca": "Bòsnia i Hercegovina",
+    "pt": "Bósnia e Herzegovina"
+  },
+  "BRASIL": {
+    "es": "Brasil",
+    "en": "Brazil",
+    "fr": "Brésil",
+    "it": "Brasile",
+    "de": "Brasilien",
+    "ca": "Brasil",
+    "pt": "Brasil"
+  },
+  "BULGARIA": {
+    "es": "Bulgaria",
+    "en": "Bulgaria",
+    "fr": "Bulgarie",
+    "it": "Bulgaria",
+    "de": "Bulgarien",
+    "ca": "Bulgària",
+    "pt": "Bulgária"
+  },
+  "CAMEROON": {
+    "es": "Cameroon",
+    "en": "Cameroon",
+    "fr": "Cameroon",
+    "it": "Cameroon",
+    "de": "Cameroon",
+    "ca": "Cameroon",
+    "pt": "Cameroon"
+  },
+  "CANADA": {
+    "es": "Canada",
+    "en": "Canada",
+    "fr": "Canada",
+    "it": "Canada",
+    "de": "Canada",
+    "ca": "Canada",
+    "pt": "Canada"
+  },
+  "CHILE": {
+    "es": "Chile",
+    "en": "Chile",
+    "fr": "Chili",
+    "it": "Cile",
+    "de": "Chile",
+    "ca": "Xile",
+    "pt": "Chile"
+  },
+  "CHINA": {
+    "es": "China",
+    "en": "China",
+    "fr": "Chine",
+    "it": "Cina",
+    "de": "China",
+    "ca": "Xina",
+    "pt": "China"
+  },
+  "COLOMBIA": {
+    "es": "Colombia",
+    "en": "Colombia",
+    "fr": "Colombie",
+    "it": "Colombia",
+    "de": "Kolumbien",
+    "ca": "Colòmbia",
+    "pt": "Colômbia"
+  },
+  "COSTA DE MARFIL": {
+    "es": "Costa de Marfil",
+    "en": "Ivory Coast",
+    "fr": "Côte d'Ivoire",
+    "it": "Costa d'Avorio",
+    "de": "Elfenbeinküste",
+    "ca": "Costa d'Ivori",
+    "pt": "Costa do Marfim"
+  },
+  "DINAMARCA": {
+    "es": "Dinamarca",
+    "en": "Denmark",
+    "fr": "Danemark",
+    "it": "Danimarca",
+    "de": "Dänemark",
+    "ca": "Dinamarca",
+    "pt": "Dinamarca"
+  },
+  "ECUADOR": {
+    "es": "Ecuador",
+    "en": "Ecuador",
+    "fr": "Équateur",
+    "it": "Ecuador",
+    "de": "Ecuador",
+    "ca": "Equador",
+    "pt": "Equador"
+  },
+  "EGIPTO": {
+    "es": "Egipto",
+    "en": "Egypt",
+    "fr": "Égypte",
+    "it": "Egitto",
+    "de": "Ägypten",
+    "ca": "Egipte",
+    "pt": "Egito"
+  },
+  "EL SALVADOR": {
+    "es": "El Salvador",
+    "en": "El Salvador",
+    "fr": "Salvador",
+    "it": "El Salvador",
+    "de": "El Salvador",
+    "ca": "El Salvador",
+    "pt": "El Salvador"
+  },
+  "ESPANA": {
+    "es": "España",
+    "en": "Spain",
+    "fr": "Espagne",
+    "it": "Spagna",
+    "de": "Spanien",
+    "ca": "Espanya",
+    "pt": "Espanha"
+  },
+  "ETIOPIA": {
+    "es": "Etiopía",
+    "en": "Ethiopia",
+    "fr": "Éthiopie",
+    "it": "Etiopia",
+    "de": "Äthiopien",
+    "ca": "Etiòpia",
+    "pt": "Etiópia"
+  },
+  "FILIPINAS": {
+    "es": "Filipinas",
+    "en": "Philippines",
+    "fr": "Philippines",
+    "it": "Filippine",
+    "de": "Philippinen",
+    "ca": "Filipines",
+    "pt": "Filipinas"
+  },
+  "FRANCIA": {
+    "es": "Francia",
+    "en": "France",
+    "fr": "France",
+    "it": "Francia",
+    "de": "Frankreich",
+    "ca": "França",
+    "pt": "França"
+  },
+  "GABON": {
+    "es": "Gabon",
+    "en": "Gabon",
+    "fr": "Gabon",
+    "it": "Gabon",
+    "de": "Gabon",
+    "ca": "Gabon",
+    "pt": "Gabon"
+  },
+  "GAMBIA": {
+    "es": "Gambia",
+    "en": "Gambia",
+    "fr": "Gambie",
+    "it": "Gambia",
+    "de": "Gambia",
+    "ca": "Gàmbia",
+    "pt": "Gâmbia"
+  },
+  "GEORGIA": {
+    "es": "Georgia",
+    "en": "Georgia",
+    "fr": "Géorgie",
+    "it": "Georgia",
+    "de": "Georgien",
+    "ca": "Geòrgia",
+    "pt": "Geórgia"
+  },
+  "GERMANY": {
+    "es": "Germany",
+    "en": "Germany",
+    "fr": "Germany",
+    "it": "Germany",
+    "de": "Germany",
+    "ca": "Germany",
+    "pt": "Germany"
+  },
+  "GHANA": {
+    "es": "Ghana",
+    "en": "Ghana",
+    "fr": "Ghana",
+    "it": "Ghana",
+    "de": "Ghana",
+    "ca": "Ghana",
+    "pt": "Gana"
+  },
+  "GUATEMALA": {
+    "es": "Guatemala",
+    "en": "Guatemala",
+    "fr": "Guatemala",
+    "it": "Guatemala",
+    "de": "Guatemala",
+    "ca": "Guatemala",
+    "pt": "Guatemala"
+  },
+  "GUINEA": {
+    "es": "Guinea",
+    "en": "Guinea",
+    "fr": "Guinée",
+    "it": "Guinea",
+    "de": "Guinea",
+    "ca": "Guinea",
+    "pt": "Guiné"
+  },
+  "HOLANDA": {
+    "es": "Holanda",
+    "en": "Netherlands",
+    "fr": "Pays-Bas",
+    "it": "Paesi Bassi",
+    "de": "Niederlande",
+    "ca": "Països Baixos",
+    "pt": "Países Baixos"
+  },
+  "HONDURAS": {
+    "es": "Honduras",
+    "en": "Honduras",
+    "fr": "Honduras",
+    "it": "Honduras",
+    "de": "Honduras",
+    "ca": "Hondures",
+    "pt": "Honduras"
+  },
+  "HUNGRIA": {
+    "es": "Hungría",
+    "en": "Hungary",
+    "fr": "Hongrie",
+    "it": "Ungheria",
+    "de": "Ungarn",
+    "ca": "Hongria",
+    "pt": "Hungria"
+  },
+  "INDIA": {
+    "es": "India",
+    "en": "India",
+    "fr": "Inde",
+    "it": "India",
+    "de": "Indien",
+    "ca": "Índia",
+    "pt": "Índia"
+  },
+  "IRLANDA": {
+    "es": "Irlanda",
+    "en": "Ireland",
+    "fr": "Irlande",
+    "it": "Irlanda",
+    "de": "Irland",
+    "ca": "Irlanda",
+    "pt": "Irlanda"
+  },
+  "ISRAEL": {
+    "es": "Israel",
+    "en": "Israel",
+    "fr": "Israël",
+    "it": "Israele",
+    "de": "Israel",
+    "ca": "Israel",
+    "pt": "Israel"
+  },
+  "ITALIA": {
+    "es": "Italia",
+    "en": "Italy",
+    "fr": "Italie",
+    "it": "Italia",
+    "de": "Italien",
+    "ca": "Itàlia",
+    "pt": "Itália"
+  },
+  "JORDANIA": {
+    "es": "Jordania",
+    "en": "Jordan",
+    "fr": "Jordanie",
+    "it": "Giordania",
+    "de": "Jordanien",
+    "ca": "Jordània",
+    "pt": "Jordânia"
+  },
+  "KAZAKHSTAN": {
+    "es": "Kazakhstan",
+    "en": "Kazakhstan",
+    "fr": "Kazakhstan",
+    "it": "Kazakhstan",
+    "de": "Kazakhstan",
+    "ca": "Kazakhstan",
+    "pt": "Kazakhstan"
+  },
+  "LATVIA": {
+    "es": "Latvia",
+    "en": "Latvia",
+    "fr": "Latvia",
+    "it": "Latvia",
+    "de": "Latvia",
+    "ca": "Latvia",
+    "pt": "Latvia"
+  },
+  "LIBANO": {
+    "es": "Líbano",
+    "en": "Lebanon",
+    "fr": "Liban",
+    "it": "Libano",
+    "de": "Libanon",
+    "ca": "Líban",
+    "pt": "Líbano"
+  },
+  "LIBERIA": {
+    "es": "Liberia",
+    "en": "Liberia",
+    "fr": "Liberia",
+    "it": "Liberia",
+    "de": "Liberia",
+    "ca": "Libèria",
+    "pt": "Libéria"
+  },
+  "LITUANIA": {
+    "es": "Lituania",
+    "en": "Lithuania",
+    "fr": "Lituanie",
+    "it": "Lituania",
+    "de": "Litauen",
+    "ca": "Lituània",
+    "pt": "Lituânia"
+  },
+  "MADAGASCAR": {
+    "es": "Madagascar",
+    "en": "Madagascar",
+    "fr": "Madagascar",
+    "it": "Madagascar",
+    "de": "Madagaskar",
+    "ca": "Madagascar",
+    "pt": "Madagascar"
+  },
+  "MALTA": {
+    "es": "Malta",
+    "en": "Malta",
+    "fr": "Malte",
+    "it": "Malta",
+    "de": "Malta",
+    "ca": "Malta",
+    "pt": "Malta"
+  },
+  "MARRUECOS": {
+    "es": "Marruecos",
+    "en": "Morocco",
+    "fr": "Maroc",
+    "it": "Marocco",
+    "de": "Marokko",
+    "ca": "Marroc",
+    "pt": "Marrocos"
+  },
+  "MONGOLIA": {
+    "es": "Mongolia",
+    "en": "Mongolia",
+    "fr": "Mongolie",
+    "it": "Mongolia",
+    "de": "Mongolei",
+    "ca": "Mongòlia",
+    "pt": "Mongólia"
+  },
+  "MOROCCO": {
+    "es": "Morocco",
+    "en": "Morocco",
+    "fr": "Morocco",
+    "it": "Morocco",
+    "de": "Morocco",
+    "ca": "Morocco",
+    "pt": "Morocco"
+  },
+  "MOZAMBIQUE": {
+    "es": "Mozambique",
+    "en": "Mozambique",
+    "fr": "Mozambique",
+    "it": "Mozambico",
+    "de": "Mosambik",
+    "ca": "Moçambic",
+    "pt": "Moçambique"
+  },
+  "NIGERIA": {
+    "es": "Nigeria",
+    "en": "Nigeria",
+    "fr": "Nigeria",
+    "it": "Nigeria",
+    "de": "Nigeria",
+    "ca": "Nigèria",
+    "pt": "Nigéria"
+  },
+  "PAIS VASCO": {
+    "es": "País Vasco",
+    "en": "Basque Country",
+    "fr": "Pays basque",
+    "it": "Paesi Baschi",
+    "de": "Baskenland",
+    "ca": "País Basc",
+    "pt": "País Basco"
+  },
+  "PANAMA": {
+    "es": "Panamá",
+    "en": "Panama",
+    "fr": "Panama",
+    "it": "Panama",
+    "de": "Panama",
+    "ca": "Panamà",
+    "pt": "Panamá"
+  },
+  "PERU": {
+    "es": "Perú",
+    "en": "Peru",
+    "fr": "Pérou",
+    "it": "Perù",
+    "de": "Peru",
+    "ca": "Perú",
+    "pt": "Peru"
+  },
+  "POLINESIA FRANCESA": {
+    "es": "Polinesia Francesa",
+    "en": "French Polynesia",
+    "fr": "Polynésie française",
+    "it": "Polinesia Francese",
+    "de": "Französisch-Polynesien",
+    "ca": "Polinèsia Francesa",
+    "pt": "Polinésia Francesa"
+  },
+  "POLONIA": {
+    "es": "Polonia",
+    "en": "Poland",
+    "fr": "Pologne",
+    "it": "Polonia",
+    "de": "Polen",
+    "ca": "Polònia",
+    "pt": "Polónia"
+  },
+  "PORTUGAL": {
+    "es": "Portugal",
+    "en": "Portugal",
+    "fr": "Portugal",
+    "it": "Portogallo",
+    "de": "Portugal",
+    "ca": "Portugal",
+    "pt": "Portugal"
+  },
+  "RUMANIA": {
+    "es": "Rumania",
+    "en": "Romania",
+    "fr": "Roumanie",
+    "it": "Romania",
+    "de": "Rumänien",
+    "ca": "Romania",
+    "pt": "Romênia"
+  },
+  "RUSIA": {
+    "es": "Rusia",
+    "en": "Russia",
+    "fr": "Russie",
+    "it": "Russia",
+    "de": "Russland",
+    "ca": "Rússia",
+    "pt": "Rússia"
+  },
+  "SIRIA": {
+    "es": "Siria",
+    "en": "Syria",
+    "fr": "Syrie",
+    "it": "Siria",
+    "de": "Syrien",
+    "ca": "Síria",
+    "pt": "Síria"
+  },
+  "SUECIA": {
+    "es": "Suecia",
+    "en": "Sweden",
+    "fr": "Suède",
+    "it": "Svezia",
+    "de": "Schweden",
+    "ca": "Suècia",
+    "pt": "Suécia"
+  },
+  "SUIZA": {
+    "es": "Suiza",
+    "en": "Switzerland",
+    "fr": "Suisse",
+    "it": "Svizzera",
+    "de": "Schweiz",
+    "ca": "Suïssa",
+    "pt": "Suíça"
+  },
+  "TANZANIA": {
+    "es": "Tanzania",
+    "en": "Tanzania",
+    "fr": "Tanzanie",
+    "it": "Tanzania",
+    "de": "Tansania",
+    "ca": "Tanzània",
+    "pt": "Tanzânia"
+  },
+  "TURKMENISTAN": {
+    "es": "Turkmenistan",
+    "en": "Turkmenistan",
+    "fr": "Turkmenistan",
+    "it": "Turkmenistan",
+    "de": "Turkmenistan",
+    "ca": "Turkmenistan",
+    "pt": "Turkmenistan"
+  },
+  "UCRANIA": {
+    "es": "Ucrania",
+    "en": "Ukraine",
+    "fr": "Ukraine",
+    "it": "Ucraina",
+    "de": "Ukraine",
+    "ca": "Ucraïna",
+    "pt": "Ucrânia"
+  },
+  "VENEZUELA": {
+    "es": "Venezuela",
+    "en": "Venezuela",
+    "fr": "Venezuela",
+    "it": "Venezuela",
+    "de": "Venezuela",
+    "ca": "Veneçuela",
+    "pt": "Venezuela"
+  },
+  "ESTADOS UNIDOS": {
+    "es": "Estados Unidos",
+    "en": "United States",
+    "fr": "États-Unis",
+    "it": "Stati Uniti",
+    "de": "Vereinigte Staaten",
+    "ca": "Estats Units",
+    "pt": "Estados Unidos"
+  },
+  "BELGICA": {
+    "es": "Bélgica",
+    "en": "Belgium",
+    "fr": "Belgique",
+    "it": "Belgio",
+    "de": "Belgien",
+    "ca": "Bèlgica",
+    "pt": "Bélgica"
+  },
+  "REPUBLICA DOMINICANA": {
+    "es": "República Dominicana",
+    "en": "Dominican Republic",
+    "fr": "République dominicaine",
+    "it": "Repubblica Dominicana",
+    "de": "Dominikanische Republik",
+    "ca": "República Dominicana",
+    "pt": "República Dominicana"
+  },
+  "ISLAS VIRGENES": {
+    "es": "Islas Vírgenes",
+    "en": "Virgin Islands",
+    "fr": "Îles Vierges",
+    "it": "Isole Vergini",
+    "de": "Jungferninseln",
+    "ca": "Illes Verges",
+    "pt": "Ilhas Virgens"
+  }
+}
