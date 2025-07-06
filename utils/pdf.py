@@ -158,7 +158,10 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "", 10)
         
-        self.cell(50, 6, traslator.traducir_pais(data["NACIONALIDAD"].upper(), idioma).upper(), ln=True)
+        if data["NACIONALIDAD"].upper() == "NO DISPONIBLE":
+            self.cell(50, 6, traslator.traducir("No Disponible", idioma).upper(), ln=True)
+        else:
+            self.cell(50, 6, traslator.traducir_pais(data["NACIONALIDAD"].upper(), idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -173,7 +176,7 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "", 10)
         
-        self.cell(50, 6, data["FECHA DE NACIMIENTO"], ln=True)
+        self.cell(50, 6, traslator.traducir(data["FECHA DE NACIMIENTO"], idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)
@@ -186,7 +189,7 @@ class PDF(FPDF):
             self.set_font("Amiri", "", 10)
         else:        
             self.set_font("Arial", "", 10)
-        self.cell(50, 6, str(data.get("EDAD", "")), ln=True)
+        self.cell(50, 6, traslator.traducir(str(data.get("EDAD", "")), idioma).upper(), ln=True)
 
         if(idioma == "ar"):
             self.set_font("Amiri", "B", 10)

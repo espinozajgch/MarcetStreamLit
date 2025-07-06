@@ -29,20 +29,38 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
     #st.dataframe(df_final)
     # Obtener ID del jugador seleccionado (único y limpio)
     ids_disponibles = df_datos_filtrado["ID"].dropna().astype(str).str.strip().unique().tolist()
-    #st.dataframe(ids_disponibles)
+    #st.dataframe(df_datos_filtrado)
+    
     if not ids_disponibles or any(isinstance(id, str) and id.strip().lower() == 'nan' for id in ids_disponibles):
-        names_disponibles = df_datos_filtrado["JUGADOR"].dropna().astype(str).str.strip().unique().tolist()
-        jugador_id = names_disponibles[0]
-        
-        # Filtrar los DataFrames por el ID seleccionado
-        df_jugador = df_datos[df_datos["JUGADOR"].astype(str).str.strip() == jugador_id]
-        df_joined_filtrado = df_final[df_final["JUGADOR"].astype(str).str.strip() == jugador_id]
-        id = unavailable
+        # Mostrar mensaje si no hay datos válidos
+        #st.text("No hay IDs disponibles o todos son 'nan'.")
 
-        df_jugador = df_jugador.applymap(
-            lambda x: unavailable if pd.isna(x) or str(x).strip().lower() in ["nan", "none", ""] else x
-        )
-        #df_jugador = df_jugador.fillna(unavailable)
+        # Crear combinación única de jugador + categoría
+        df_datos_filtrado["JUGADOR_CATEGORIA"] = (
+            df_datos_filtrado["JUGADOR"].astype(str).str.strip() + " - " +
+            df_datos_filtrado["CATEGORIA"].astype(str).str.strip())
+
+        # Lista de combinaciones únicas disponibles
+        names_disponibles = df_datos_filtrado["JUGADOR_CATEGORIA"].dropna().unique().tolist()
+        jugador_cat = names_disponibles[0]  # selección por defecto
+
+        # Separar nombre y categoría desde la selección
+        nombre_jugador, categoria_jugador = [x.strip() for x in jugador_cat.split(" - ")]
+
+        # Filtrar DataFrames por nombre y categoría
+        df_jugador = df_datos[
+            (df_datos["JUGADOR"].astype(str).str.strip() == nombre_jugador) &
+            (df_datos["CATEGORIA"].astype(str).str.strip() == categoria_jugador)
+        ]
+        df_joined_filtrado = df_final[
+            (df_final["JUGADOR"].astype(str).str.strip() == nombre_jugador) &
+            (df_final["CATEGORIA"].astype(str).str.strip() == categoria_jugador)
+        ]
+
+        # Manejo de valores nulos/vacíos
+        id = unavailable
+        df_jugador = df_jugador.applymap(lambda x: unavailable if pd.isna(x) or str(x).strip().lower() in ["nan", "none", ""] else x)
+
     else:
         jugador_id = ids_disponibles[0]
         # Filtrar los DataFrames por el ID seleccionado

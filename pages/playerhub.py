@@ -142,9 +142,13 @@ if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
 else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
     
+    #st.dataframe(df_datos_final)
+
     # Sección datos de usuario
     df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
     
+   
+
     cat_label = "U19" if categoria.lower() == "juvenil" else "U15"
    
     if not df_datos_filtrado.empty:

@@ -630,7 +630,17 @@ def get_filtered_list(dataframe, column, filters, default_option="Todos"):
     for col, val in filters.items():
         if val != default_option:
             dataframe = dataframe[dataframe[col] == val]
-    return sorted(dataframe[column].dropna().astype(str).str.strip().unique().tolist())
+    valores_unicos = dataframe[column].dropna().astype(str).str.strip().unique().tolist()
+    return sorted(limpiar_lista(valores_unicos))
+
+def limpiar_lista(valores):
+    """
+    Elimina elementos vacíos, nulos o no informativos (NaN, None, '', 'nan', 'none') de una lista.
+    """
+    return [
+        v for v in valores
+        if pd.notna(v) and str(v).strip().lower() not in ["", "nan", "none"]
+    ]
 
 def get_filters(df):
     default_option = "Todos"
