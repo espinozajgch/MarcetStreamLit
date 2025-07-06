@@ -238,7 +238,7 @@ class PDF(FPDF):
         if codigod:
             img_path = f"assets/images/pitch/campo_{codigod}.png"
             try:
-                self.image(img_path, x=140, y=50, w=55)
+                self.image(img_path, x=130, y=50, w=70)
             except:
                 txt = f"Imagen para {codigod} no encontrada"
                 self.cell(0, 6, txt, ln=True)

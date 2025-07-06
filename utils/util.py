@@ -7,6 +7,7 @@ from datetime import datetime
 from utils.pdf import PDF
 from scipy.stats import percentileofscore
 from functools import reduce
+import unicodedata
 
 def get_ttl():
     if st.session_state.get("reload_data", False):
@@ -40,6 +41,8 @@ def get_player_data(conn):
     df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].dt.strftime('%d/%m/%Y').astype(str)
 
     df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
+    df['NACIONALIDAD'] = df['NACIONALIDAD'].apply(quitar_acentos)
+
     df.drop_duplicates(subset=["ID"], keep="first")
     
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -967,29 +970,59 @@ def get_diccionario_test_categorias(conn):
 
     return test, test_cat, lista_columnas
 
+# Función para eliminar acentos
+def quitar_acentos(texto):
+    if not isinstance(texto, str):
+        return texto
+    # Descomposición Unicode
+    texto_normalizado = unicodedata.normalize('NFD', texto)
+    # Elimina tildes pero deja la ñ
+    texto_sin_tildes = ''.join(
+        c for c in texto_normalizado
+        if unicodedata.category(c) != 'Mn' or c == '̃' and texto_normalizado[texto_normalizado.index(c)-1].lower() == 'n'
+    )
+    return texto_sin_tildes
+
 def obtener_bandera(pais):
     # Diccionario de códigos de país ISO 3166-1 alfa-2
     paises = {
-        "ALBANIA": "🇦🇱", "ALEMANIA": "🇩🇪", "ANDORRA": "🇦🇩", "ARGENTINA": "🇦🇷",
-        "ARMENIA": "🇦🇲", "AUSTRALIA": "🇦🇺", "AUSTRIA": "🇦🇹", "AZERBAIJAN": "🇦🇿",
-        "BARBADOS": "🇧🇧", "BELGIUM": "🇧🇪", "BENIN": "🇧🇯", "BOLIVIA": "🇧🇴",
-        "BOSNIA AND HERZEGOVINA": "🇧🇦", "BRASIL": "🇧🇷", "BULGARIA": "🇧🇬", "CAMEROON": "🇨🇲",
-        "CANADA": "🇨🇦", "CHILE": "🇨🇱", "CHINA": "🇨🇳", "COLOMBIA": "🇨🇴",
-        "COSTA DE MARFIL": "🇨🇮", "DINAMARCA": "🇩🇰", "DOMINICAN REPUBLIC": "🇩🇴", "ECUADOR": "🇪🇨",
-        "EGIPTO": "🇪🇬", "EL SALVADOR": "🇸🇻", "ESPAÑA": "🇪🇸", "ETIOPÍA": "🇪🇹", "FILIPINAS": "🇵🇭",
-        "FRANCIA": "🇫🇷", "GABON": "🇬🇦", "GAMBIA": "🇬🇲", "GEORGIA": "🇬🇪", "GERMANY": "🇩🇪",
-        "GHANA": "🇬🇭", "GUATEMALA": "🇬🇹", "GUINEA": "🇬🇳", "HOLANDA": "🇳🇱", "HONDURAS": "🇭🇳",
-        "HUNGRIA": "🇭🇺", "INDIA": "🇮🇳", "INGLATERRA": "🇬🇧", "IRLANDA": "🇮🇪", "ISRAEL": "🇮🇱",
-        "ITALIA": "🇮🇹", "JORDANIA": "🇯🇴", "KAZAKHSTAN": "🇰🇿", "LATVIA": "🇱🇻", "LÍBANO": "🇱🇧",
-        "LIBERIA": "🇱🇷", "LITUANIA": "🇱🇹", "MADAGASCAR": "🇲🇬", "MALTA": "🇲🇹", "MARRUECOS": "🇲🇦",
-        "MÉXICO": "🇲🇽", "MONGOLIA": "🇲🇳", "MOROCCO": "🇲🇦", "MOZAMBIQUE": "🇲🇿", "NIGERIA": "🇳🇬",
-        "PAÍS VASCO": "🇪🇸", "PANAMÁ": "🇵🇦", "PERÚ": "🇵🇪", "POLAND": "🇵🇱", "POLINESIA FRANCESA": "🇵🇫",
-        "POLONIA": "🇵🇱", "PORTUGAL": "🇵🇹", "R. DOMINICANA": "🇩🇴", "RUMANIA": "🇷🇴", "RUSIA": "🇷🇺",
-        "SIRIA": "🇸🇾", "SUECIA": "🇸🇪", "SUIZA": "🇨🇭", "TANZANIA": "🇹🇿", "TUNEZ": "🇹🇳",
-        "TURKMENISTAN": "🇹🇲", "UCRANIA": "🇺🇦", "USA": "🇺🇸", "VENEZUELA": "🇻🇪", "VIRGIN ISLANDS": "🇻🇬"
+        "AFGANISTAN": "🇦🇫", "ALBANIA": "🇦🇱", "ALEMANIA": "🇩🇪", "ANDORRA": "🇦🇩",
+        "ANGOLA": "🇦🇴","ANTIGUA Y BARBUDA": "🇦🇬", "ARABIA SAUDITA": "🇸🇦","ARGELIA": "🇩🇿",
+        "ARGENTINA": "🇦🇷","ARMENIA": "🇦🇲", "AUSTRALIA": "🇦🇺","AUSTRIA": "🇦🇹","AZERBAIYAN": "🇦🇿",
+        "BAHAMAS": "🇧🇸","BANGLADES": "🇧🇩","BARBADOS": "🇧🇧","BAREIN": "🇧🇭","BELGICA": "🇧🇪","BELICE": "🇧🇿","BENIN": "🇧🇯",
+        "BIELORRUSIA": "🇧🇾","BIRMANIA": "🇲🇲","BOLIVIA": "🇧🇴","BOSNIA Y HERZEGOVINA": "🇧🇦","BOTSUANA": "🇧🇼","BRASIL": "🇧🇷",
+        "BRUNEI": "🇧🇳","BULGARIA": "🇧🇬","BURKINA FASO": "🇧🇫","BURUNDI": "🇧🇮","BUTAN": "🇧🇹","CABO VERDE": "🇨🇻",
+        "CAMBOYA": "🇰🇭","CAMERUN": "🇨🇲","CANADA": "🇨🇦","CATAR": "🇶🇦","CHAD": "🇹🇩","CHILE": "🇨🇱","CHINA": "🇨🇳","CHIPRE": "🇨🇾",
+        "COLOMBIA": "🇨🇴","COMORAS": "🇰🇲","COREA DEL NORTE": "🇰🇵","COREA DEL SUR": "🇰🇷","COSTA DE MARFIL": "🇨🇮",
+        "COSTA RICA": "🇨🇷","CROACIA": "🇭🇷","CUBA": "🇨🇺","DINAMARCA": "🇩🇰","DOMINICA": "🇩🇲","ECUADOR": "🇪🇨","EGIPTO": "🇪🇬",
+        "EL SALVADOR": "🇸🇻","EMIRATOS ARABES UNIDOS": "🇦🇪","ERITREA": "🇪🇷","ESLOVAQUIA": "🇸🇰","ESLOVENIA": "🇸🇮",
+        "ESPANA": "🇪🇸","ESTADOS UNIDOS": "🇺🇸","ESTONIA": "🇪🇪","ETIOPIA": "🇪🇹","FIJI": "🇫🇯","FILIPINAS": "🇵🇭",
+        "FINLANDIA": "🇫🇮","FRANCIA": "🇫🇷","GABON": "🇬🇦","GAMBIA": "🇬🇲","GEORGIA": "🇬🇪","GHANA": "🇬🇭","GRANADA": "🇬🇩",
+        "GRECIA": "🇬🇷","GUATEMALA": "🇬🇹","GUINEA": "🇬🇳","GUINEA BISSAU": "🇬🇼","GUINEA ECUATORIAL": "🇬🇶","GUYANA": "🇬🇾",
+        "HAITI": "🇭🇹","HOLANDA": "🇳🇱","HONDURAS": "🇭🇳","HUNGRIA": "🇭🇺","INDIA": "🇮🇳","INDONESIA": "🇮🇩","INGLATERRA": "🇬🇧",
+        "IRAK": "🇮🇶","IRAN": "🇮🇷","IRLANDA": "🇮🇪","ISLANDIA": "🇮🇸","ISLAS MARSHALL": "🇲🇭","ISLAS SALOMON": "🇸🇧",
+        "ISLAS VIRGENES": "🇻🇬","ISRAEL": "🇮🇱","ITALIA": "🇮🇹","JAMAICA": "🇯🇲","JAPON": "🇯🇵","JORDANIA": "🇯🇴","KAZAJISTAN": "🇰🇿",
+        "KENIA": "🇰🇪","KIRGUISTAN": "🇰🇬","KIRIBATI": "🇰🇮","KUWAIT": "🇰🇼","LAOS": "🇱🇦","LESOTO": "🇱🇸","LETONIA": "🇱🇻",
+        "LIBANO": "🇱🇧","LIBERIA": "🇱🇷","LIBIA": "🇱🇾","LIECHTENSTEIN": "🇱🇮","LITUANIA": "🇱🇹","LUXEMBURGO": "🇱🇺",
+        "MACEDONIA DEL NORTE": "🇲🇰","MADAGASCAR": "🇲🇬","MALASIA": "🇲🇾","MALAUI": "🇲🇼","MALDIVAS": "🇲🇻","MALI": "🇲🇱",
+        "MALTA": "🇲🇹","MARRUECOS": "🇲🇦","MAURICIO": "🇲🇺","MAURITANIA": "🇲🇷","MEXICO": "🇲🇽","MICRONESIA": "🇫🇲",
+        "MOLDAVIA": "🇲🇩","MONACO": "🇲🇨","MONGOLIA": "🇲🇳","MONTENEGRO": "🇲🇪","MOZAMBIQUE": "🇲🇿","NAMIBIA": "🇳🇦","NAURU": "🇳🇷",
+        "NEPAL": "🇳🇵","NICARAGUA": "🇳🇮","NIGER": "🇳🇪","NIGERIA": "🇳🇬","NORUEGA": "🇳🇴","NUEVA ZELANDA": "🇳🇿","OMÁN": "🇴🇲",
+        "PAISES BAJOS": "🇳🇱","PAKISTAN": "🇵🇰","PALAOS": "🇵🇼","PALESTINA": "🇵🇸","PANAMA": "🇵🇦","PAPUA NUEVA GUINEA": "🇵🇬",
+        "PARAGUAY": "🇵🇾","PERU": "🇵🇪","POLINESIA FRANCESA": "🇵🇫","POLONIA": "🇵🇱","PORTUGAL": "🇵🇹","R. DOMINICANA": "🇩🇴",
+        "R.D. DEL CONGO": "🇨🇩","R. DEL CONGO": "🇨🇬","REINO UNIDO": "🇬🇧","REPUBLICA CENTROAFRICANA": "🇨🇫",
+        "REPUBLICA CHECA": "🇨🇿","RUANDA": "🇷🇼","RUMANIA": "🇷🇴","RUSIA": "🇷🇺","SAMOA": "🇼🇸","SAN CRISTOBAL Y NIEVES": "🇰🇳",
+        "SAN MARINO": "🇸🇲","SAN VICENTE Y LAS GRANADINAS": "🇻🇨","SANTA LUCIA": "🇱🇨","SANTO TOME Y PRINCIPE": "🇸🇹",
+        "SENEGAL": "🇸🇳","SERBIA": "🇷🇸","SEYCHELLES": "🇸🇨","SIERRA LEONA": "🇸🇱","SINGAPUR": "🇸🇬","SIRIA": "🇸🇾",
+        "SOMALIA": "🇸🇴","SRI LANKA": "🇱🇰","SUAZILANDIA": "🇸🇿","SUDAFRICA": "🇿🇦","SUDAN": "🇸🇩","SUDAN DEL SUR": "🇸🇸",
+        "SUECIA": "🇸🇪","SUIZA": "🇨🇭","SURINAM": "🇸🇷","TAILANDIA": "🇹🇭","TANZANIA": "🇹🇿","TAYIKISTAN": "🇹🇯",
+        "TIMOR ORIENTAL": "🇹🇱","TOGO": "🇹🇬","TONGA": "🇹🇴","TRINIDAD Y TOBAGO": "🇹🇹","TUNEZ": "🇹🇳","TURKMENISTAN": "🇹🇲",
+        "TURQUIA": "🇹🇷","TUVALU": "🇹🇻","UCRANIA": "🇺🇦","UGANDA": "🇺🇬","URUGUAY": "🇺🇾","UZBEKISTAN": "🇺🇿","VANUATU": "🇻🇺",
+        "VATICANO": "🇻🇦","VENEZUELA": "🇻🇪","VIETNAM": "🇻🇳","YEMEN": "🇾🇪","YIBUTI": "🇩🇯","ZAMBIA": "🇿🇲","ZIMBABUE": "🇿🇼"
     }
 
-    
+
+
     # Normalizar el nombre del país
     pais = pais.strip().upper()
 

@@ -167,6 +167,8 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         }
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
+
+    #st.dataframe(df_antropometria)
     # PESO (always as bar)
     if "PESO (KG)" in df.columns:
         size = 20 if len(df) <= 2 else 14
@@ -189,7 +191,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         x_vals = df["FECHA REGISTRO"]
         y_vals = df["GRASA (%)"]
         colores_puntos = y_vals.apply(lambda x: asignar_color_grasa(x, gender, categoria))
-        st.text(categoria)
+        #st.text(categoria)
         if barras or len(y_vals) <= 2:
             #st.text(x_vals)
             size = 20 if len(x_vals) <= 2 else 14
@@ -269,7 +271,8 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
             ))
 
     # Colorbar lateral
-    if "GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all():
+    if ("GRASA (%)" in df.columns and not df["GRASA (%)"].isnull().all() and (df["GRASA (%)"].fillna(0) != 0).any()):
+
         fig.add_trace(go.Heatmap(
             z=[[0]],
             x=[df["FECHA REGISTRO"].min()],

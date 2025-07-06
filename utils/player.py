@@ -71,7 +71,8 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         if nacionalidad == unavailable:
             bandera = ""
         else:
-            bandera = util.obtener_bandera(str(nacionalidad).replace(",", "."))
+            nb = "ESPANA" if nacionalidad.upper() == "ESPAÑA" else nacionalidad.upper()
+            bandera = util.obtener_bandera(str(nb).replace(",", "."))
 
         #referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
         #referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
@@ -82,16 +83,17 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         #st.badge("Success", icon=":material/check:", color="green")
 
         st.markdown(f"## {nombre} {genero_icono}")
-        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera} ")
+        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{traslator.traducir_pais(nacionalidad.upper(),idioma).upper()}_ {bandera} ")
 
         col1, col2, col3 = st.columns([1, 2, 2])
 
         with col1:
+            #st.dataframe(df_jugador)
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
             profile_image = "female" if genero == "M" else "male"
             #url_directa = convert_drive_url(url_drive)
             
-            if url_drive is not None and url_drive != "No Disponible":
+            if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":
                 #st.text(url_drive)
                 response = util.get_photo(url_drive)
 
