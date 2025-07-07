@@ -26,6 +26,13 @@ def get_test(conn):
     df = conn.read(worksheet="TEST", ttl=get_ttl())
     return df
 
+def convertir_fecha_segura(valor):
+    try:
+        return pd.to_datetime(valor, format="%d/%m/%Y").date()
+    except Exception:
+        print(f"❌ Fecha inválida: {valor}")
+        return None
+    
 def get_player_data(conn):
     #st.cache_data.clear()
     df = conn.read(worksheet="DATOS", ttl=get_ttl())
@@ -36,10 +43,16 @@ def get_player_data(conn):
         df[col] = df[col].str.strip()
 
     # Convertir a tipo datetime (asegura formato día/mes/año)
-    df["FECHA DE NACIMIENTO"] = pd.to_datetime(df["FECHA DE NACIMIENTO"], format="%d/%m/%Y")
-    df["EDAD"] = df["FECHA DE NACIMIENTO"].apply(lambda x: hoy.year - x.year - ((hoy.month, hoy.day) < (x.month, x.day)))    
-    df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].dt.strftime('%d/%m/%Y').astype(str)
+    
+    #df["FECHA DE NACIMIENTO"] = pd.to_datetime(df["FECHA DE NACIMIENTO"], format="%d/%m/%Y")
+    df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(convertir_fecha_segura)
+    #df["EDAD"] = df["FECHA DE NACIMIENTO"].apply(lambda x: hoy.year - x.year - ((hoy.month, hoy.day) < (x.month, x.day)))    
+    df["EDAD"] = df["FECHA DE NACIMIENTO"].apply(lambda x: hoy.year - x.year - ((hoy.month, hoy.day) < (x.month, x.day)) if x else None)
 
+    #df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].dt.strftime('%d/%m/%Y').astype(str)
+
+    df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(lambda x: x.strftime('%d/%m/%Y') if isinstance(x, pd.Timestamp) else None
+)
     df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
     df['NACIONALIDAD'] = df['NACIONALIDAD'].apply(quitar_acentos)
 
