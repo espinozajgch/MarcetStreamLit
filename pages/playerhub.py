@@ -49,7 +49,7 @@ fecha_actual = date.today()
 ###################################################
 df_datos, df_data_test, df_checkin = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
-#st.dataframe(df_data_test)
+#st.dataframe(df_datos )
 
 test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
 
