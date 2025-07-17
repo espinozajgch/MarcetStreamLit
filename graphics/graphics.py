@@ -135,6 +135,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
 
     metricas = ["PESO (KG)", "GRASA (%)"]
     df = df[["FECHA REGISTRO"] + metricas]
+    df = df[(df != 0).all(axis=1)]
 
     df_fechas_unicas = df["FECHA REGISTRO"].drop_duplicates().sort_values()
     años_unicos = df_fechas_unicas.dt.year.unique()
@@ -147,8 +148,9 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
     rango_color = get_range(gender, categoria)
+    st.dataframe(df["GRASA (%)"])
     cmin, cmax = calcular_rango_visual(df["GRASA (%)"], rango_color)
-    #colores_puntos = df["GRASA (%)"].apply(lambda x: asignar_color_grasa(x, gender, categoria))
+   
     colorscale = get_color_scale(gender, categoria, cmin, cmax)
     
     #st.text(gender)
