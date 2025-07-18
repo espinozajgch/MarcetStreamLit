@@ -84,7 +84,14 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         color = "violet" if genero == "M" else "blue"
         #blue, green, orange, red, violet, gray/grey, rainbow, or primary
         
-        genero_icono = ":material/girl:" if genero == "M" else ":material/boy:"
+        if genero == "M":
+            genero_icono = ":material/girl:"
+        elif genero == "H":
+            genero_icono = ":material/boy:"
+        else:
+            genero_icono = "" 
+
+        #genero_icono = ":material/girl:" if genero == "M" else ":material/boy:"
 
         if nacionalidad == unavailable:
             bandera = ""
@@ -108,7 +115,14 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         with col1:
             #st.dataframe(df_jugador)
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
-            profile_image = "female" if genero == "M" else "male"
+
+            if genero == "M":
+                profile_image = "female" 
+            elif genero == "H":
+                profile_image = "male" 
+            else:
+                profile_image = "profile" 
+
             #url_directa = convert_drive_url(url_drive)
             
             if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":

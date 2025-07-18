@@ -127,7 +127,7 @@ class PDF(FPDF):
             elif gender == "M":
                 self.image("assets/images/female.png", 8, 55, 40)
             else:
-                self.image("assets/images/female.png", 8, 55, 40)
+                self.image("assets/images/profile.png", 8, 55, 40)
             
         # Nombre
         if(idioma == "ar"):

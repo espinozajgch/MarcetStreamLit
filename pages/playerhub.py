@@ -146,7 +146,6 @@ df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a
 #st.dataframe(df_promedios)
 
 ###################################################
-
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
     st.warning("No se ha encontrado información o aun no ha seleccionado a un jugador.")
 else:
