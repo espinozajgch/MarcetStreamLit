@@ -124,6 +124,8 @@ class PDF(FPDF):
             gender = data["GENERO"]
             if gender == "H":
                 self.image("assets/images/male.png", 8, 55, 40)
+            elif gender == "M":
+                self.image("assets/images/female.png", 8, 55, 40)
             else:
                 self.image("assets/images/female.png", 8, 55, 40)
             
