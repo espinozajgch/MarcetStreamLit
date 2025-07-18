@@ -4,7 +4,7 @@ import streamlit as st
 from utils import util
 from utils import player
 from utils import reporte as report
-from graphics import graphics
+from graphics import height_weight_fat
 from graphics import cmj as cmjg
 from graphics import sprint as sprintg
 from graphics import yoyo as yoyog
@@ -58,7 +58,6 @@ columnas_a_verificar = [col for col in datatest_columns if col not in columnas_e
 
 df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
 ###################################################
-#st.dataframe(df_datos_final)
 
 df_datos_filtrado = pd.DataFrame()
 # Filtros
@@ -83,7 +82,9 @@ if on:
     #df_datos_filtrado = util.get_filters(df_filtrado)
 #else:
 
+#st.dataframe(df_datos_final)
 df_datos_filtrado = util.get_filters(df_datos_final)
+#st.dataframe(df_datos_final)
 
 # @st.fragment
 # def filtros_fragment(df):
@@ -248,10 +249,10 @@ else:
                     
                     observaciones_dict["Peso y % Grasa"] = observacion
 
-                    figalt = graphics.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
+                    figalt = height_weight_fat.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
 
                     #df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
+                    figant = height_weight_fat.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
