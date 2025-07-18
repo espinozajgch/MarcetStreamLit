@@ -68,12 +68,29 @@ SEMAFORO_GRASA = {
 }
 
 def get_range(genero, categoria):
-    return SEMAFORO_GRASA.get(genero.upper(), {}).get(categoria.lower(), [])
+    genero = (genero or "").strip().upper()
+    categoria = (categoria or "").strip().lower()
+
+    semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
+
+    if not semaforo:
+        # Si no hay rango definido, devolver uno neutro
+        return [
+            (5, "#FF0000"),   # rojo
+            (10, "#FFA500"),  # naranja
+            (15, "#FFFF00"),  # amarillo
+            (20, "#7CFC00"),  # verde claro
+            (25, "#006400"),  # verde oscuro
+        ]
+
+    return semaforo
 
 def get_color_scale(genero, categoria, cmin, cmax):
     genero = genero.upper()
     categoria = categoria.lower()
-    semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
+    
+    semaforo = get_range(genero, categoria)
+    #SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
 
     def norm(v):
         return max(0, min(1, round((v - cmin) / (cmax - cmin), 4)))
@@ -89,9 +106,19 @@ def calcular_rango_visual(df_grasa, rango_color, margen=1, rango_minimo=5):
     grasa_min = df_grasa.min()
     grasa_max = df_grasa.max()
 
-    semaforo_vals = [umbral for umbral, _ in rango_color]
-    semaforo_min = min(semaforo_vals)
-    semaforo_max = max(semaforo_vals)
+    # Validar que rango_color no esté vacío
+    if not rango_color or not isinstance(rango_color, list):
+        # Valor por defecto si no se proporciona rango_color válido
+        semaforo_min = grasa_min
+        semaforo_max = grasa_max
+    else:
+        semaforo_vals = [umbral for umbral, _ in rango_color if umbral is not None]
+        if semaforo_vals:
+            semaforo_min = min(semaforo_vals)
+            semaforo_max = max(semaforo_vals)
+        else:
+            semaforo_min = grasa_min
+            semaforo_max = grasa_max
 
     cmin = min(grasa_min - margen, semaforo_min)
     cmax = max(grasa_max + margen, semaforo_max)
@@ -109,7 +136,8 @@ def asignar_color_grasa(valor, genero, categoria):
 
     genero = genero.upper()
     categoria = categoria.lower()
-    semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
+    semaforo = get_range(genero, categoria)
+    # semaforo = SEMAFORO_GRASA.get(genero, {}).get(categoria, [])
 
     # Asegurar que esté ordenado
     semaforo = sorted(semaforo, key=lambda x: x[0])
@@ -148,7 +176,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
     rango_color = get_range(gender, categoria)
-    #st.dataframe(df["GRASA (%)"])
+    
     cmin, cmax = calcular_rango_visual(df["GRASA (%)"], rango_color)
    
     colorscale = get_color_scale(gender, categoria, cmin, cmax)
