@@ -121,7 +121,11 @@ class PDF(FPDF):
                 pass
 
         if not imagen_insertada:
-            self.image("assets/images/profile.jpg", 8, 55, 40)
+            gender = data["GENERO"]
+            if gender == "H":
+                self.image("assets/images/male.jpg", 8, 55, 40)
+            else:
+                self.image("assets/images/female.jpg", 8, 55, 40)
             
         # Nombre
         if(idioma == "ar"):
