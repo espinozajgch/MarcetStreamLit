@@ -121,7 +121,7 @@ class PDF(FPDF):
                 pass
 
         if not imagen_insertada:
-            self.image("assets/images/profile.png", 8, 55, 40)
+            self.image("assets/images/profile.jpg", 8, 55, 40)
             
         # Nombre
         if(idioma == "ar"):
