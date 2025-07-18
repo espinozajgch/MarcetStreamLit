@@ -148,7 +148,7 @@ def get_anthropometrics_graph(df_antropometria, categoria, zona_optima_min, zona
         ticktext = df_fechas_unicas.dt.strftime("%b-%Y")
 
     rango_color = get_range(gender, categoria)
-    st.dataframe(df["GRASA (%)"])
+    #st.dataframe(df["GRASA (%)"])
     cmin, cmax = calcular_rango_visual(df["GRASA (%)"], rango_color)
    
     colorscale = get_color_scale(gender, categoria, cmin, cmax)

@@ -64,10 +64,9 @@ def get_player_data(conn):
 
     #df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(lambda x: x.strftime('%d/%m/%Y') if isinstance(x, pd.Timestamp) else None)   
     
+    df = limpiar_nacionalidades(df)
     #st.dataframe(df)
-    df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
-    df['NACIONALIDAD'] = df['NACIONALIDAD'].apply(quitar_acentos)
-
+    
     df.drop_duplicates(subset=["ID"], keep="first")
     
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -1017,6 +1016,32 @@ def quitar_acentos(texto):
         if unicodedata.category(c) != 'Mn' or c == '̃' and texto_normalizado[texto_normalizado.index(c)-1].lower() == 'n'
     )
     return texto_sin_tildes
+
+def limpiar_nacionalidades(df):
+    reemplazos = {
+        "ESPANA": "ESPAÑA",
+        "FEDERACIÓN RUSSA": "RUSIA",
+        "FEDERACION RUSSA": "RUSIA",
+        "R. DOMINICANA": "REPUBLICA DOMINICANA",
+        "KENYA": "KENIA",
+        "MOROCCO": "MARRUECOS"
+    }
+
+    # Normalizar texto y aplicar reemplazos
+    df["NACIONALIDAD"] = (
+        df["NACIONALIDAD"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .replace(reemplazos)
+    )
+
+    df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
+    df['NACIONALIDAD'] = df['NACIONALIDAD'].apply(quitar_acentos)
+
+
+    return df
+
 
 def obtener_bandera(pais):
     # Diccionario de códigos de país ISO 3166-1 alfa-2

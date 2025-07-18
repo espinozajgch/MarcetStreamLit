@@ -19,7 +19,10 @@ class PDF(FPDF):
             self.add_font("Amiri", "B", "assets/fonts/Amiri-0.111/Amiri-Bold.ttf", uni=True)
             self.add_font("Amiri", "I", "assets/fonts/Amiri-0.111/Amiri-Slanted.ttf", uni=True)
             self.set_font("Amiri", "", 12)
-       
+
+        self.add_font("DejaVu", "", "assets/fonts/dejavu-2.37/DejaVuSans.ttf", uni=True)  # Añadir fuente Unicode
+        self.add_font("DejaVu", "B", "assets/fonts/dejavu-2.37/DejaVuSans-Bold.ttf", uni=True)
+        
     def footer(self):
         # Posición a 15 mm del final de la página
         self.set_y(-15)
@@ -156,7 +159,7 @@ class PDF(FPDF):
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
-            self.set_font("Arial", "", 10)
+            self.set_font("DejaVu", "", 10)
         
         if data["NACIONALIDAD"].upper() == "NO DISPONIBLE":
             self.cell(50, 6, traslator.traducir("No Disponible", idioma).upper(), ln=True)
