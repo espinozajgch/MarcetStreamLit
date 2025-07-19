@@ -9,11 +9,11 @@ from datetime import datetime
 def get_usuarios(_conn, _get_data):
     return _get_data(_conn, "USUARIOS")
 
-@st.cache_data(ttl=600)  
+@st.cache_data(ttl=60)  
 def get_test(_conn, _get_data):
     return _get_data(_conn, "TEST")
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_player_data(_conn, _get_data):
     """
     Carga, limpia y transforma los datos de jugadores desde la hoja "DATOS" de Google Sheets.
@@ -105,7 +105,7 @@ def get_test_data(conn, hoja, _get_data):
 
     return df
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def load_player_and_physical_data(_conn, _get_data):
     """
     Carga y consolida los datos de jugadores y sus tests físicos.
