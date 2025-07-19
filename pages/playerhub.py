@@ -33,7 +33,6 @@ if "usuario" not in st.session_state:
     st.stop()
 
 st.header(" :blue[Player Hub] :material/contacts:", divider=True)
-#st.subheader("Datos individuales, historicos y alertas")
 
 unavailable = "No Disponible"
 fecha_registro = "FECHA REGISTRO"
@@ -49,7 +48,6 @@ fecha_actual = date.today()
 ###################################################
 df_datos, df_data_test, df_checkin = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
-#st.dataframe(df_datos )
 
 test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
 
@@ -129,8 +127,7 @@ with st.expander("Configuración Avanzada"):
 
     seleccion = st.radio("Selecciona un idioma:", idiomas, horizontal=True)
     idioma = idioma_map[seleccion]
-
-    #st.divider()
+    
     type_report = ["Simple", "Avanzado"]
     tipo_reporte = st.radio("Tipo Reporte", type_report, horizontal=True)
 
@@ -142,28 +139,31 @@ with st.expander("Configuración Avanzada"):
 # Promedios
 ###################################################
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
-#df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
-df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, categorial, equipol, equipo_promedio)
-#st.dataframe(df_promedios)
-
+df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, 
+                                                  categorial, equipol, equipo_promedio)
 ###################################################
+
+use_scale_gradient = True
+# Store figure parameters for PDF regeneration
+fig_params_dict = {}
+
 if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
     st.warning("No se ha encontrado información o aun no ha seleccionado a un jugador.")
 else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
-    
-    #st.dataframe(df_datos_final)
-
+   
     # Sección datos de usuario
-    df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
+    df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, 
+                                                                                    df_datos_final, 
+                                                                                    test_data_filtered, 
+                                                                                    unavailable, 
+                                                                                    idioma)
     
    
 
     cat_label = "U19" if categoria.lower() == "juvenil" else "U15"
    
     if not df_datos_filtrado.empty:
-        #traducidas = util.traducir_lista(lista_columnas + ["REPORTE"], idioma)
-        ##tab1,tab2,tab3 = st.tabs(["👤 Perfil", "📈 Rendimiento", "📆 Historicos" ,"📉 Comparaciones", "🏥 Alertas"])
         antropometria, cmj, sprint, yoyo, agilidad, rsa, reporte = st.tabs(lista_columnas + ["REPORTE"])
 
         figalt = None
@@ -188,12 +188,11 @@ else:
                 
                 df_anthropometrics = df_joined_filtrado[[fecha_registro] + columns]
                 df_anthropometrics = df_anthropometrics.reset_index(drop=True)
-                #st.dataframe(df_anthropometrics)
+                
                 if not util.columnas_sin_datos_utiles(df_anthropometrics, [fecha_registro]):
                     
                     # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
-                    df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columns] == 0).all(axis=1)]
-                    #percentiles_an = util.calcular_percentiles(df_anthropometrics.iloc[0], referencia_test, columnas_filtradas)
+                    df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columns] == 0).all(axis=1)]                
                     
                     st.markdown("📆 **Ultímas Mediciones**")
 
@@ -249,10 +248,37 @@ else:
                     
                     observaciones_dict["Peso y % Grasa"] = observacion
 
-                    figalt = height_weight_fat.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
-
-                    #df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    figant = height_weight_fat.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
+                    figalt = graphics.get_height_graph(df_anthropometrics, idioma, 
+                                                       tipo_reporte_bool)
+                    
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, categoria, 
+                                                                zona_optima_min, zona_optima_max, 
+                                                                idioma, tipo_reporte_bool, 
+                                                                gender, cat_label,
+                                                                gradient_colorbar=use_scale_gradient)
+                    # Store parameters for PDF regeneration
+                    if figalt is not None:
+                        fig_params_dict["Altura"] = {
+                            'function_type': 'height',
+                            'params': {
+                                'df_antropometria': df_anthropometrics,
+                                'idioma': idioma,
+                                'barras': tipo_reporte_bool
+                            }
+                        }                    
+                    if figant is not None:
+                        fig_params_dict["Peso y Grasa"] = {
+                            'function_type': 'anthropometrics',
+                            'params': {
+                                'df_antropometria': df_anthropometrics,
+                                'categoria': categoria,
+                                'zona_optima_min': zona_optima_min,
+                                'zona_optima_max': zona_optima_max,
+                                'barras': tipo_reporte_bool,
+                                'gender': gender,
+                                'cat_label': cat_label
+                            }
+                        }
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -265,19 +291,26 @@ else:
                         df_anthropometrics["IMC"] = np.where(mask, np.nan, df_anthropometrics[columns[1]] / ((df_anthropometrics[columns[0]] / 100) ** 2))
 
                         # Asegurarse de que la columna "IMC" no contenga "N/A" como string
-                        df_anthropometrics["Categoría IMC"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", df_anthropometrics["IMC"].apply(util.categorizar_imc))
+                        df_anthropometrics["Categoría IMC"] = np.where(df_anthropometrics["IMC"].isna(), "N/A", 
+                                                                       df_anthropometrics["IMC"].apply(util.categorizar_imc))
 
                         st.markdown("📊 **Análisis de IMC y Porcentaje de Grasa Corporal**")
                         st.dataframe(df_anthropometrics
                             .style
                             .format({"ALTURA (CM)": "{:.2f}", "PESO (KG)": "{:.2f}", "IMC": "{:.2f}", "GRASA (%)": "{:.2f}"})  # Aplica el formato de 2 decimales
-                            .map(util.color_categorias, subset=["Categoría IMC"]))
+                            .map(util.color_categorias, subset=["Categoría IMC"]), hide_index=True)
                     with c2:
                         # Cálculo de estadísticas
                         stats = {
-                            columns[0]: [df_anthropometrics[columns[0]].mean(), df_anthropometrics[columns[0]].max(), df_anthropometrics[columns[0]].min()],
-                            columns[1]: [df_anthropometrics[columns[1]].mean(), df_anthropometrics[columns[1]].max(), df_anthropometrics[columns[1]].min()],
-                            columns[2]: [df_anthropometrics[columns[2]].mean(), df_anthropometrics[columns[2]].max(), df_anthropometrics[columns[2]].min()],
+                            columns[0]: [df_anthropometrics[columns[0]].mean(), 
+                                         df_anthropometrics[columns[0]].max(), 
+                                         df_anthropometrics[columns[0]].min()],
+                            columns[1]: [df_anthropometrics[columns[1]].mean(), 
+                                         df_anthropometrics[columns[1]].max(), 
+                                         df_anthropometrics[columns[1]].min()],
+                            columns[2]: [df_anthropometrics[columns[2]].mean(), 
+                                         df_anthropometrics[columns[2]].max(), 
+                                         df_anthropometrics[columns[2]].min()],
                         }
                         stats_df = pd.DataFrame(stats, index=["Promedio", "Máximo", "Mínimo"])
 
@@ -305,8 +338,6 @@ else:
 
                 if not todos_ceros:
                     df_cmj = df_cmj[~(df_cmj[columns] == 0).all(axis=1)]
-                    #st.dataframe(df_cmj)  
-                    #percentiles_cmj = util.calcular_percentiles(df_cmj.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
                     
@@ -328,18 +359,17 @@ else:
                     with col3:
                         act = df_cmj[fecha_registro].iloc[0]
                         st.metric("Último Registro", act)
-
-                    #st.text(gender)
-                    promedio_cmj = util.obtener_promedio_genero(df_promedios, categoria, equipo_promedio, columns[0], gender)
+                    
+                    promedio_cmj = util.obtener_promedio_genero(df_promedios, categoria, 
+                                                                equipo_promedio, columns[0], 
+                                                                gender)
                     cactc = float(cactc)
-                    #st.text(cactc)
                     observacion = util.get_observacion_cmj(cactc, categoria, gender)
                     observacion = traslator.traducir(observacion, idioma)
                     observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
                     
                     # Mostrar mensaje visual según el rango definido por categoría
                     if cactc is not None and pd.notna(cactc):
-                        #categoria = categoria.lower()
 
                         if gender == "M":
                             if categoria.lower() == "juvenil":
@@ -353,7 +383,7 @@ else:
                                     st.success(observacion, icon="✅")
                                 else:  # cactc < 18
                                     st.warning(observacion, icon="⚠️")
-                        elif genero == "H":
+                        elif gender == "H":
                             if categoria.lower() == "juvenil":
                                 if cactc > 36:
                                     st.success(observacion, icon="✅")
@@ -370,29 +400,43 @@ else:
                                 else:
                                     st.warning(observacion, icon="⚠️")
 
-                    #graphics.get_cmj_graph(df_cmj, df_promedios, categoria, equipo)
+                    promedios = util.obtener_promedios_metricas_genero(
+                        df_promedios=df_promedios,
+                        categoria=categoria,
+                        equipo=equipo,
+                        metricas=[columns[0].upper()],
+                        genero=gender,
+                        tipo="CMJ"
+                    )
 
-                    #st.divider()
-                    cola, colb = st.columns([2.5,1])
+                    figcmj = cmjg.get_cmj_graph(df_cmj, promedios, categoria, equipo_promedio, 
+                                                [columns[0]], fecha_registro, idioma, 
+                                                tipo_reporte_bool, gender, cat_label,
+                                                gradient_colorbar=use_scale_gradient)
+                    # Store parameters for PDF regeneration
+                    if figcmj is not None:
+                        fig_params_dict["CMJ"] = {
+                            'function_type': 'cmj',
+                            'params': {
+                                'df_cmj': df_cmj,
+                                'promedios': promedios,
+                                'categoria': categoria,
+                                'equipo': equipo_promedio,
+                                'metricas': [columns[0]],
+                                'columnas_fecha_registro': fecha_registro,
+                                'idioma': idioma,
+                                'barras': tipo_reporte_bool,
+                                'gender': gender,
+                                'cat_label': cat_label,
+                                'gradient_colorbar': use_scale_gradient
+                            }
+                        }
 
-                    with cola:
-                        promedios = util.obtener_promedios_metricas_genero(
-                            df_promedios=df_promedios,
-                            categoria=categoria,
-                            equipo=equipo,
-                            metricas=[columns[0].upper()],
-                            genero=gender,
-                            tipo="CMJ"
-                        )
-                        
-                        figcmj = cmjg.get_cmj_graph(df_cmj, promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma, tipo_reporte_bool, gender, cat_label)
-                    with colb:
-                        st.markdown("📊 **Históricos**")
-                        styled_df = util.aplicar_semaforo(df_cmj)
-                        st.dataframe(df_cmj)
-
-                    #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                    #graphics.mostrar_percentiles_coloreados(df_cmj.iloc[0], percentiles_cmj)  
+                    st.divider()
+                    
+                    st.markdown("📊 **Históricos**")
+                    styled_df = util.aplicar_semaforo(df_cmj)
+                    st.dataframe(df_cmj, hide_index=True)
                 else:
                     st.text(mensaje_no_data) 
                     percentiles_cmj = None      
@@ -415,11 +459,9 @@ else:
                 df_sprint = df_sprint.loc[~(df_sprint[columns].fillna(0) == 0).all(axis=1)]
 
                 todos_ceros = (df_sprint[columns] == 0).all().all()
-                
-                #st.dataframe(df_sprint)
+                                
                 if not todos_ceros:
                     df_sprint = df_sprint[~(df_sprint[columns] == 0).all(axis=1)]
-                    #percentiles_sp = util.calcular_percentiles(df_sprint.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
 
@@ -452,18 +494,16 @@ else:
                     with col5:
                         act = df_sprint[fecha_registro].iloc[0]
                         st.metric(f"Último Registro",act)
-                        #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
-                    
-                    observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria, genero=gender)
+                    observacion = util.get_observacion_sprint(valor_sprint=act040t, 
+                                                              categoria=categoria, 
+                                                              genero=gender)
                     observacion = traslator.traducir(observacion, idioma)
                     observaciones_dict["SPRINT (0-40M)"] = observacion
                     
                     act040t = float(act040t) if pd.notna(act040t) else None
 
                     if act040t is not None:
-                        #categoria = categoria.lower()
-
                         if gender == "H":
                             umbral_bueno = 5.2 if "juvenil" in categoria.lower() else 5.9
                         elif genero == "M":
@@ -476,7 +516,6 @@ else:
                         else:
                             st.warning(observacion, icon="⚠️")
 
-                    #st.text(columns[2].upper())
                     promedios_sprint = util.obtener_promedios_metricas_genero(
                             df_promedios=df_promedios,
                             categoria=categoria.capitalize(),
@@ -484,23 +523,69 @@ else:
                             metricas=[columns[2].upper()],
                             genero=gender,
                             tipo="Sprint 0-40m"
-                        )
-                    
-                    #st.dataframe(df_promedios)
+                        )                                        
 
                     if(act05t != 0) or (act05v != 0):
-                        figsp05 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        figsp05 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, 
+                                                           categoria, equipo_promedio, 
+                                                           columns[0],columns[1],                                                            
+                                                           fecha_registro, idioma, 
+                                                           tipo_reporte_bool, cat_label,
+                                                           gender,
+                                                           gradient_colorbar=use_scale_gradient)
 
                     if(act040t != 0) or (act040v != 0):
-                        figsp040 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
-                
+                        figsp040 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, 
+                                                            categoria, equipo_promedio, 
+                                                            columns[2],columns[3],                                                             
+                                                            fecha_registro, idioma, 
+                                                            tipo_reporte_bool, cat_label, 
+                                                            gender,
+                                                            gradient_colorbar=use_scale_gradient)
+                        
+                    # Store parameters for PDF regeneration
+                    if figsp05 is not None:
+                        fig_params_dict["SPRINT 0-5"] = {
+                            'function_type': 'sprint',
+                            'params': {
+                                'df_sprint': df_sprint,
+                                'promedio_row': promedios_sprint,
+                                'categoria': categoria,
+                                'equipo': equipo_promedio,
+                                'metrica_tiempo': columns[0],
+                                'metrica_velocidad': columns[1],
+                                'columnas_fecha_registro': fecha_registro,
+                                'idioma': idioma,
+                                'barras': tipo_reporte_bool,
+                                'cat_label': cat_label,
+                                'gender': gender,
+                                'gradient_colorbar': use_scale_gradient
+                            }
+                        }
+                    
+                    if figsp040 is not None:
+                        fig_params_dict["SPRINT 0-40"] = {
+                            'function_type': 'sprint',
+                            'params': {
+                                'df_sprint': df_sprint,
+                                'promedio_row': promedios_sprint,
+                                'categoria': categoria,
+                                'equipo': equipo_promedio,
+                                'metrica_tiempo': columns[2],
+                                'metrica_velocidad': columns[3],
+                                'columnas_fecha_registro': fecha_registro,
+                                'idioma': idioma,
+                                'barras': tipo_reporte_bool,
+                                'cat_label': cat_label,
+                                'gender': gender,
+                                'gradient_colorbar': use_scale_gradient
+                            }
+                        }
+
                     st.divider()
                     st.markdown("📊 **Históricos**")
-                    st.dataframe(df_sprint)   
-                    
-                    #st.divider()
-                    #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                    #graphics.mostrar_percentiles_coloreados(df_sprint.iloc[0], percentiles_sp) 
+                    st.dataframe(df_sprint, hide_index=True)   
+ 
                 else:
                     st.text(mensaje_no_data)  
                     percentiles_sp = None 
@@ -526,8 +611,7 @@ else:
 
                 if not todos_ceros:
                     df_yoyo = df_yoyo[~(df_yoyo[columns] == 0).all(axis=1)]
-                    #percentiles_yoyo = util.calcular_percentiles(df_yoyo.iloc[0], referencia_test, columnas_filtradas)
-                    
+                   
                     st.markdown("📆 **Ultímas Mediciones**")
                     col1, col2, col3 = st.columns(3)
 
@@ -550,15 +634,34 @@ else:
                     st.divider()
 
                     cola, colb = st.columns([2.5,1.5])
+                    
+                    figyoyo = yoyog.get_yoyo_graph(df_yoyo, df_promedios, categoria, 
+                                                   equipo_promedio, columns[1], 
+                                                   fecha_registro, idioma, 
+                                                   tipo_reporte_bool, 
+                                                   cat_label)
+                    
+                    # Store parameters for PDF regeneration
+                    if figyoyo is not None:
+                        fig_params_dict["YO-YO"] = {
+                            'function_type': 'yoyo',
+                            'params': {
+                                'df_yoyo': df_yoyo,
+                                'df_promedios': df_promedios,
+                                'categoria': categoria,
+                                'equipo': equipo_promedio,
+                                'metrica': columns[1],
+                                'columnas_fecha_registro': fecha_registro,
+                                'idioma': idioma,
+                                'barras': tipo_reporte_bool,
+                                'cat_label': cat_label
+                            }
+                        }
 
-                    #with cola:
-                    figyoyo = yoyog.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label)
-                    #with colb:   
                     st.markdown("📊 **Históricos**")
                     styled_df = util.aplicar_semaforo(df_yoyo)
-                    st.dataframe(df_yoyo)    
-                    #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
-                    #graphics.mostrar_percentiles_coloreados(df_yoyo.iloc[0], percentiles_yoyo)  
+                    st.dataframe(df_yoyo, hide_index=True)    
+                     
                 else:
                     st.text(mensaje_no_data)
                     percentiles_yoyo = None
@@ -567,7 +670,6 @@ else:
                 percentiles_yoyo = None
 
         with agilidad:
-            #st.dataframe(df_joined_filtrado)
             if len(df_joined_filtrado) > 0: 
 
                 ######################################################################################################
@@ -575,7 +677,7 @@ else:
                 columns = list(test_cat.get(lista_columnas[4], []))
                 
                 df_agilty = df_joined_filtrado[[fecha_registro] + columns]
-                #st.dataframe(df_joined_filtrado)
+                
                 df_agilty = df_agilty.loc[~(df_agilty[columns].fillna(0) == 0).all(axis=1)]
                 todos_ceros = (df_agilty[columns] == 0).all().all()
 
@@ -584,7 +686,6 @@ else:
                     df_agilty = df_agilty[~(df_agilty[columns] == 0).any(axis=1)]
                     diferencias = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
                     ultima_diferencia = diferencias[-1]["diferencia_%"] if diferencias else None
-                    #percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
                     
                     st.markdown("📆 **Ultímas Mediciones**")
                     col1, col2, col3, col4 = st.columns(4)
@@ -614,21 +715,47 @@ else:
                             st.metric("Último Registro", act)
 
                     if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
-                        observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
+                        observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, 
+                                                                    genero=gender, 
+                                                                    categoria=categoria)
                         observacion = traslator.traducir(observacion, idioma)
                         observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
-                        #st.text(diferencia)
+                        
                         if ultima_diferencia <= 5:
                             st.success(observacion, icon="✅")
                         else:
                             st.warning(observacion, icon="⚠️")
 
-                        figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
-                        st.divider()
+                        figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, 
+                                                                            categoria, equipo, 
+                                                                            columns, fecha_registro, 
+                                                                            idioma, tipo_reporte_bool, 
+                                                                            cat_label, gender,
+                                                                            gradient_colorbar=use_scale_gradient)
                         
+                        # Store parameters for PDF regeneration
+                        if figag is not None:
+                            fig_params_dict["AGILIDAD"] = {
+                                'function_type': 'agility',
+                                'params': {
+                                    'df_agility': df_agilty,
+                                    'df_promedios': df_promedios,
+                                    'categoria': categoria,
+                                    'equipo': equipo,
+                                    'metricas': columns,
+                                    'columnas_fecha_registro': fecha_registro,
+                                    'idioma': idioma,
+                                    'barras': tipo_reporte_bool,
+                                    'cat_label': cat_label,
+                                    'gender': gender,
+                                    'gradient_colorbar': use_scale_gradient
+                                }
+                            }
+
+                        st.divider()
                     
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(df_agilty)
+                        st.dataframe(df_agilty, hide_index=True)
                    
                 else:
                     st.text(mensaje_no_data)
@@ -650,11 +777,10 @@ else:
                 df_rsa = df_rsa.loc[~(df_rsa[columns].fillna(0) == 0).all(axis=1)]
 
                 todos_ceros = (df_rsa[columns] == 0).all().all()
-                #st.dataframe(df_rsa)
+                
                 if not todos_ceros:
                     df_rsa = df_rsa[~(df_rsa[columns] == 0).all(axis=1)]
-                    #percentiles_rsa = util.calcular_percentiles(df_rsa.iloc[0], referencia_test, columnas_filtradas)
-                    
+                   
                     st.markdown("📆 **Ultímas Mediciones**")
 
                     col1, col2, col3 = st.columns(3)
@@ -675,23 +801,61 @@ else:
                         act = df_rsa[fecha_registro].iloc[0]
                         st.metric(f"Último Registro",act)
 
-                    #styled_dfa = util.aplicar_semaforo(df_rsa[columna_fecha_registro + columns], invertir=True)
-
                     cola, colb = st.columns([2.5,1])
                     with cola:
-                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label) 
+                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, 
+                                                     equipo_promedio, columns, 
+                                                     fecha_registro, idioma, 
+                                                     tipo_reporte_bool, cat_label) 
+                        
+                        # Store parameters for PDF regeneration
+                        if figrsat is not None:
+                            fig_params_dict["RSA Tiempo"] = {
+                                'function_type': 'rsa',
+                                'params': {
+                                    'df_rsa': df_rsa,
+                                    'df_promedios': df_promedios,
+                                    'categoria': categoria,
+                                    'equipo': equipo_promedio,
+                                    'columns': columns,
+                                    'columnas_fecha_registro': fecha_registro,
+                                    'idioma': idioma,
+                                    'barras': tipo_reporte_bool,
+                                    'cat_label': cat_label
+                                }
+                            }
                     with colb:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(df_rsa[[fecha_registro] + [columns[0]]]) 
+                        st.dataframe(df_rsa[[fecha_registro] + [columns[0]]], hide_index=True) 
 
                     styled_dfb = util.aplicar_semaforo(df_rsa[[fecha_registro] + columns])
                     colc, cold = st.columns([2.5,1])
                     with colc:
-                        #st.dataframe(df_promedios)
-                        figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label)
+                        figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, 
+                                                              categoria, equipo_promedio, 
+                                                              columns[1], fecha_registro, 
+                                                              idioma, tipo_reporte_bool, 
+                                                              cat_label)
+                        
+                        # Store parameters for PDF regeneration
+                        if figrsav is not None:
+                            fig_params_dict["RSA Velocidad"] = {
+                                'function_type': 'rsa_velocity',
+                                'params': {
+                                    'df_rsa': df_rsa,
+                                    'df_promedios': df_promedios,
+                                    'categoria': categoria,
+                                    'equipo': equipo_promedio,
+                                    'metrica': columns[1],
+                                    'columnas_fecha_registro': fecha_registro,
+                                    'idioma': idioma,
+                                    'barras': tipo_reporte_bool,
+                                    'cat_label': cat_label
+                                }
+                            }
                     with cold:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(df_rsa[[fecha_registro] + [columns[1]]]) 
+                        st.dataframe(df_rsa[[fecha_registro] + [columns[1]]], hide_index=True) 
                 else:
                     st.text(mensaje_no_data) 
                     percentiles_rsa = None      
@@ -772,27 +936,38 @@ else:
                                 figs_filtrados[k] = graficos_disponibles[k]
 
                 if st.button("📄 Generar PDF"):
+                    import gc
+                    import copy
+                    
+                    gc.collect() 
+
                     # Mostrar el status inmediatamente
                     status = st.status("🛠 Generando PDF...", state="running", expanded=True)
                     fecha_str = fecha_actual.strftime("%d/%m/%Y")
 
-                    observaciones = {
-                        "Peso y % Grasa": "El jugador mantiene un % graso dentro del rango saludable.",
-                        "POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)": "Mejora significativa respecto al mes anterior.",
-                        "SPRINT (0-40M)": "El tiempo total ha disminuido, indicando mayor aceleración.",
-                        "VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)": "Aún se observa una leve asimetría entre piernas."
-                    }
-                    
                     try:
-                        if(tipo_reporte=="Avanzado"):
-                            # 1. Generar PDF como bytes (puede tardar)
+                        # CRITICAL: Pass copies of data to prevent contamination
+                        if tipo_reporte == "Avanzado":
                             pdf_bytes = report.generate_pdf_avanzado(
-                                df_jugador, df_anthropometrics, df_agilty, df_sprint, 
-                                df_cmj, df_yoyo, df_rsa, figs_filtrados, fecha_str, idioma, observaciones_dict)
+                                df_jugador.copy(), 
+                                df_anthropometrics.copy() if df_anthropometrics is not None else None, 
+                                df_agilty.copy() if df_agilty is not None else None, 
+                                df_sprint.copy() if df_sprint is not None else None, 
+                                df_cmj.copy() if df_cmj is not None else None, 
+                                df_yoyo.copy() if df_yoyo is not None else None, 
+                                df_rsa.copy() if df_rsa is not None else None, 
+                                figs_filtrados.copy(), fecha_str, idioma, 
+                                observaciones_dict.copy(), fig_params_dict=fig_params_dict.copy())
                         else:
-                            # 2. Generar PDF como bytes (puede tardar)
                             pdf_bytes = report.generate_pdf_simple(
-                                df_jugador, df_anthropometrics, figs_filtrados, fecha_str, idioma, observaciones_dict)
+                                df_jugador.copy(), 
+                                df_anthropometrics.copy() if df_anthropometrics is not None else None, 
+                                figs_filtrados.copy(), 
+                                fecha_str, idioma, observaciones_dict.copy(),
+                                fig_params_dict=fig_params_dict.copy())
+                        
+                        # Force another garbage collection after PDF generation
+                        gc.collect()
                             
                         # 2. Codificar y preparar para mostrar
                         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
@@ -800,7 +975,7 @@ else:
 
                         # Enlace de descarga con nombre específico
                         st.markdown(f'''
-                            <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{df_jugador['JUGADOR'].iloc[0]}.pdf" target="_blank">
+                            <a href="data:application/pdf;base64,{b64_pdf}" download="Informe_Fisico_{df_jugador['JUGADOR'].iloc[0]}_{tipo_reporte.lower()}.pdf" target="_blank">
                                 📥 Descargar PDF
                             </a>
                         ''', unsafe_allow_html=True)
@@ -817,6 +992,6 @@ else:
                     except Exception as e:
                         # Mostrar error si algo falla
                         status.update(label="❌ Error al generar el PDF", state="error", expanded=True)
-                        st.exception(e)
+                        st.exception(e)                        
             else:
                 st.text(mensaje_no_data)

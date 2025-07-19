@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from utils import util
 from utils import traslator
 
-SPRINT_CONFIG = {
+SPRINT_SEMAFORO = {
     "H": {
         "juvenil": {
             "rango": (4.4, 6.3),
@@ -54,24 +54,189 @@ SPRINT_CONFIG = {
 }
 
 
+def get_sprint_color_scale(gender, categoria):
+    """Get sprint color scale from existing SPRINT_SEMAFORO structure"""
+    config = SPRINT_SEMAFORO.get(gender.upper(), {}).get(categoria.lower(), {})
+    if not config:
+        return []
+    
+    # Extract range and color scale from existing structure
+    rango = config.get("rango", (0, 10))
+    escala_colores = config.get("escala_colores", [])
+    
+    # Convert to threshold-color pairs
+    thresholds = []
+    for ratio, color in escala_colores:
+        # Convert ratio to actual value based on range
+        valor = rango[0] + (rango[1] - rango[0]) * ratio
+        thresholds.append((valor, color))
+    
+    return thresholds
 
-def get_rango_sprint(categoria: str, genero: str = "H") -> tuple:
-    """
-    Retorna el rango (mínimo, máximo) para sprint en función de género y categoría.
-    """
-    genero = genero.upper()
-    categoria = categoria.lower()
-    return SPRINT_CONFIG.get(genero, {}).get(categoria, {}).get("rango", (4.4, 6.3))
+def asignar_color_sprint(valor, gender, categoria):
+    """Assign color based on sprint time using existing structure"""
+    if pd.isna(valor):
+        return "gray"
+    
+    config = SPRINT_SEMAFORO.get(gender.upper(), {}).get(categoria.lower(), {})
+    if not config:
+        return "gray"
+    
+    rango = config.get("rango", (0, 10))
+    escala_colores = config.get("escala_colores", [])
+    
+    if not escala_colores:
+        return "gray"
+    
+    # Normalize value to 0-1 range
+    if rango[1] - rango[0] == 0:
+        normalized = 0
+    else:
+        normalized = (valor - rango[0]) / (rango[1] - rango[0])
+        normalized = max(0, min(1, normalized))  # Clamp to 0-1
+    
+    # Find appropriate color based on normalized position
+    for i, (ratio, color) in enumerate(escala_colores):
+        if normalized <= ratio:
+            return color
+    
+    # If beyond all ratios, return last color
+    return escala_colores[-1][1] if escala_colores else "gray"
 
-def get_escala_colores_sprint(categoria: str, genero: str = "H") -> list:
+
+def get_sprint_colorbar_agregada(fig, y_min, y_max, gender, 
+                                 categoria, gradient=True, pdf_mode=False):
     """
-    Retorna la escala de colores para el sprint según género y categoría.
+    Add Sprint colorbar using existing SPRINT_SEMAFORO structure
     """
-    genero = genero.upper()
-    categoria = categoria.lower()
-    return SPRINT_CONFIG.get(genero, {}).get(categoria, {}).get("escala_colores", [
-        [0.0, "#7CFC00"], [0.25, "#006400"], [0.5, "#FFD700"], [0.75, "#FFA500"], [1.0, "#FF4500"]
-    ])
+    config = SPRINT_SEMAFORO.get(gender.upper(), {}).get(categoria.lower(), {})
+    if not config:
+        return fig
+    
+    rango = config.get("rango", (y_min, y_max))
+    escala_colores = config.get("escala_colores", [])
+    
+    if not escala_colores:
+        return fig
+
+    # PDF-SPECIFIC: Different font sizes for colorbar
+    if pdf_mode:
+        tick_font_size = 16      
+        title_font_size = 20     
+    else:
+        tick_font_size = 9       
+        title_font_size = 10     
+    
+    # Convert ratios to actual values for colorbar
+    colorbar_scale = []
+    for ratio, color in escala_colores:
+        valor = rango[0] + (rango[1] - rango[0]) * ratio
+        colorbar_scale.append((valor, color))
+    
+    if gradient:
+        gradient_steps = 50
+        
+        for i in range(len(colorbar_scale) - 1):
+            y_start = colorbar_scale[i][0]
+            y_end = colorbar_scale[i + 1][0]
+            color_start = colorbar_scale[i][1]
+            color_end = colorbar_scale[i + 1][1]
+            
+            if color_start != color_end:
+                for step in range(gradient_steps):
+                    y_bottom = y_start + (y_end - y_start) * (step / gradient_steps)
+                    y_top = y_start + (y_end - y_start) * ((step + 1) / gradient_steps)
+                    
+                    ratio = step / gradient_steps
+                    interpolated_color = util.interpolate_color(color_start, color_end, ratio)
+                    
+                    fig.add_shape(
+                        type="rect",
+                        x0=1.05, x1=1.07,
+                        y0=y_bottom, y1=y_top + 0.01,
+                        xref="paper", yref="y",
+                        fillcolor=interpolated_color,
+                        line=dict(width=0, color=interpolated_color)
+                    )
+            else:
+                fig.add_shape(
+                    type="rect",
+                    x0=1.05, x1=1.07,
+                    y0=y_start, y1=y_end,
+                    xref="paper", yref="y",
+                    fillcolor=color_start,
+                    line=dict(width=0)
+                )
+        
+        # Add tick labels with PDF-aware sizes
+        for valor, _ in colorbar_scale:
+            fig.add_annotation(
+                x=1.075,
+                y=valor,
+                text=f"{valor:.2f}",
+                xref="paper",
+                yref="y",
+                showarrow=False,
+                font=dict(size=tick_font_size, color="black"),
+                xanchor='left'
+            )
+        
+        # Add title with PDF-aware size
+        fig.add_annotation(
+            x=1.057,
+            y=1.08,
+            text="Tiempo (s)",
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=title_font_size, color="black", family="Arial"),
+            xanchor='center'
+        )
+        
+    else:
+        # Solid colors approach
+        num_segments = len(colorbar_scale) - 1
+        
+        for i in range(num_segments):
+            y_bottom = colorbar_scale[i][0]
+            y_top = colorbar_scale[i + 1][0] if i < num_segments - 1 else y_max
+            color = colorbar_scale[i][1]
+            
+            fig.add_shape(
+                type="rect",
+                x0=1.05, x1=1.07,
+                y0=y_bottom, y1=y_top,
+                xref="paper", yref="y",
+                fillcolor=color,
+                line=dict(width=0)
+            )
+        
+        # Add tick labels with PDF-aware sizes
+        for valor, _ in colorbar_scale:
+            fig.add_annotation(
+                x=1.075,
+                y=valor,
+                text=f"{valor:.2f}",
+                xref="paper",
+                yref="y",
+                showarrow=False,
+                font=dict(size=tick_font_size, color="black"),
+                xanchor='left'
+            )
+        
+        # Add title with PDF-aware size
+        fig.add_annotation(
+            x=1.057,
+            y=1.08,
+            text="Tiempo (s)",
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=title_font_size, color="black", family="Arial"),
+            xanchor='center'
+        )
+    
+    return fig
 
 def get_sprint_graph(
     df_sprint,
@@ -84,7 +249,9 @@ def get_sprint_graph(
     idioma="es",
     barras=False,
     cat_label="U19",
-    gender="H"
+    gender="H",
+    gradient_colorbar=True,
+    pdf_mode=False  
 ):
     df = df_sprint.copy()
     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors='coerce')
@@ -104,27 +271,97 @@ def get_sprint_graph(
 
     fig = go.Figure()
 
-    # === VELOCIDAD ===
+     # PDF-SPECIFIC: Different font sizes for layout
+    if pdf_mode:
+        title_font_size = 44        
+        axis_font_size = 36         
+        tick_font_size = 30         
+        legend_font_size = 26       
+        annotation_font_size = 24   
+        margin_left = 160           
+        margin_right = 260          
+        margin_top = 140            
+        margin_bottom = 160         
+        legend_y = -0.12            
+        bar_text_size = 30          
+    else:
+        # App display (keep original)
+        title_font_size = 16
+        axis_font_size = 12
+        tick_font_size = 10
+        legend_font_size = 12
+        annotation_font_size = 11
+        margin_left = 50
+        margin_right = 130
+        margin_top = 60
+        margin_bottom = 80
+        legend_y = -0.3
+        bar_text_size = 20 if len(df) == 1 else 14
+
+    # The text height should be proportional to the actual data range, not just font size
+    data_range = y_max - y_min if 'y_max' in locals() and 'y_min' in locals() else 1.0
+    estimated_text_height = (bar_text_size / 400.0) * data_range  # More realistic conversion
+    min_bar_height_for_inside = estimated_text_height * 3.0  # More generous safety margin
+
+    # === VELOCIDAD (Secondary Y-axis) ===
     cols_vel = [columnas_fecha_registro, metrica_velocidad]
     if columnas_fecha_registro != columna_x:
         cols_vel.insert(1, columna_x)
     df_metric_vel = df[cols_vel].dropna()
 
     if not df_metric_vel.empty:
+        # Calculate velocidad range for better text height estimation
+        vel_min = 0  # Velocidad starts from 0
+        vel_max = df_metric_vel[metrica_velocidad].max()
+        vel_range = vel_max - vel_min
+        
+        # Recalculate text height for velocidad based on its data range
+        vel_text_height = (bar_text_size / 400.0) * vel_range
+        vel_min_height_for_inside = vel_text_height * 2.5
+        
         if barras or len(df_metric_vel[metrica_velocidad]) == 1:
-            size = 20 if df_metric_vel[metrica_velocidad].notna().sum() == 1 else 14
-            fig.add_trace(go.Bar(
-                x=df_metric_vel[columna_x],
-                y=df_metric_vel[metrica_velocidad],
-                name=traslator.traducir(metrica_velocidad, idioma),
-                marker_color=color_linea,
-                offsetgroup="velocidad",
-                yaxis="y2",
-                text=df_metric_vel[metrica_velocidad].apply(lambda x: f"{x:.2f} m/s"),
-                textposition="inside",
-                textfont=dict(size=size),
-                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
-            ))
+            # Calculate dynamic text positioning for velocidad bars
+            text_colors_vel = []
+            text_positions_vel = []
+            text_angles_vel = []
+            
+            vel_values = df_metric_vel[metrica_velocidad].tolist()
+            
+            for valor in vel_values:
+                bar_height = valor  # Since velocidad starts from 0, this is the actual height
+                
+                if bar_height >= vel_min_height_for_inside:
+                    text_positions_vel.append("inside")
+                    text_colors_vel.append("white")  # White on blue bars
+                    text_angles_vel.append(-90)
+                else:
+                    text_positions_vel.append("outside")
+                    text_colors_vel.append("black")
+                    text_angles_vel.append(0)
+            
+            # Create individual velocidad bar traces
+            for i, (x_val, y_val, text_color, text_pos, text_angle) in enumerate(
+                zip(df_metric_vel[columna_x], vel_values, 
+                    text_colors_vel, text_positions_vel, text_angles_vel)):
+                
+                fig.add_trace(go.Bar(
+                    x=[x_val],
+                    y=[y_val],
+                    name=traslator.traducir(metrica_velocidad, idioma) if i == 0 else None,
+                    showlegend=(i == 0),
+                    marker_color=color_linea,
+                    offsetgroup="velocidad",
+                    yaxis="y2",
+                    text=f"{y_val:.2f} m/s",
+                    textposition=text_pos,
+                    #textangle=text_angle,
+                    textfont=dict(
+                        size=bar_text_size,
+                        color=text_color,
+                        family="Arial"
+                    ),
+                    hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
+                ))
         else:
             fig.add_trace(go.Scatter(
                 x=df_metric_vel[columna_x],
@@ -132,13 +369,13 @@ def get_sprint_graph(
                 mode="lines+markers",
                 name=traslator.traducir(metrica_velocidad, idioma),
                 marker=dict(color=color_linea, size=10),
+                line=dict(color=color_linea, width=3),
                 yaxis="y2",
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_velocidad, idioma)}:</b> %{{y:.2f}} m/s<extra></extra>"
             ))
 
-        #if not barras:
+        # Annotation for best velocity (maximum)
         if not barras and len(df_metric_vel) > 1:
-        #if len(df_metric_vel) > 1 or not barras:
             fila_max = df_metric_vel[df_metric_vel[metrica_velocidad] == df_metric_vel[metrica_velocidad].max()].iloc[0]
             fig.add_annotation(
                 x=fila_max[columna_x],
@@ -151,13 +388,21 @@ def get_sprint_graph(
                 ay=-40,
                 xshift=-20 if barras else 0,
                 bgcolor="gray",
-                font=dict(color="white")
+                font=dict(color="white", size=annotation_font_size, family="Arial")
             )
 
-    # === TIEMPO ===
-    prom_tiempo = promedio_row.get(metrica_tiempo, None)
-    #prom_tiempo = (promedio_row[metrica_tiempo].values[0]if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None)
-    #prom_tiempo = promedio_row[metrica_tiempo].values[0] if not promedio_row.empty and metrica_tiempo in promedio_row.columns else None
+    # === TIEMPO (Primary Y-axis with color coding) ===
+    prom_tiempo = None
+    if isinstance(promedio_row, dict):
+        # If it's a dictionary, get the value directly
+        prom_tiempo = promedio_row.get(metrica_tiempo, None)
+    elif hasattr(promedio_row, 'empty') and not promedio_row.empty:
+        # If it's a DataFrame and not empty
+        if metrica_tiempo in promedio_row.columns:
+            val = promedio_row[metrica_tiempo].values[0]
+            prom_tiempo = val if pd.notna(val) else None
+    
+    # Ensure the value is valid
     prom_tiempo = prom_tiempo if pd.notna(prom_tiempo) else None
 
     cols_time = [columnas_fecha_registro, metrica_tiempo]
@@ -169,60 +414,94 @@ def get_sprint_graph(
         tiempo_min = df_metric_time[metrica_tiempo].min()
         tiempo_max = df_metric_time[metrica_tiempo].max()
 
-        # Rango por categoría
-        base_min, base_max = get_rango_sprint(categoria, gender)
-        escala_colores = get_escala_colores_sprint(categoria, gender)
-        #st.text(escala_colores)
-        y_min = min(base_min, tiempo_min)
-        y_max = max(base_max, tiempo_max)
-        margen = (y_max - y_min) * 0.5
-        y_min -= margen
-        y_max += margen
+        # Dynamic range calculation for tiempo
+        config = SPRINT_SEMAFORO.get(gender.upper(), {}).get(categoria.lower(), {})
+        if config:
+            # Use existing range from SPRINT_SEMAFORO
+            rango = config.get("rango", (tiempo_min, tiempo_max))
+            y_min = min(tiempo_min - 0.1, rango[0] - 0.1)
+            y_max = max(tiempo_max + 0.1, rango[1] + 0.1)
+        else:
+            # Fallback range
+            y_min = tiempo_min - 0.2
+            y_max = tiempo_max + 0.2
 
-        #if barras:
-        size = 20 if df_metric_time[metrica_tiempo].notna().sum() == 1 else 14
-        fig.add_trace(go.Bar(
-            x=df_metric_time[columna_x],
-            y=df_metric_time[metrica_tiempo],
-            name=traslator.traducir(metrica_tiempo, idioma),
-            marker=dict(
-                color=df_metric_time[metrica_tiempo],
-                colorscale=escala_colores,
-                cmin=y_min,
-                cmax=y_max
-            ),
-            offsetgroup="tiempo",
-            yaxis="y1",
-            text=df_metric_time[metrica_tiempo].apply(lambda x: f"{x:.2f} seg"),
-            #text=df_metric_time[metrica_tiempo].round(2),
-            textposition="inside",
-            textfont=dict(size=size),
-            hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
-        ))
+        # Color-coded bars for tiempo with dynamic text positioning
+        colores_tiempo = [asignar_color_sprint(v, gender, categoria) for v in df_metric_time[metrica_tiempo]]
+        
+        # Calculate proper contrast colors and positions for each bar
+        text_colors = []
+        text_positions = []
+        text_angles = []
+        
+        # Recalculate text height for tiempo based on its actual data range
+        tiempo_range = y_max - y_min
+        tiempo_text_height = (bar_text_size / 400.0) * tiempo_range
+        tiempo_min_height_for_inside = tiempo_text_height * 2.5
+        
+        for i, (valor, color) in enumerate(zip(df_metric_time[metrica_tiempo], colores_tiempo)):
+            # Calculate bar height properly - use the actual bar height from base to top
+            bar_height = valor - y_min  # Height from y_min baseline to the bar top
+            
+            if bar_height >= tiempo_min_height_for_inside:
+                # Bar is tall enough for inside text
+                text_positions.append("inside")
+                text_colors.append(util.get_contrasting_text_color(color))
+                text_angles.append(-90)  # Vertical text inside
+            else:
+                # Bar is too short, place text outside on top
+                text_positions.append("outside")
+                text_colors.append("black")  # Always black when outside
+                text_angles.append(0)  # Horizontal text outside
 
+        # Create individual bar traces for proper text positioning
+        for i, (x_val, y_val, bar_color, text_color, text_pos, text_angle) in enumerate(
+            zip(df_metric_time[columna_x], df_metric_time[metrica_tiempo], 
+                colores_tiempo, text_colors, text_positions, text_angles)):
+            
+            fig.add_trace(go.Bar(
+                x=[x_val],
+                y=[y_val],
+                name=traslator.traducir(metrica_tiempo, idioma) if i == 0 else None,
+                showlegend=(i == 0),
+                marker_color=bar_color,
+                offsetgroup="tiempo",
+                yaxis="y1",
+                text=f"{y_val:.2f} s",
+                textposition=text_pos,
+                #textangle=text_angle,  # FIXED: Uncommented this line
+                textfont=dict(
+                    size=bar_text_size, 
+                    color=text_color,
+                    family="Arial"
+                ),
+                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica_tiempo, idioma)}:</b> %{{y:.2f}} s<extra></extra>"
+            ))
+        # Annotation for best time (minimum)
         if not barras and len(df_metric_time) > 1:
             fila_min = df_metric_time[df_metric_time[metrica_tiempo] == df_metric_time[metrica_tiempo].min()].iloc[0]
             fig.add_annotation(
                 x=fila_min[columna_x],
                 y=fila_min[metrica_tiempo],
                 yref="y1",
-                text=f"{traslator.traducir('Min', idioma)}: {fila_min[metrica_tiempo]:.2f} seg",
+                text=f"{traslator.traducir('Min', idioma)}: {fila_min[metrica_tiempo]:.2f} s",
                 showarrow=True,
                 arrowhead=2,
                 ax=0,
                 ay=-40,
                 xshift=20 if barras else 0,
                 bgcolor="gray",
-                font=dict(color="white")
+                font=dict(color="white", size=annotation_font_size, family="Arial")
             )
 
+        # Average line for tiempo
         if prom_tiempo is not None:
             fig.add_hline(
                 y=prom_tiempo,
                 line=dict(color=color_promedio, dash="dash", width=2),
-                annotation_text=f"{prom_tiempo:.2f} seg",
+                annotation_text=f"{prom_tiempo:.2f} s",
                 annotation_position="top right",
-                annotation=dict(font=dict(color="black", size=14)),
+                annotation=dict(font=dict(color="black", size=annotation_font_size, family="Arial")),
                 layer="above"
             )
             fig.add_trace(go.Scatter(
@@ -233,70 +512,78 @@ def get_sprint_graph(
                 showlegend=True
             ))
 
-        # Barra lateral de color
-        fig.add_trace(go.Scatter(
-            x=[None], y=[None],
-            mode="markers",
-            marker=dict(
-                size=0,
-                color=[prom_tiempo if prom_tiempo is not None else y_min],
-                colorscale=escala_colores,
-                cmin=y_min,
-                cmax=y_max,
-                colorbar=dict(
-                    title="",
-                    ticks="",
-                    tickfont=dict(color="white"),
-                    thickness=20,
-                    len=1,
-                    lenmode="fraction",
-                    y=0,
-                    yanchor="bottom",
-                    x=1.15 if barras else -0.19,
-                    xanchor="right" if barras else "left"
-                ),
-                showscale=True
-            ),
-            showlegend=False,
-            hoverinfo="skip"
-        ))
+        # ADD THE SPRINT COLORBAR with PDF mode
+        fig = get_sprint_colorbar_agregada(fig, y_min, y_max, gender, 
+                                          categoria, 
+                                          gradient=gradient_colorbar,
+                                          pdf_mode=pdf_mode)
 
+        # Set Y-axis range for tiempo
         fig.update_layout(yaxis=dict(range=[y_min, y_max]))
 
     # === Layout final ===
     title_layout = "SPRINT" if barras else "Evolución del Sprint"
     fig.update_layout(
-        title=f"{traslator.traducir(title_layout, idioma).upper()} ({traslator.traducir(metrica_tiempo, idioma)} y {traslator.traducir(metrica_velocidad, idioma)})",
+        title=dict(
+            text=f"{traslator.traducir(title_layout, idioma).upper()} ({traslator.traducir(metrica_tiempo, idioma)} y {traslator.traducir(metrica_velocidad, idioma)})",
+            font=dict(size=title_font_size, family="Arial", color="#1f2937"),
+            x=0.5,
+            xanchor="center"
+        ),
         xaxis=dict(
+            title=dict(
+                text=traslator.traducir("FECHA", idioma) if not barras else None,
+                font=dict(size=axis_font_size, family="Arial")
+            ),
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
+            tickfont=dict(size=tick_font_size, family="Arial"),
             type="category" if barras else "date",
             showticklabels=not barras and len(tickvals) > 1
         ),
         yaxis=dict(
-            title=traslator.traducir("TIEMPO (SEG)", idioma),
+            title=dict(
+                text=traslator.traducir("TIEMPO (SEG)", idioma),
+                font=dict(size=axis_font_size, family="Arial")
+            ),
             side="left" if not barras else "right",
-            showgrid=True
+            tickfont=dict(size=tick_font_size, family="Arial"),
+            showgrid=True,
+            showticklabels=True,          # ENSURE ALWAYS TRUE
+            visible=True,                 # ENSURE AXIS IS VISIBLE
+            fixedrange=False             # ALLOW ZOOM/PAN
         ),
         yaxis2=dict(
-            title=traslator.traducir("VELOCIDAD (M/S)", idioma),
+            title=dict(
+                text=traslator.traducir("VELOCIDAD (M/S)", idioma),
+                font=dict(size=axis_font_size, family="Arial")
+            ),
             overlaying="y",
             side="right" if not barras else "left",
-            showgrid=False
+            tickfont=dict(size=tick_font_size, family="Arial"),
+            showgrid=False,
+            showticklabels=True,          # ENSURE ALWAYS TRUE
+            visible=True,                 # ENSURE AXIS IS VISIBLE
+            fixedrange=False             # ALLOW ZOOM/PAN
         ),
         template="plotly_white",
         barmode="group" if barras else "overlay",
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.3,
+            y=legend_y,
             xanchor="center",
-            x=0.5
-        )
+            x=0.5,
+            font=dict(size=legend_font_size, family="Arial")
+        ),
+        margin=dict(l=margin_left, r=margin_right, t=margin_top, b=margin_bottom)
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    # Only display in app, not PDF
+    if not pdf_mode:
+        st.plotly_chart(fig, use_container_width=True)
+    
     return fig
 
 
@@ -492,7 +779,7 @@ def get_sprint_graph_vt(
         ))
 
     title = traslator.traducir("Evolución del Sprint", idioma)
-    #metrica_tiempo = traslator.traducir(metrica_tiempo, idioma)
+
     # --- Layout final ---
     fig.update_layout(
         title=f"{title} ({traslator.traducir(metrica_tiempo, idioma)} y {traslator.traducir(metrica_velocidad, idioma)})",

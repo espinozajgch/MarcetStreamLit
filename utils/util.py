@@ -3,11 +3,49 @@ import pandas as pd
 from fpdf import FPDF
 import numpy as np
 import requests
+import matplotlib.colors as mcolors
 from datetime import datetime
 from utils.pdf import PDF
 from scipy.stats import percentileofscore
 from functools import reduce
 import unicodedata
+
+
+def interpolate_color(color1, color2, ratio):
+    """
+    Interpolate between two hex colors
+    """
+    # Convert hex to RGB
+    rgb1 = mcolors.hex2color(color1)
+    rgb2 = mcolors.hex2color(color2)
+    
+    # Interpolate each RGB component
+    r = rgb1[0] + (rgb2[0] - rgb1[0]) * ratio
+    g = rgb1[1] + (rgb2[1] - rgb1[1]) * ratio
+    b = rgb1[2] + (rgb2[2] - rgb1[2]) * ratio
+    
+    # Convert back to hex
+    return mcolors.rgb2hex((r, g, b))
+
+def get_contrasting_text_color(background_color):
+    """
+    Calculate contrasting text color (black or white) based on background color luminance
+    """
+    # Convert color to RGB if it's a hex color
+    if isinstance(background_color, str) and background_color.startswith('#'):
+        rgb = mcolors.hex2color(background_color)
+    else:
+        # Try to convert other color formats
+        try:
+            rgb = mcolors.to_rgb(background_color)
+        except:
+            return "white"  # Default fallback
+    
+    # Calculate luminance using standard formula
+    luminance = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+    
+    # Return black for light backgrounds, white for dark backgrounds
+    return "black" if luminance > 0.5 else "white"
 
 def get_ttl():
     if st.session_state.get("reload_data", False):

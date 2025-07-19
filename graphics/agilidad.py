@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from utils import util
 from utils import traslator
 
-ESCALAS_COLOR_AGILIDAD = {
+AGILITY_SEMAFORO = {
     "H": {
         "cadete": [
             [0.0, "#7CFC00"],
@@ -49,7 +49,8 @@ def get_escala_color_agilidad(genero: str, categoria: str) -> list:
     """
     genero = genero.upper()
     categoria = categoria.lower()
-    return ESCALAS_COLOR_AGILIDAD.get(genero, {}).get(categoria, ESCALAS_COLOR_AGILIDAD["H"]["juvenil"])
+    return AGILITY_SEMAFORO.get(genero, {}).get(categoria, AGILITY_SEMAFORO["H"]["juvenil"])
+
 
 def calcular_color_diferencia_agilidad(diferencia: float, genero: str = "H", categoria: str = "juvenil") -> str:
     """
@@ -79,43 +80,158 @@ def calcular_color_diferencia_agilidad(diferencia: float, genero: str = "H", cat
 
     return escala[-1][1]
 
-def get_agilidad_colorbar_agregada(fig, y_min, y_max, gender, categoria):
-    escala = get_escala_color_agilidad(gender, categoria)
-    tickvals = [round(umbral * 10, 2) for umbral, _ in escala]
-    ticktext = [str(round(umbral * 10, 1)) for umbral, _ in escala]
 
-    fig.add_trace(go.Scatter(
-        x=[None],
-        y=[None],
-        mode="markers",
-        marker=dict(
-            size=0,
-            color=[10],
-            cmin=0,
-            cmax=round(tickvals[-1] + 1, 1),
-            colorscale=escala,
-            colorbar=dict(
-                title=dict(text="DIF %"),
-                tickvals=tickvals,
-                ticktext=ticktext,
-                tickfont=dict(size=12, color="black"),
-                thickness=20,
-                len=1,
-                lenmode="fraction",
-                y=0.5,
-                yanchor="middle",
-                x=1.03,
-                xanchor="left"
-            ),
-            showscale=True
-        ),
-        showlegend=False,
-        hoverinfo="skip"
-    ))
+def get_agilidad_colorbar_agregada(fig, y_min, y_max, gender, categoria, gradient=True, pdf_mode=False):
+    """
+    Add Agilidad colorbar using shapes for precise control - INDEPENDENT positioning with PDF support
+    """
+    escala = get_escala_color_agilidad(gender, categoria)
+    
+    # PDF-SPECIFIC: Different font sizes for colorbar
+    if pdf_mode:
+        tick_font_size = 24         
+        title_font_size = 28        
+    else:
+        tick_font_size = 9          
+        title_font_size = 10        
+    
+    tickvals = [round(umbral * 10, 2) for umbral, _ in escala]  # Convert 0.0-1.0 to 0-10%
+    ticktext = [str(round(umbral * 10, 1)) for umbral, _ in escala]  # Text labels
+ 
+    # Position it in paper coordinates for consistency
+    colorbar_bottom = 0.2  # Fixed bottom position
+    colorbar_top = 0.8     # Fixed top position
+    colorbar_height = colorbar_top - colorbar_bottom
+    
+    if gradient:
+        gradient_steps = 50  # SAME as working versions
+        
+        for i in range(len(escala) - 1):
+            # Use the original 0.0-1.0 scale for positioning within colorbar
+            y_start_norm = escala[i][0]  # 0.0-1.0 
+            y_end_norm = escala[i + 1][0]  # 0.0-1.0
+            color_start = escala[i][1]
+            color_end = escala[i + 1][1]
+            
+            # Convert to paper coordinates within colorbar area
+            y_start_paper = colorbar_bottom + (y_start_norm * colorbar_height)
+            y_end_paper = colorbar_bottom + (y_end_norm * colorbar_height)
+            
+            # Only create gradient if colors are different
+            if color_start != color_end:
+                # Create gradient steps between current and next color
+                for step in range(gradient_steps):
+                    y_bottom = y_start_paper + (y_end_paper - y_start_paper) * (step / gradient_steps)
+                    y_top = y_start_paper + (y_end_paper - y_start_paper) * ((step + 1) / gradient_steps)
+                    
+                    # Interpolate between colors
+                    ratio = step / gradient_steps
+                    interpolated_color = util.interpolate_color(color_start, color_end, ratio)
+                    
+                    # Add rectangle using PAPER coordinates for both X and Y
+                    fig.add_shape(
+                        type="rect",
+                        x0=1.02, x1=1.04,           
+                        y0=y_bottom, y1=y_top + 0.01,  
+                        xref="paper", yref="paper",  
+                        fillcolor=interpolated_color,
+                        line=dict(width=0, color=interpolated_color)
+                    )
+            else:
+                # Same color, create a solid block
+                fig.add_shape(
+                    type="rect",
+                    x0=1.02, x1=1.04,           
+                    y0=y_start_paper, y1=y_end_paper,      
+                    xref="paper", yref="paper",  
+                    fillcolor=color_start,
+                    line=dict(width=0)
+                )
+        
+        # Add tick labels using paper coordinates with PDF-aware sizes
+        for i, (umbral, _) in enumerate(escala):
+            # Convert normalized position to paper coordinates
+            y_position_paper = colorbar_bottom + (umbral * colorbar_height)
+            label = ticktext[i]
+            
+            fig.add_annotation(
+                x=1.045,                     
+                y=y_position_paper,         
+                text=f"{label}%",            
+                xref="paper",
+                yref="paper",                
+                showarrow=False,
+                font=dict(size=tick_font_size, color="black"),  
+                xanchor='left'
+            )
+        
+        # Add title for gradient version with PDF-aware size
+        fig.add_annotation(
+            x=1.03,                        
+            y=0.89,                        
+            text="Dif %",                  
+            xref="paper",
+            yref="paper",                  
+            showarrow=False,
+            font=dict(size=title_font_size, color="black", family="Arial"), 
+            xanchor='center'               
+        )
+        
+    else:
+        # SOLID COLORS APPROACH: Same logic with paper coordinates and PDF-aware fonts
+        for i in range(len(escala) - 1):
+            y_start_norm = escala[i][0]
+            y_end_norm = escala[i + 1][0]
+            color = escala[i][1]
+            
+            y_start_paper = colorbar_bottom + (y_start_norm * colorbar_height)
+            y_end_paper = colorbar_bottom + (y_end_norm * colorbar_height)
+            
+            fig.add_shape(
+                type="rect",
+                x0=1.02, x1=1.04,           
+                y0=y_start_paper, y1=y_end_paper,      
+                xref="paper", yref="paper",  
+                fillcolor=color,
+                line=dict(width=0)
+            )
+        
+        # Add tick labels using paper coordinates with PDF-aware sizes
+        for i, (umbral, _) in enumerate(escala):
+            y_position_paper = colorbar_bottom + (umbral * colorbar_height)
+            label = ticktext[i]
+            
+            fig.add_annotation(
+                x=1.045,                     
+                y=y_position_paper,
+                text=f"{label}%",
+                xref="paper",
+                yref="paper",                
+                showarrow=False,
+                font=dict(size=tick_font_size, color="black"),  
+                xanchor='left'
+            )
+        
+        # Add title with PDF-aware size
+        fig.add_annotation(
+            x=1.03,                        
+            y=0.89,                        
+            text="Dif %",                
+            xref="paper",
+            yref="paper",                  
+            showarrow=False,
+            font=dict(size=title_font_size, color="black", family="Arial"),  
+            xanchor='center'               
+        )
+    
     return fig
 
-def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es", barras=False, cat_label="U19", gender="H"):
 
+def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, 
+                                      metricas, columnas_fecha_registro, 
+                                      idioma="es", barras=False, cat_label="U19", 
+                                      gender="H", gradient_colorbar=True,
+                                      pdf_mode=False): 
     df = pd.DataFrame(df_agility)
     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors="coerce")
     df = df.sort_values(by=columnas_fecha_registro)
@@ -130,6 +246,36 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
     color_linea_nd = "#66c2ff"
     fig = go.Figure()
 
+    # PDF-SPECIFIC: Different font sizes for layout
+    if pdf_mode:
+        title_font_size = 44        
+        axis_font_size = 36         
+        tick_font_size = 30        
+        legend_font_size = 26       
+        annotation_font_size = 24   
+        margin_left = 160           
+        margin_right = 260          
+        margin_top = 140            
+        margin_bottom = 160         
+        legend_y = -0.12            
+        bar_text_size = 30          
+        circle_text_size = 26       
+        circle_size = 65            
+    else:
+        title_font_size = 16
+        axis_font_size = 12
+        tick_font_size = 10
+        legend_font_size = 12
+        annotation_font_size = 11
+        margin_left = 50
+        margin_right = 100
+        margin_top = 60
+        margin_bottom = 80
+        legend_y = -0.3
+        bar_text_size = 20 if len(df) == 1 else 14
+        circle_text_size = 20 if len(df) == 1 else 13
+        circle_size = 55 if len(df) == 1 else 40
+
     promedio_row = df_promedios[
         (df_promedios["CATEGORIA"] == categoria) &
         (df_promedios["EQUIPO"] == equipo)
@@ -142,36 +288,94 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
             if pd.notna(valor):
                 promedios[metrica] = valor
 
-    valores = []
+    # Calculate Y-axis range for TIME (single axis approach)
+    valores_tiempo = []
     for metrica in metricas:
-        valores += df[metrica].dropna().tolist()
+        valores_tiempo += df[metrica].dropna().tolist()
 
-    if valores:
-        ymin = min(valores) - 0.1
-        ymax = max(valores) + 0.5
-        margen = (ymax - ymin) * 0.3
-        ymin = min(0, ymin - margen) 
-        ymax += margen
+    if valores_tiempo:
+        # OUTLIER DETECTION: Remove extreme values (likely data errors)
+        # Agility times should typically be 1-10 seconds, anything above 30s is likely an error
+        valores_tiempo_filtered = [v for v in valores_tiempo if v <= 30.0]  # Filter extreme outliers
+        
+        if valores_tiempo_filtered:  # Use filtered values if any remain
+            ymin_tiempo = min(valores_tiempo_filtered)
+            ymax_tiempo = max(valores_tiempo_filtered)
+            
+            # FORCE Y-AXIS TO INCLUDE 0: Always start at 0 or below
+            ymin_tiempo = min(0, ymin_tiempo)  # Ensure 0 is always visible
+            
+            # Add reasonable padding (10-20% of range)
+            padding = (ymax_tiempo - ymin_tiempo) * 0.15
+            ymin_tiempo = min(ymin_tiempo - padding, 0)  # Ensure 0 remains visible
+            ymax_tiempo += padding
+            
+            # Ensure minimum range for readability
+            if ymax_tiempo - ymin_tiempo < 1.0:
+                ymax_tiempo = max(ymin_tiempo + 1.0, 1.0)
+        else:
+            # Fallback if all values were outliers
+            ymin_tiempo, ymax_tiempo = 0, 10
     else:
-        ymin, ymax = 0, 1
+        ymin_tiempo, ymax_tiempo = 0, 10
 
+    # === TIME TRACES (Single Y-axis) with DYNAMIC TEXT POSITIONING ===
     for metrica, color, dash in zip(metricas, [color_linea_nd, color_linea_dom], ["solid", "dash"]):
         df_metric = df[[columna_x, columnas_fecha_registro, metrica]].dropna()
+        
+        # FILTER OUT OUTLIERS from traces too
+        df_metric = df_metric[df_metric[metrica] <= 30.0]  # Same filter as Y-axis calculation
+        
         x_vals = df_metric[columna_x].tolist()
         y_vals = df_metric[metrica].tolist()
 
         if barras or len(x_vals) == 1:
-            size = 20 if len(x_vals) == 1 else 14
-            fig.add_trace(go.Bar(
-                x=x_vals,
-                y=y_vals,
-                name=traslator.traducir(metrica, idioma),
-                marker_color=color,
-                text=[f"{val:.2f} seg" for val in y_vals],
-                textposition="auto",
-                textfont=dict(size=size),
-                hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
-            ))
+            # DYNAMIC TEXT POSITIONING: Same logic as sprint graph
+            # Calculate text height based on actual data range
+            tiempo_range = ymax_tiempo - ymin_tiempo
+            tiempo_text_height = (bar_text_size / 400.0) * tiempo_range
+            tiempo_min_height_for_inside = tiempo_text_height * 2.5
+            
+            # Calculate proper contrast colors and positions for each bar
+            text_colors = []
+            text_positions = []
+            text_angles = []
+            
+            for i, valor in enumerate(y_vals):
+                # Calculate bar height from baseline (ymin_tiempo) to bar top
+                bar_height = valor - ymin_tiempo
+                
+                if bar_height >= tiempo_min_height_for_inside:
+                    # Bar is tall enough for inside text
+                    text_positions.append("inside")
+                    text_colors.append(util.get_contrasting_text_color(color))
+                    text_angles.append(-90)  # Vertical text inside
+                else:
+                    # Bar is too short, place text outside on top
+                    text_positions.append("outside")
+                    text_colors.append("black")  # Always black when outside
+                    text_angles.append(0)  # Horizontal text outside
+            
+            # Create individual bar traces for proper text positioning
+            for i, (x_val, y_val, text_color, text_pos, text_angle) in enumerate(
+                zip(x_vals, y_vals, text_colors, text_positions, text_angles)):
+                
+                fig.add_trace(go.Bar(
+                    x=[x_val],
+                    y=[y_val],
+                    name=traslator.traducir(metrica, idioma) if i == 0 else None,
+                    showlegend=(i == 0),
+                    marker_color=color,
+                    text=f"{y_val:.2f} seg",
+                    textposition=text_pos,
+                    #textangle=text_angle,
+                    textfont=dict(
+                        size=bar_text_size,
+                        color=text_color,
+                        family="Arial"
+                    ),
+                    hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
+                ))
         else:
             fig.add_trace(go.Scatter(
                 x=x_vals,
@@ -183,6 +387,7 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
             ))
 
+        # Add min annotations for time with PDF-aware font sizes
         if (not df_metric.empty and len(df_metric) > 1) and not barras:
             min_val = df_metric[metrica].min()
             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
@@ -200,36 +405,33 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
                 ay=offset_y,
                 xshift=xshift_val,
                 bgcolor="gray",
-                font=dict(color="white")
+                font=dict(color="white", size=annotation_font_size, family="Arial")
             )
 
+    # === DIFFERENCE CIRCLES (positioned properly within range) ===
     added_to_legend = False
     for idx, row in df.iterrows():
         fecha = row[columna_x]
         dom = row.get(metricas[0], None)
         nd = row.get(metricas[1], None)
-        sizet = 20 if len(df) == 1 else 13
-        sizec = 55 if len(df) == 1 else 40
 
-        if pd.notna(dom) and pd.notna(nd) and nd != 0:
+        # FILTER OUTLIERS in difference calculation too
+        if pd.notna(dom) and pd.notna(nd) and nd != 0 and dom <= 30.0 and nd <= 30.0:
             diferencia = (abs(dom - nd) / nd) * 100
-            color = calcular_color_diferencia_agilidad(diferencia, gender)
-
-            if diferencia < 1:
-                y_pos = 0.5
-            elif 0 <= diferencia <= 10:
-                y_pos = ymin + (diferencia / 12) * (ymax - ymin)
-            else:
-                y_pos = 3
-
-            diferenciat = traslator.traducir("DIFERENCIA %", idioma);
+            color = calcular_color_diferencia_agilidad(diferencia, gender, categoria)
+            
+            # FIXED: Position circles ABOVE the highest visible value, within Y-axis range
+            max_visible_value = max([v for v in [dom, nd] if v <= 30.0])
+            y_position = min(ymax_tiempo * 0.85, max_visible_value + (ymax_tiempo - ymin_tiempo) * 0.1)
+            
+            diferenciat = traslator.traducir("DIFERENCIA %", idioma)
             fig.add_trace(go.Scatter(
                 x=[fecha],
-                y=[y_pos],
+                y=[y_position],  # Positioned within visible range
                 mode="markers+text",
-                marker=dict(size=sizec, color=color, opacity=0.9),
+                marker=dict(size=circle_size, color=color, opacity=0.9),
                 text=f"{diferencia:.1f}%",
-                textfont=dict(size=sizet, color="black"),
+                textfont=dict(size=circle_text_size, color="black"),
                 textposition="middle center",
                 showlegend=not added_to_legend,
                 name=f"{diferenciat} ({cat_label})",
@@ -241,18 +443,36 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
     ticktext = tickvals
 
     title_layout = "AGILIDAD (Pierna Izquierda y Pierna Derecha)" if barras else "Evolución de la Agilidad (Pierna Izquierda y Pierna Derecha)"
+    
+    # === LAYOUT with SINGLE Y-AXIS (like original) with PDF-aware fonts ===
     fig.update_layout(
-        title=traslator.traducir(title_layout, idioma).upper(),
+        title=dict(
+            text=traslator.traducir(title_layout, idioma).upper(),
+            font=dict(size=title_font_size, family="Arial", color="#1f2937"),  # PDF-aware size
+            x=0.5,
+            xanchor="center"
+        ),
         xaxis=dict(
+            title=dict(
+                text=traslator.traducir("FECHA", idioma) if not barras else None,
+                font=dict(size=axis_font_size, family="Arial")  # PDF-aware size
+            ),
             tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
+            tickfont=dict(size=tick_font_size, family="Arial"),  # PDF-aware size
             type="category",
             showticklabels=not barras
         ),
         yaxis=dict(
-            title=traslator.traducir("TIEMPO (SEG)", idioma),
-            range=[ymin, ymax],
+            title=dict(
+                text=traslator.traducir("TIEMPO (SEG)", idioma),
+                font=dict(size=axis_font_size, family="Arial")  # PDF-aware size
+            ),
+            tickfont=dict(size=tick_font_size, family="Arial"),  # PDF-aware size
+            range=[ymin_tiempo, ymax_tiempo],  # FIXED: Ensure 0 is always visible
+            dtick=None,  # Let Plotly auto-calculate ticks to ensure 0 is shown
+            tick0=0,     # FORCE 0 to be a tick mark
             side="left"
         ),
         template="plotly_white",
@@ -260,195 +480,25 @@ def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equip
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.3,
+            y=legend_y,  # PDF-aware position
             xanchor="center",
-            x=0.5
-        )
+            x=0.5,
+            font=dict(size=legend_font_size, family="Arial")  # PDF-aware size
+        ),
+        margin=dict(l=margin_left, r=margin_right, t=margin_top, b=margin_bottom)  # PDF-aware margins
     )
 
-    fig = get_agilidad_colorbar_agregada(fig, ymin, ymax, gender, categoria)
+    # === ADD INDEPENDENT COLORBAR (not linked to any axis) with PDF support ===
+    fig = get_agilidad_colorbar_agregada(fig, 0, 10,  # Fixed 0-10% range
+                                         gender, categoria,
+                                         gradient=gradient_colorbar,
+                                         pdf_mode=pdf_mode)  # Pass PDF mode
 
-    st.plotly_chart(fig, use_container_width=True)
+    # Only display in app, not PDF
+    if not pdf_mode:
+        st.plotly_chart(fig, use_container_width=True)
+    
     return fig
-
-# def get_agility_graph_combined_simple(df_agility, df_promedios, categoria, equipo, metricas, columnas_fecha_registro, idioma="es", barras=False):
-
-#     df = pd.DataFrame(df_agility)
-#     df[columnas_fecha_registro] = pd.to_datetime(df[columnas_fecha_registro], format="%d/%m/%Y", errors="coerce")
-#     df = df.sort_values(by=columnas_fecha_registro)
-
-#     fechas_unicas = pd.to_datetime(df[columnas_fecha_registro].dropna().unique())
-#     periodos = pd.Series(fechas_unicas).dt.to_period("M").unique()
-#     fecha_formato = "%d-%b-%Y" if len(periodos) == 1 else "%b-%Y"
-#     df["FECHA TEXTO"] = df[columnas_fecha_registro].dt.strftime(fecha_formato)
-
-#     columna_x = "FECHA TEXTO"
-
-#     color_linea_dom = "#1f77b4"   # azul
-#     color_linea_nd = "#66c2ff"    # celeste
-
-#     fig = go.Figure()
-
-#     promedio_row = df_promedios[
-#         (df_promedios["CATEGORIA"] == categoria) &
-#         (df_promedios["EQUIPO"] == equipo)
-#     ]
-
-#     promedios = {}
-#     for metrica in metricas:
-#         if not promedio_row.empty and metrica in promedio_row.columns:
-#             valor = promedio_row[metrica].values[0]
-#             if pd.notna(valor):
-#                 promedios[metrica] = valor
-
-#     valores = []
-#     for metrica in metricas:
-#         valores += df[metrica].dropna().tolist()
-
-#     if valores:
-#         ymin = min(valores) - 0.1
-#         ymax = max(valores) + 0.1
-#         margen = (ymax - ymin) * 0.8
-#         ymin -= margen
-#         ymax += margen
-#     else:
-#         ymin, ymax = 0, 1
-
-#     for metrica, color, dash in zip(metricas, [color_linea_nd, color_linea_dom], ["solid", "dash"]):
-#         df_metric = df[[columna_x, columnas_fecha_registro, metrica]].dropna()
-#         x_vals = df_metric[columna_x].tolist()
-#         y_vals = df_metric[metrica].tolist()
-
-#         if barras:
-#             size = 20 if len(x_vals) == 1 else 14
-#             fig.add_trace(go.Bar(
-#                 x=x_vals,
-#                 y=y_vals,
-#                 name=traslator.traducir(metrica, idioma),
-#                 marker_color=color,
-#                 text=[f"{val:.2f} seg" for val in y_vals],
-#                 textposition="auto",
-#                 textfont=dict(size=size),
-#                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{traslator.traducir(metrica, idioma)}:</b> %{{y:.2f}} seg<extra></extra>"
-#             ))
-#         else:
-#             fig.add_trace(go.Scatter(
-#                 x=x_vals,
-#                 y=y_vals,
-#                 mode="lines+markers",
-#                 name=traslator.traducir(metrica, idioma),
-#                 line=dict(color=color, width=3, dash=dash),
-#                 marker=dict(size=8, color=color),
-#                 hovertemplate=f"<b>Fecha:</b> %{{x}}<br><b>{metrica}:</b> %{{y:.2f}} seg<extra></extra>"
-#             ))
-
-#         if (not df_metric.empty and len(df_metric) > 1) or not barras:
-#             min_val = df_metric[metrica].min()
-#             fila_min = df_metric[df_metric[metrica] == min_val].sort_values(by=columnas_fecha_registro, ascending=False).iloc[0]
-#             maxl = traslator.traducir("Min ", idioma)
-#             xshift_val = -20 if barras and metrica == metricas[0] else 20 if barras and metrica == metricas[1] else 0
-#             offset_y = -30 if metrica == metricas[1] else -60
-#             offset_x = 60 if metrica == metricas[1] else -60
-#             fig.add_annotation(
-#                 x=fila_min[columna_x],
-#                 y=fila_min[metrica],
-#                 text=f"{maxl}: {fila_min[metrica]:.2f} seg",
-#                 showarrow=True,
-#                 arrowhead=2,
-#                 ax=offset_x,
-#                 ay=offset_y,
-#                 xshift=xshift_val,
-#                 bgcolor="gray",
-#                 font=dict(color="white")
-#             )
-
-#     added_to_legend = False
-#     for idx, row in df.iterrows():
-#         fecha = row[columna_x]
-#         dom = row.get(metricas[0], None)
-#         nd = row.get(metricas[1], None)
-#         size = 20 if len(x_vals) == 1 else 14
-#         if pd.notna(dom) and pd.notna(nd) and nd != 0:
-#             diferencia = ((dom - nd) / nd) * 100
-#             fig.add_trace(go.Scatter(
-#                 x=[fecha],
-#                 y=[max(dom, nd) + 0.2],
-#                 mode="markers+text",
-#                 marker=dict(size=20, color="orange", opacity=0.7),
-#                 text=f"{diferencia:.1f}%",
-#                 textfont=dict(size=size,color="black"),
-#                 textposition="top center",
-#                 showlegend=not added_to_legend,
-#                 name=traslator.traducir("DIFERENCIA %", idioma),
-#                 hoverinfo="skip"
-#             ))
-#             added_to_legend = True
-
-#     # if valores:
-#     #     prom_dom = promedios.get(metricas[0], (ymin + ymax) / 2)
-#     #     fig.add_trace(go.Scatter(
-#     #         x=[None],
-#     #         y=[None],
-#     #         mode="markers",
-#     #         marker=dict(
-#     #             size=0,
-#     #             color=[prom_dom],
-#     #             colorscale=[
-#     #                 [0.0, "green"],
-#     #                 [0.5, "orange"],
-#     #                 [1.0, "red"]
-#     #             ],
-#     #             cmin=ymin,
-#     #             cmax=ymax,
-#     #             colorbar=dict(
-#     #                 title="",
-#     #                 ticks="outside",
-#     #                 tickfont=dict(color="black"),
-#     #                 thickness=20,
-#     #                 len=1,
-#     #                 lenmode="fraction",
-#     #                 y=0,
-#     #                 yanchor="bottom",
-#     #                 x=1.05,
-#     #                 xanchor="left"
-#     #             ),
-#     #             showscale=True
-#     #         ),
-#     #         showlegend=False,
-#     #         hoverinfo="skip"
-#     #     ))
-
-#     tickvals = df["FECHA TEXTO"].drop_duplicates().tolist()
-#     ticktext = tickvals
-
-#     title_layout = "AGILIDAD (IZQ Y DER)" if barras else "Evolución de la Agilidad (IZQ y DER)"
-#     fig.update_layout(
-#         title=traslator.traducir(title_layout, idioma).upper(),
-#         xaxis=dict(
-#             tickmode="array",
-#             tickvals=tickvals,
-#             ticktext=ticktext,
-#             type="category",
-#             showticklabels=not barras
-#         ),
-#         yaxis=dict(
-#             title=traslator.traducir("TIEMPO (SEG)", idioma),
-#             range=[ymin, ymax],
-#             side="left"
-#         ),
-#         template="plotly_white",
-#         barmode="group" if barras else "overlay",
-#         legend=dict(
-#             orientation="h",
-#             yanchor="bottom",
-#             y=-0.3,
-#             xanchor="center",
-#             x=0.5
-#         )
-#     )
-
-#     st.plotly_chart(fig, use_container_width=True)
-#     return fig
 
 def get_diferencia_agilidad(df_agility, metricas, columna_fecha):
     """

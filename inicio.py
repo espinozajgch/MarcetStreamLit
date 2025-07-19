@@ -48,10 +48,8 @@ df_joined = df_joined[np.logical_not(mask)]
 
 total_jugadores = len(df_datos)
 df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
-#st.dataframe(df_joined)
-#########################################################
 
-##st.header("Bienvenido")
+#########################################################
 
 col1, col2, col3, col4, col5 = st.columns(5)
 
