@@ -1,12 +1,15 @@
+#from streamlit_gsheets import GSheetsConnection
+
 import streamlit as st
 import pandas as pd
-from streamlit_gsheets import GSheetsConnection
-import matplotlib.pyplot as plt
-import seaborn as sns
-from utils import util
-import numpy as np
-import login as login
 import warnings
+
+from utils import util
+from utils import login
+from utils import connector_sgs
+from utils import data_util
+from utils.constants import COLUMNAS_EXCLUIDAS
+
 warnings.filterwarnings("ignore", message="When grouping with a length-1 list-like")
 
 st.set_page_config(
@@ -16,42 +19,24 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Create a connection object.
-conn = st.connection("gsheets", type=GSheetsConnection)
+conn = connector_sgs.get_connector() 
 
 # 🔐 Verificación de sesión
 login.generarLogin(conn)
+
 if "usuario" not in st.session_state:
     st.stop()
+
 st.header('Bienvenido a :orange[Marcet]')
 
-df_datos, df_data_test, df_checkin = util.getData(conn)
-df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
-
-test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
-
-#st.dataframe(test)
-
-# 1. Lista de columnas que quieres excluir de la validación
-columnas_excluidas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO','anio','mes']
-
-# 2. Lista de columnas que sí quieres validar
-columnas_a_validar = [col for col in df_joined.columns if col not in columnas_excluidas]
-
-# 3. Eliminar filas donde todas las columnas a validar son NaN o None
-df_joined = df_joined.dropna(subset=columnas_a_validar, how="all")
-
-# 4. Eliminar filas donde todas las columnas a validar son 0
-mask = (df_joined[columnas_a_validar] == 0).all(axis=1)
-df_joined = df_joined[np.logical_not(mask)]
-
-
+df_datos, df_data_test, df_checkin = data_util.load_player_and_physical_data(conn, connector_sgs.get_data)
 total_jugadores = len(df_datos)
-df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
-#st.dataframe(df_joined)
-#########################################################
 
-##st.header("Bienvenido")
+df_joined = util.join_player_and_physical_data(df_datos, df_data_test)
+df_joined = util.limpiar_filas_sin_datos_validos(df_joined, COLUMNAS_EXCLUIDAS)
+df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
+
+#########################################################
 
 col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -95,4 +80,5 @@ st.divider()
 
 if not df_joined.empty: 
     st.markdown("📆 **Cantidad de Sesiones por jugador**")
+    _, test_cat, _ = data_util.get_diccionario_test_categorias(conn, connector_sgs.get_data)
     st.dataframe(util.sesiones_por_test(df_joined, test_cat))

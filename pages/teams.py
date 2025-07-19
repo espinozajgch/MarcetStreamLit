@@ -4,7 +4,7 @@ import streamlit as st
 from utils import util
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
-import login as login
+from utils import login
 from datetime import date
 
 import matplotlib.pyplot as plt
@@ -126,7 +126,7 @@ df_comparativo = pd.DataFrame({
 })
 
 # Mapa de calor comparativo entre jugadores
-fig = px.imshow(df_comparativo.drop(columns='Jugador').corr(), text_auto=True)
+fig = px.imshow(df_comparativo.drop(columns='Jugador').corr(), text_auto=True, errors="ignore")
 st.plotly_chart(fig)
 
 # 4.3 Radar Charts

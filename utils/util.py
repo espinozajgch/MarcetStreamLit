@@ -1,30 +1,13 @@
 import streamlit as st
 import pandas as pd
-from fpdf import FPDF
 import numpy as np
 import requests
 from datetime import datetime
-from utils.pdf import PDF
 from scipy.stats import percentileofscore
 from functools import reduce
 import unicodedata
 
-def get_ttl():
-    if st.session_state.get("reload_data", False):
-        default_reload_time = "0m"  # Forzar recarga
-        st.session_state["reload_data"] = False  # Resetear flag después de la recarga
-    else:
-        default_reload_time = "360m"  # Usar caché normalmente
-
-    return default_reload_time
-
-def get_usuarios(conn):
-    df = conn.read(worksheet="USUARIOS", ttl=get_ttl())
-    return df
-
-def get_test(conn):
-    df = conn.read(worksheet="TEST", ttl=get_ttl())
-    return df
+#from gspread_dataframe import get_as_dataframe, set_with_dataframe
 
 def formatear_fecha(x):
     try:
@@ -40,53 +23,6 @@ def convertir_fecha_segura(valor):
     except Exception:
         print(f"❌ Fecha inválida: {valor}")
         return None
-    
-def get_player_data(conn):
-    #st.cache_data.clear()
-    df = conn.read(worksheet="DATOS", ttl=get_ttl())
-    #st.dataframe(df)
-    hoy = datetime.today()
-
-    #st.dataframe(df)
-    for col in df.select_dtypes(include=["object", "string"]):
-        df[col] = df[col].str.strip()
-
-    # Convertir a tipo datetime (asegura formato día/mes/año)
-    
-    #df["FECHA DE NACIMIENTO"] = pd.to_datetime(df["FECHA DE NACIMIENTO"], format="%d/%m/%Y")
-    df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(convertir_fecha_segura)
-    #st.dataframe(df)
-    #df["EDAD"] = df["FECHA DE NACIMIENTO"].apply(lambda x: hoy.year - x.year - ((hoy.month, hoy.day) < (x.month, x.day)))    
-    df["EDAD"] = df["FECHA DE NACIMIENTO"].apply(lambda x: hoy.year - x.year - ((hoy.month, hoy.day) < (x.month, x.day)) if x else None)
-
-    #df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].dt.strftime('%d/%m/%Y').astype(str)
-    df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(formatear_fecha)
-
-    #df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(lambda x: x.strftime('%d/%m/%Y') if isinstance(x, pd.Timestamp) else None)   
-    
-    df = limpiar_nacionalidades(df)
-    #st.dataframe(df)
-    
-    df.drop_duplicates(subset=["ID"], keep="first")
-    
-    df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
-    df = df.sort_values(by=["FECHA REGISTRO"], ascending=False).reset_index(drop=True)
-    df["FECHA REGISTRO"] = df["FECHA REGISTRO"].dt.strftime('%d/%m/%Y').astype(str)
-    df = df.astype({ "ID": str }) 
-    df = df.astype({ "JUGADOR": str }) 
-
-    df.drop("Cantidad", axis=1, inplace=True)
-    
-    df = rellenar_fechas_invalidas(df, columna="FECHA REGISTRO")
-    df = rellenar_fechas_invalidas(df, columna="FECHA DE NACIMIENTO")
-
-    df.reset_index(drop=True, inplace=True)
-    # Eliminar filas donde ID es NaN, 0 o "nan"
-    #df = df[df["ID"].notnull() &
-    #(df["ID"].astype(str) != "0") &
-    #(df["ID"].astype(str).str.lower() != "nan")]
-
-    return df
 
 def rellenar_fechas_invalidas(df, columna="FECHA REGISTRO", formato="%d/%m/%Y"):
     """
@@ -113,43 +49,6 @@ def rellenar_fechas_invalidas(df, columna="FECHA REGISTRO", formato="%d/%m/%Y"):
 
     return df
 
-def getData(conn):
-    df_datos = get_player_data(conn)
-
-    df_an = get_test_data(conn,'ANTROPOMETRIA')
-    df_ag = get_test_data(conn,'AGILIDAD')
-    df_sp = get_test_data(conn,'SPRINT')
-    df_cmj = get_test_data(conn,'CMJ')
-    df_yoyo = get_test_data(conn,'YO-YO')
-    df_rsa = get_test_data(conn,'RSA')
-
-    df_checkin = get_test_data(conn,'CHECK-IN')
-
-    columnas_comunes = ['FECHA REGISTRO', 'ID', 'CATEGORIA', 'EQUIPO']
-    df_data_test = unir_dataframes([df_an, df_ag, df_sp, df_cmj, df_yoyo, df_rsa], columnas_comunes)
-
-    df_data_test["CATEGORIA"] = df_data_test["CATEGORIA"].str.strip()
-    df_data_test["EQUIPO"] = df_data_test["EQUIPO"].str.strip()
-
-    columnas_excluidas = ["FECHA REGISTRO", "ID", "JUGADOR" ,"CATEGORIA", "EQUIPO", "TEST"]
-    columnas_estructura = get_dataframe_columns(df_data_test)
-   
-    # Eliminar columnas excluidas
-    columnas_filtradas = [col for col in columnas_estructura if col not in columnas_excluidas]
-
-    df_data_test = limpiar_columnas_numericas(df_data_test, columnas_filtradas)
-    df_checkin = limpiar_columnas_numericas(df_checkin, columnas_filtradas)
-
-    df_data_test = rellenar_fechas_invalidas(df_data_test, columna="FECHA REGISTRO")
-    df_checkin = rellenar_fechas_invalidas(df_checkin, columna="FECHA REGISTRO")
-
-    df_data_test.reset_index(drop=True, inplace=True)
-    df_checkin.reset_index(drop=True, inplace=True)
-
-    #st.text("Datos de los tests")
-    #st.dataframe(df_checkin)
-    return df_datos, df_data_test, df_checkin
-
 def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
     """
     Une una lista de DataFrames basándose en columnas comunes.
@@ -160,31 +59,39 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
         metodo (str): Tipo de unión ('outer' para no perder datos, 'inner' para intersección).
 
     Returns:
-        DataFrame: Un DataFrame combinado con columnas comunes al inicio.
+        pd.DataFrame: Un DataFrame combinado con columnas comunes al inicio.
     """
     if not dfs:
         raise ValueError("La lista de DataFrames está vacía.")
-    
-    dfs = [df.drop_duplicates(subset=columnas_comunes) for df in dfs]
 
-    # Verifica que todos los DataFrames contengan las columnas comunes
-    for df in dfs:
-        for col in columnas_comunes:
-            if col not in df.columns:
-                raise ValueError(f"La columna '{col}' no existe en uno de los DataFrames.")
-    
-    # Merge secuencial de todos los DataFrames
-    df_final = reduce(lambda left, right: pd.merge(left, right, on=columnas_comunes, how=metodo), dfs)
-    
+    dfs_validos = []
+
+    for idx, df in enumerate(dfs):
+        columnas_faltantes = [col for col in columnas_comunes if col not in df.columns]
+        if columnas_faltantes:
+            mensaje = f"⚠️ El DataFrame #{idx + 1} no contiene las columnas necesarias: {', '.join(columnas_faltantes)}. Será excluido."
+            try:
+                st.warning(mensaje)
+            except:
+                print(mensaje)
+            continue
+        # Limpiar duplicados por columnas comunes
+        df = df.drop_duplicates(subset=columnas_comunes)
+        dfs_validos.append(df)
+
+    if not dfs_validos:
+        raise ValueError("Ningún DataFrame contenía todas las columnas comunes necesarias.")
+
+    # Merge secuencial
+    df_final = reduce(lambda left, right: pd.merge(left, right, on=columnas_comunes, how=metodo), dfs_validos)
+
     # Eliminar filas donde TODAS las columnas NO comunes son NaN
     columnas_no_comunes = [col for col in df_final.columns if col not in columnas_comunes]
     df_final = df_final.dropna(subset=columnas_no_comunes, how='all')
 
-    # Reordenar columnas: comunes primero
+    # Reordenar columnas
     columnas_ordenadas = columnas_comunes + [col for col in df_final.columns if col not in columnas_comunes]
-    df_final = df_final[columnas_ordenadas]
-    
-    return df_final
+    return df_final[columnas_ordenadas]
 
 def es_numerico(val):
     try:
@@ -192,35 +99,11 @@ def es_numerico(val):
     except:
         return False
     
-def get_test_data(conn, hoja):
-    df = conn.read(worksheet=hoja, ttl=get_ttl())
-    df = df.reset_index(drop=True)  # Reinicia los índices
-
-    if "ID" in df.columns:
-        df = df.astype({"ID": str})  # o ajusta a tus columnas específicas
-    else:
-        df.columns = df.iloc[0]  # Usa la primera fila como nombres de columna
-        df = df[1:]  # Elimina la fila de encabezado original
-        df = df.reset_index(drop=True)
-        
-        mask = df.applymap(es_numerico)
-        df = df[mask.any(axis=1)]
-        
-        # ✅ Reemplazo sin advertencia futura
-        df = df.replace("None", 0)
-        df = df.fillna(0)
-        df = df.infer_objects(copy=False)
-       
-        df["CATEGORIA"] = "Check in"
-        df["JUGADOR"] = df["JUGADOR"].str.upper()
-
-    return df
-
 def get_dataframe_columns(dataframe):
     dataframe_columns = dataframe.columns.tolist()
     return dataframe_columns
 
-def getJoinedDataFrame(df_datos, df_data_test):
+def join_player_and_physical_data(df_datos, df_data_test):
 
     # Verificar si alguno de los DataFrames está vacío
     if df_datos.empty or df_data_test.empty:
@@ -308,6 +191,50 @@ def limpiar_columnas_numericas(df, columnas_filtradas):
             .pipe(pd.to_numeric, errors="coerce")
         )
     
+    return df
+
+def limpiar_filas_sin_datos_validos(df, columnas_excluidas=None):
+    """
+    Elimina filas donde todas las columnas válidas (no excluidas) son NaN o 0.
+    Si alguna columna esperada no existe, se muestra una advertencia.
+
+    Args:
+        df (pd.DataFrame): DataFrame a procesar.
+        columnas_excluidas (list, optional): Columnas que no se validan. Por defecto:
+            ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO', 'anio', 'mes']
+
+    Returns:
+        pd.DataFrame: DataFrame limpio, sin filas vacías o con ceros en columnas relevantes.
+    """
+    if columnas_excluidas is None:
+        columnas_excluidas = ['FECHA REGISTRO', 'ID', 'JUGADOR', 'CATEGORIA', 'EQUIPO', 'anio', 'mes']
+
+    # Columnas que intentaríamos validar (las que no están excluidas)
+    todas_columnas = df.columns.tolist()
+    columnas_a_validar = [col for col in todas_columnas if col not in columnas_excluidas]
+
+    # Verificar columnas faltantes
+    columnas_faltantes = [col for col in columnas_a_validar if col not in df.columns]
+    if columnas_faltantes:
+        mensaje = f"⚠️ Columnas no encontradas para validación: {', '.join(columnas_faltantes)}"
+        try:
+            st.warning(mensaje)
+        except:
+            print(mensaje)
+        # Excluirlas de la validación para evitar errores
+        columnas_a_validar = [col for col in columnas_a_validar if col in df.columns]
+
+    if not columnas_a_validar:
+        # Nada que validar, retornar sin cambios
+        return df
+
+    # Eliminar filas donde todas las columnas a validar son NaN
+    df = df.dropna(subset=columnas_a_validar, how="all")
+
+    # Eliminar filas donde todas las columnas a validar son 0
+    mask = (df[columnas_a_validar] == 0).all(axis=1)
+    df = df[~mask]
+
     return df
 
 def columnas_sin_datos_utiles(df, columnas_excluidas=None, mostrar_alerta=False, mensaje="❗ No hay datos útiles en las columnas seleccionadas."):
@@ -451,7 +378,7 @@ def get_new(datos_jugadores, df_existente, columnas_datos, fecha=None):
 
         existentes = df_existente[["JUGADOR", "CATEGORIA", "FECHA REGISTRO"]].drop_duplicates()
         faltantes = combinaciones.merge(existentes, on=["JUGADOR", "CATEGORIA", "FECHA REGISTRO"], how="left", indicator=True)
-        faltantes = faltantes[faltantes["_merge"] == "left_only"].drop(columns="_merge")
+        faltantes = faltantes[faltantes["_merge"] == "left_only"].drop(columns="_merge", errors="ignore")
 
         df_nuevo = faltantes.merge(jugadores_categoria, on=["JUGADOR", "CATEGORIA"], how="left")
         df_nuevo = df_nuevo.merge(datos_jugadores, on=["ID", "JUGADOR", "CATEGORIA"], how="left")
@@ -592,7 +519,7 @@ def actualizar_datos_con_checkin(df_datos, df_checkin, df_joined):
     df_datos_final = df_datos_final.drop_duplicates(subset=["JUGADOR", "CATEGORIA"], keep="first")
 
     # 6. Eliminar la columna auxiliar
-    df_datos_final = df_datos_final.drop(columns="PRIORIDAD").reset_index(drop=True)
+    df_datos_final = df_datos_final.drop(columns="PRIORIDAD", errors="ignore").reset_index(drop=True)
 
     # 7. Eliminar filas completamente vacías
     df_datos_final = df_datos_final.dropna(how="all").reset_index(drop=True)
@@ -661,30 +588,38 @@ def merge_by_nombre_categoria(df_unido, df_nuevo):
 def filtrar_por_rango_fechas(df, columna_fecha, fecha_inicio, fecha_fin, formato="%d/%m/%Y"):
     """
     Filtra un DataFrame por un rango de fechas, manteniendo la columna de fechas como string.
-    Si la fecha de inicio y fin son iguales, no se aplica filtro.
+    Si la columna no existe, se muestra una advertencia y se retorna el DataFrame original.
 
-    Parámetros:
+    Args:
         df (pd.DataFrame): DataFrame original.
         columna_fecha (str): Nombre de la columna que contiene fechas como string.
         fecha_inicio (datetime.date): Fecha inicial del rango.
         fecha_fin (datetime.date): Fecha final del rango.
         formato (str): Formato de fecha en el DataFrame (por defecto: "%d/%m/%Y").
 
-    Retorna:
-        pd.DataFrame: DataFrame filtrado, con la columna de fecha como string y sin columnas auxiliares.
+    Returns:
+        pd.DataFrame: DataFrame filtrado (o el original si la columna no existe).
     """
+    if columna_fecha not in df.columns:
+        mensaje = f"⚠️ La columna de fecha '{columna_fecha}' no existe en el DataFrame. No se aplicará filtro."
+        try:
+            st.warning(mensaje)
+        except:
+            print(mensaje)
+        return df
+
     df_temp = df.copy()
     df_temp["FECHA DT"] = pd.to_datetime(df_temp[columna_fecha], format=formato, errors="coerce")
 
     if fecha_inicio == fecha_fin:
-        filtrado = df_temp  # No se filtra si ambas fechas son iguales
+        filtrado = df_temp
     else:
         filtrado = df_temp[
             (df_temp["FECHA DT"].dt.date >= fecha_inicio) &
             (df_temp["FECHA DT"].dt.date <= fecha_fin)
         ]
 
-    return filtrado.drop(columns=["FECHA DT"])
+    return filtrado.drop(columns=["FECHA DT"], errors="ignore")
 
 # Utilidad para obtener lista única ordenada de una columna, con filtros
 def get_filtered_list(dataframe, column, filters, default_option="Todos"):
@@ -752,11 +687,12 @@ def get_filters(df):
    
     # Verificar si se aplicó al menos un filtro (distinto de "Todos")
     if any(value != default_option for value in filters.values()):
-         df_filtrado = df.copy()
-         for col, val in filters.items():
-             if val != default_option:
-                 df_filtrado = df_filtrado[df_filtrado[col] == val]
-         return df_filtrado
+        df_filtrado = df.copy()
+        for col, val in filters.items():
+            if val != default_option:
+                df_filtrado = df_filtrado[df_filtrado[col] == val]
+        df_filtrado = df_filtrado.reset_index(drop=True)
+        return df_filtrado
     
     # Si no se seleccionó ningún filtro, retornar el original
     df = df.reset_index(drop=True)
@@ -1033,13 +969,6 @@ def construir_diccionario_test_categorias(df_columnas_raw):
 
     return test_categorias
 
-
-def get_diccionario_test_categorias(conn):
-    test = get_test(conn)
-    test_cat = construir_diccionario_test_categorias(test)
-    lista_columnas = test.columns.tolist()
-
-    return test, test_cat, lista_columnas
 
 # Función para eliminar acentos
 def quitar_acentos(texto):

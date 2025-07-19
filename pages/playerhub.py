@@ -1,21 +1,26 @@
-from streamlit_gsheets import GSheetsConnection
+#from streamlit_gsheets import GSheetsConnection
 
 import streamlit as st
-from utils import util
-from utils import player
-from utils import reporte as report
-from graphics import height_weight_fat
+import pandas as pd
+import numpy as np
+import base64
+
+from graphics import graphics
 from graphics import cmj as cmjg
 from graphics import sprint as sprintg
 from graphics import yoyo as yoyog
 from graphics import rsa as rsag
 from graphics import agilidad as agilidadg
-import pandas as pd
-import numpy as np
-import login as login
 from datetime import date
-import base64
+
+from utils import util
+from utils import player
+from utils import reporte as report
 from utils import traslator
+from utils import login
+from utils import connector_sgs
+from utils import data_util
+from utils import constants
 
 st.set_page_config(
     page_title="PlayerHub",
@@ -24,8 +29,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
+fecha_actual = date.today()
+
+@st.fragment
+def bloque_conexion():
+    conn = connector_sgs.get_connector()  # Esto se ejecuta cada vez que el fragmento se monta
+    
+    # Conexion, lectura y limpieza lectura de datos
+    ###################################################
+    _, test_cat, lista_columnas = data_util.get_diccionario_test_categorias(conn, connector_sgs.get_data)
+
+    df_datos, df_data_test, df_checkin = data_util.load_player_and_physical_data(conn, connector_sgs.get_data)
+    df_joined = util.join_player_and_physical_data(df_datos, df_data_test)
+    
+    datatest_columns = util.get_dataframe_columns(df_data_test)
+    columnas_a_verificar = [col for col in datatest_columns if col not in constants.COLUMNAS_EXCLUIDAS_PROMEDIO]
+    
+    df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
+    
+    return conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas
+    ###################################################
+
 # 📡 Conexión con Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
+#conn = st.connection("gsheets", type=GSheetsConnection)
+conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas = bloque_conexion()
 
 # 🔐 Verificación de sesión
 login.generarLogin(conn)
@@ -33,33 +61,9 @@ if "usuario" not in st.session_state:
     st.stop()
 
 st.header(" :blue[Player Hub] :material/contacts:", divider=True)
-#st.subheader("Datos individuales, historicos y alertas")
-
-unavailable = "No Disponible"
-fecha_registro = "FECHA REGISTRO"
-categorial = "CATEGORIA"
-equipol = "EQUIPO"
-jugadorl = "JUGADOR"
-mensaje_no_data = "El Jugador seleccionado no cuenta con datos suficientes para mostrar esta sección"
-equipo_promedio = "A"
-columnas_excluidas_promedio = [fecha_registro, 'ID', categorial, equipol]
-fecha_actual = date.today()
-
-# Conexion, lectura y limpieza lectura de datos
-###################################################
-df_datos, df_data_test, df_checkin = util.getData(conn)
-df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
-#st.dataframe(df_datos )
-
-test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
-
-datatest_columns = util.get_dataframe_columns(df_data_test)
-columnas_a_verificar = [col for col in datatest_columns if col not in columnas_excluidas_promedio]
-
-df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
-###################################################
 
 df_datos_filtrado = pd.DataFrame()
+
 # Filtros
 ###################################################
 genero = ["Todos", "Masculino", "Femenino"]
@@ -78,19 +82,11 @@ if gender_type != "NA":
 on = st.toggle("Mostrar solo jugadores con registros")
 if on:
     df_sesiones = util.sesiones_por_test(df_data_test_final, test_cat)
-    df_datos_final = df_datos_final[df_datos_final[jugadorl].isin(df_sesiones[jugadorl])]
+    df_datos_final = df_datos_final[df_datos_final[constants.JUGADOR_LABEL].isin(df_sesiones[constants.JUGADOR_LABEL])]
     #df_datos_filtrado = util.get_filters(df_filtrado)
 #else:
 
-#st.dataframe(df_datos_final)
 df_datos_filtrado = util.get_filters(df_datos_final)
-#st.dataframe(df_datos_final)
-
-# @st.fragment
-# def filtros_fragment(df):
-#     return util.get_filters(df)
-#df_datos_filtrado = filtros_fragment(df_datos_final)
-
 
 with st.expander("Configuración Avanzada"):
 
@@ -112,7 +108,7 @@ with st.expander("Configuración Avanzada"):
         st.warning("❌ La fecha final no puede ser anterior a la fecha inicial.")
         st.stop()
 
-    test_data_filtered = util.filtrar_por_rango_fechas(df_data_test_final, fecha_registro, fecha_inicio, fecha_fin)
+    test_data_filtered = util.filtrar_por_rango_fechas(df_data_test_final, constants.FECHA_REGISTRO_LABEL, fecha_inicio, fecha_fin)
 
     #st.divider()
     idiomas = ["Español", "Inglés", "Francés", "Italiano", "Alemán", "Catalán", "Portugues"]
@@ -143,7 +139,7 @@ with st.expander("Configuración Avanzada"):
 ###################################################
 # Agrupar por CATEGORIA y EQUIPO, calcular promedio
 #df_promedios = df_data_test.groupby(["CATEGORIA", "EQUIPO"])[columnas_a_verificar].mean().reset_index()
-df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, categorial, equipol, equipo_promedio)
+df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, constants.CATEGORIA_LABEL, constants.EQUIPO_LABEL, constants.EQUIPO_PROMEDIO)
 #st.dataframe(df_promedios)
 
 ###################################################
@@ -152,13 +148,10 @@ if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
 else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
     
-    #st.dataframe(df_datos_final)
 
     # Sección datos de usuario
-    df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
+    df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, constants.UNAVAILABLE, idioma)
     
-   
-
     cat_label = "U19" if categoria.lower() == "juvenil" else "U15"
    
     if not df_datos_filtrado.empty:
@@ -186,10 +179,10 @@ else:
                 ## ANTROPOMETRIA
                 columns = list(test_cat.get(lista_columnas[0], []))
                 
-                df_anthropometrics = df_joined_filtrado[[fecha_registro] + columns]
+                df_anthropometrics = df_joined_filtrado[[constants.FECHA_REGISTRO_LABEL] + columns]
                 df_anthropometrics = df_anthropometrics.reset_index(drop=True)
                 #st.dataframe(df_anthropometrics)
-                if not util.columnas_sin_datos_utiles(df_anthropometrics, [fecha_registro]):
+                if not util.columnas_sin_datos_utiles(df_anthropometrics, [constants.FECHA_REGISTRO_LABEL]):
                     
                     # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
                     df_anthropometrics = df_anthropometrics[~(df_anthropometrics[columns] == 0).all(axis=1)]
@@ -236,7 +229,7 @@ else:
                         st.metric(columns[2].capitalize(),f'{float(gact):,.2f}')
                     
                     with col4:
-                        act = df_anthropometrics[fecha_registro].iloc[0]
+                        act = df_anthropometrics[constants.FECHA_REGISTRO_LABEL].iloc[0]
                         st.metric("Último Registro", act)
 
                     observacion = util.get_observacion_grasa(gact, categoria.lower(), gender)
@@ -249,10 +242,10 @@ else:
                     
                     observaciones_dict["Peso y % Grasa"] = observacion
 
-                    figalt = height_weight_fat.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
+                    figalt = graphics.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
 
                     #df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    figant = height_weight_fat.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -284,10 +277,10 @@ else:
                         st.markdown("📊 **Valores máximos, mínimos y promedio**")
                         st.dataframe(stats_df.round(1))
                 else:
-                    st.text(mensaje_no_data)
+                    st.text(constants.MENSAJE_NO_DATA)
                     percentiles_an = None
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
                 percentiles_an = None
         
         with cmj:
@@ -296,7 +289,7 @@ else:
                 ######################################################################################################
                 ## CMJ
                 columns = list(test_cat.get(lista_columnas[1], []))
-                df_cmj = df_joined_filtrado[[fecha_registro] + columns]
+                df_cmj = df_joined_filtrado[[constants.FECHA_REGISTRO_LABEL] + columns]
                 df_cmj = df_cmj.reset_index(drop=True)
 
                 # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
@@ -326,11 +319,11 @@ else:
                         st.metric(columns[1].replace("-", " ").capitalize(),f'{cactw:,.2f}', f'{variacion:,.2f}')
 
                     with col3:
-                        act = df_cmj[fecha_registro].iloc[0]
+                        act = df_cmj[constants.FECHA_REGISTRO_LABEL].iloc[0]
                         st.metric("Último Registro", act)
 
                     #st.text(gender)
-                    promedio_cmj = util.obtener_promedio_genero(df_promedios, categoria, equipo_promedio, columns[0], gender)
+                    promedio_cmj = util.obtener_promedio_genero(df_promedios, categoria, constants.EQUIPO_PROMEDIO, columns[0], gender)
                     cactc = float(cactc)
                     #st.text(cactc)
                     observacion = util.get_observacion_cmj(cactc, categoria, gender)
@@ -385,7 +378,7 @@ else:
                             tipo="CMJ"
                         )
                         
-                        figcmj = cmjg.get_cmj_graph(df_cmj, promedios, categoria, equipo_promedio, [columns[0]], fecha_registro, idioma, tipo_reporte_bool, gender, cat_label)
+                        figcmj = cmjg.get_cmj_graph(df_cmj, promedios, categoria, constants.EQUIPO_PROMEDIO, [columns[0]], constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, gender, cat_label)
                     with colb:
                         st.markdown("📊 **Históricos**")
                         styled_df = util.aplicar_semaforo(df_cmj)
@@ -394,10 +387,10 @@ else:
                     #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #graphics.mostrar_percentiles_coloreados(df_cmj.iloc[0], percentiles_cmj)  
                 else:
-                    st.text(mensaje_no_data) 
+                    st.text(constants.MENSAJE_NO_DATA) 
                     percentiles_cmj = None      
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
                 percentiles_cmj = None
           
         with sprint:
@@ -407,7 +400,7 @@ else:
                 ## SPRINT
 
                 columns = list(test_cat.get(lista_columnas[2], []))
-                df_sprint = df_joined_filtrado[[fecha_registro] + columns]
+                df_sprint = df_joined_filtrado[[constants.FECHA_REGISTRO_LABEL] + columns]
                 
                 df_sprint = df_sprint.reset_index(drop=True)
 
@@ -450,7 +443,7 @@ else:
                         st.metric(columns[3].capitalize(),f'{float(act040v):,.2f}', f'{float(variacion040v):,.2f}', delta_color="inverse")
 
                     with col5:
-                        act = df_sprint[fecha_registro].iloc[0]
+                        act = df_sprint[constants.FECHA_REGISTRO_LABEL].iloc[0]
                         st.metric(f"Último Registro",act)
                         #df_sprint = util.convertir_m_s_a_km_h(df_sprint, ["VEL 0-5M (M/S)", "VEL 5-20M (M/S)", "VEL 20-40M (M/S)"])
                     
@@ -489,10 +482,10 @@ else:
                     #st.dataframe(df_promedios)
 
                     if(act05t != 0) or (act05v != 0):
-                        figsp05 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[0],columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        figsp05 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, constants.EQUIPO_PROMEDIO, columns[0],columns[1], constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, cat_label, gender)
 
                     if(act040t != 0) or (act040v != 0):
-                        figsp040 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, equipo_promedio, columns[2],columns[3], fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        figsp040 = sprintg.get_sprint_graph(df_sprint, promedios_sprint, categoria, constants.EQUIPO_PROMEDIO, columns[2],columns[3], constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, cat_label, gender)
                 
                     st.divider()
                     st.markdown("📊 **Históricos**")
@@ -502,10 +495,10 @@ else:
                     #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #graphics.mostrar_percentiles_coloreados(df_sprint.iloc[0], percentiles_sp) 
                 else:
-                    st.text(mensaje_no_data)  
+                    st.text(constants.MENSAJE_NO_DATA)  
                     percentiles_sp = None 
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
                 percentiles_sp = None
                 
         with yoyo:
@@ -516,7 +509,7 @@ else:
                 ## YO-YO
 
                 columns = list(test_cat.get(lista_columnas[3], []))
-                df_yoyo = df_joined_filtrado[[fecha_registro] + columns]
+                df_yoyo = df_joined_filtrado[[constants.FECHA_REGISTRO_LABEL] + columns]
                 df_yoyo = df_yoyo.reset_index(drop=True)
 
                 # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
@@ -544,7 +537,7 @@ else:
                         st.metric(columns[1].capitalize(),f'{act:,.2f}', f'{variacion:,.2f}')
                     
                     with col3:
-                        act = df_yoyo[fecha_registro].iloc[0]
+                        act = df_yoyo[constants.FECHA_REGISTRO_LABEL].iloc[0]
                         st.metric(f"Último Registro",act)
 
                     st.divider()
@@ -552,7 +545,7 @@ else:
                     cola, colb = st.columns([2.5,1.5])
 
                     #with cola:
-                    figyoyo = yoyog.get_yoyo_graph(df_yoyo, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label)
+                    figyoyo = yoyog.get_yoyo_graph(df_yoyo, df_promedios, categoria, constants.EQUIPO_PROMEDIO, columns[1], constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, cat_label)
                     #with colb:   
                     st.markdown("📊 **Históricos**")
                     styled_df = util.aplicar_semaforo(df_yoyo)
@@ -560,10 +553,10 @@ else:
                     #st.markdown("📊 **Tabla de percentiles: Comparación del jugador con atletas de su misma edad**")
                     #graphics.mostrar_percentiles_coloreados(df_yoyo.iloc[0], percentiles_yoyo)  
                 else:
-                    st.text(mensaje_no_data)
+                    st.text(constants.MENSAJE_NO_DATA)
                     percentiles_yoyo = None
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
                 percentiles_yoyo = None
 
         with agilidad:
@@ -574,7 +567,7 @@ else:
                 ## AGILIDAD
                 columns = list(test_cat.get(lista_columnas[4], []))
                 
-                df_agilty = df_joined_filtrado[[fecha_registro] + columns]
+                df_agilty = df_joined_filtrado[[constants.FECHA_REGISTRO_LABEL] + columns]
                 #st.dataframe(df_joined_filtrado)
                 df_agilty = df_agilty.loc[~(df_agilty[columns].fillna(0) == 0).all(axis=1)]
                 todos_ceros = (df_agilty[columns] == 0).all().all()
@@ -582,7 +575,7 @@ else:
                 if not todos_ceros:
                     
                     df_agilty = df_agilty[~(df_agilty[columns] == 0).any(axis=1)]
-                    diferencias = agilidadg.get_diferencia_agilidad(df_agilty, columns, fecha_registro)
+                    diferencias = agilidadg.get_diferencia_agilidad(df_agilty, columns, constants.FECHA_REGISTRO_LABEL)
                     ultima_diferencia = diferencias[-1]["diferencia_%"] if diferencias else None
                     #percentiles_ag = util.calcular_percentiles(df_agilty.iloc[0], referencia_test, columnas_filtradas)
                     
@@ -610,7 +603,7 @@ else:
 
                     with col4:
                         if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
-                            act = df_agilty[fecha_registro].iloc[0] if len(df_agilty) > 0 else 0
+                            act = df_agilty[constants.FECHA_REGISTRO_LABEL].iloc[0] if len(df_agilty) > 0 else 0
                             st.metric("Último Registro", act)
 
                     if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
@@ -623,7 +616,7 @@ else:
                         else:
                             st.warning(observacion, icon="⚠️")
 
-                        figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label, gender)
+                        figag = agilidadg.get_agility_graph_combined_simple(df_agilty, df_promedios, categoria, equipo, columns, constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, cat_label, gender)
                         st.divider()
                         
                     
@@ -631,10 +624,10 @@ else:
                         st.dataframe(df_agilty)
                    
                 else:
-                    st.text(mensaje_no_data)
+                    st.text(constants.MENSAJE_NO_DATA)
                     percentiles_ag = None
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
                 percentiles_ag = None
                             
         with rsa:
@@ -643,7 +636,7 @@ else:
                 ######################################################################################################
                 ## RSA
                 columns = list(test_cat.get(lista_columnas[5], []))
-                df_rsa = df_joined_filtrado[[fecha_registro] + columns]
+                df_rsa = df_joined_filtrado[[constants.FECHA_REGISTRO_LABEL] + columns]
                 df_rsa = df_rsa.reset_index(drop=True)
                 
                 # Eliminar las filas donde TODAS las columnas filtradas sean cero o nulas
@@ -672,31 +665,31 @@ else:
                         st.metric(columns[1].capitalize(),f'{act:,.2f}', f'{variacion:,.2f}')
 
                     with col3:
-                        act = df_rsa[fecha_registro].iloc[0]
+                        act = df_rsa[constants.FECHA_REGISTRO_LABEL].iloc[0]
                         st.metric(f"Último Registro",act)
 
                     #styled_dfa = util.aplicar_semaforo(df_rsa[columna_fecha_registro + columns], invertir=True)
 
                     cola, colb = st.columns([2.5,1])
                     with cola:
-                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label) 
+                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, constants.EQUIPO_PROMEDIO, columns, constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, cat_label) 
                     with colb:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(df_rsa[[fecha_registro] + [columns[0]]]) 
+                        st.dataframe(df_rsa[[constants.FECHA_REGISTRO_LABEL] + [columns[0]]]) 
 
-                    styled_dfb = util.aplicar_semaforo(df_rsa[[fecha_registro] + columns])
+                    styled_dfb = util.aplicar_semaforo(df_rsa[[constants.FECHA_REGISTRO_LABEL] + columns])
                     colc, cold = st.columns([2.5,1])
                     with colc:
                         #st.dataframe(df_promedios)
-                        figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns[1], fecha_registro, idioma, tipo_reporte_bool, cat_label)
+                        figrsav = rsag.get_rsa_velocity_graph(df_rsa, df_promedios, categoria, constants.EQUIPO_PROMEDIO, columns[1], constants.FECHA_REGISTRO_LABEL, idioma, tipo_reporte_bool, cat_label)
                     with cold:    
                         st.markdown("📊 **Históricos**")
-                        st.dataframe(df_rsa[[fecha_registro] + [columns[1]]]) 
+                        st.dataframe(df_rsa[[constants.FECHA_REGISTRO_LABEL] + [columns[1]]]) 
                 else:
-                    st.text(mensaje_no_data) 
+                    st.text(constants.MENSAJE_NO_DATA) 
                     percentiles_rsa = None      
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
                 percentiles_rsa = None
                 
         with reporte:
@@ -819,4 +812,4 @@ else:
                         status.update(label="❌ Error al generar el PDF", state="error", expanded=True)
                         st.exception(e)
             else:
-                st.text(mensaje_no_data)
+                st.text(constants.MENSAJE_NO_DATA)
