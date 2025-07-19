@@ -467,6 +467,15 @@
     "ca": "Espanya",
     "pt": "Espanha"
   },
+    "ESPANA": {
+    "es": "España",
+    "en": "Spain",
+    "fr": "Espagne",
+    "it": "Spagna",
+    "de": "Spanien",
+    "ca": "Espanya",
+    "pt": "Espanha"
+  },
   "ETIOPIA": {
     "es": "Etiopía",
     "en": "Ethiopia",
@@ -836,7 +845,7 @@
     "ca": "Bèlgica",
     "pt": "Bélgica"
   },
-  "R. DOMINICANA": {
+  "REPUBLICA DOMINICANA": {
     "es": "R. Dominicana",
     "en": "Dominican R.",
     "fr": "R. dominicaine",

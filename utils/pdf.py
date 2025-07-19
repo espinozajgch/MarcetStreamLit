@@ -19,7 +19,10 @@ class PDF(FPDF):
             self.add_font("Amiri", "B", "assets/fonts/Amiri-0.111/Amiri-Bold.ttf", uni=True)
             self.add_font("Amiri", "I", "assets/fonts/Amiri-0.111/Amiri-Slanted.ttf", uni=True)
             self.set_font("Amiri", "", 12)
-       
+
+        self.add_font("DejaVu", "", "assets/fonts/dejavu-2.37/DejaVuSans.ttf", uni=True)  # Añadir fuente Unicode
+        self.add_font("DejaVu", "B", "assets/fonts/dejavu-2.37/DejaVuSans-Bold.ttf", uni=True)
+        
     def footer(self):
         """FIXED: Consistent footer with reduced height"""
         self.set_y(-15)  # REDUCED footer height
@@ -115,7 +118,13 @@ class PDF(FPDF):
                 pass
 
         if not imagen_insertada:
-            self.image("assets/images/profile.png", 8, 55, 40)
+            gender = data["GENERO"]
+            if gender == "H":
+                self.image("assets/images/male.png", 8, 55, 40)
+            elif gender == "M":
+                self.image("assets/images/female.png", 8, 55, 40)
+            else:
+                self.image("assets/images/profile.png", 8, 55, 40)
             
         # Nombre
         if(idioma == "ar"):
@@ -153,7 +162,7 @@ class PDF(FPDF):
         if(idioma == "ar"):
             self.set_font("Amiri", "", 10)
         else:
-            self.set_font("Arial", "", 10)
+            self.set_font("DejaVu", "", 10)
         
         if data["NACIONALIDAD"].upper() == "NO DISPONIBLE":
             self.cell(50, 6, traslator.traducir("No Disponible", idioma).upper(), ln=True)

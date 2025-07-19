@@ -102,10 +102,9 @@ def get_player_data(conn):
 
     #df["FECHA DE NACIMIENTO"] = df["FECHA DE NACIMIENTO"].apply(lambda x: x.strftime('%d/%m/%Y') if isinstance(x, pd.Timestamp) else None)   
     
+    df = limpiar_nacionalidades(df)
     #st.dataframe(df)
-    df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
-    df['NACIONALIDAD'] = df['NACIONALIDAD'].apply(quitar_acentos)
-
+    
     df.drop_duplicates(subset=["ID"], keep="first")
     
     df["FECHA REGISTRO"] = pd.to_datetime(df["FECHA REGISTRO"], format="%d/%m/%Y")
@@ -114,10 +113,41 @@ def get_player_data(conn):
     df = df.astype({ "ID": str }) 
     df = df.astype({ "JUGADOR": str }) 
 
+    df.drop("Cantidad", axis=1, inplace=True)
+    
+    df = rellenar_fechas_invalidas(df, columna="FECHA REGISTRO")
+    df = rellenar_fechas_invalidas(df, columna="FECHA DE NACIMIENTO")
+
+    df.reset_index(drop=True, inplace=True)
     # Eliminar filas donde ID es NaN, 0 o "nan"
     #df = df[df["ID"].notnull() &
     #(df["ID"].astype(str) != "0") &
     #(df["ID"].astype(str).str.lower() != "nan")]
+
+    return df
+
+def rellenar_fechas_invalidas(df, columna="FECHA REGISTRO", formato="%d/%m/%Y"):
+    """
+    Reemplaza valores nulos o no válidos en una columna de fecha por la fecha actual (formato: dd/mm/yyyy).
+
+    Args:
+        df (pd.DataFrame): El DataFrame a procesar.
+        columna (str): El nombre de la columna de fechas.
+        formato (str): El formato de salida (por defecto: "%d/%m/%Y").
+
+    Returns:
+        pd.DataFrame: El DataFrame con la columna corregida.
+    """
+    hoy = datetime.today()
+
+    # Convertir a datetime con errores como NaT
+    df[columna] = pd.to_datetime(df[columna], errors="coerce", dayfirst=True)
+
+    # Reemplazar valores inválidos con fecha actual
+    df[columna] = df[columna].fillna(hoy)
+
+    # Convertir nuevamente a string con el formato deseado
+    df[columna] = df[columna].dt.strftime(formato)
 
     return df
 
@@ -148,8 +178,14 @@ def getData(conn):
     df_data_test = limpiar_columnas_numericas(df_data_test, columnas_filtradas)
     df_checkin = limpiar_columnas_numericas(df_checkin, columnas_filtradas)
 
+    df_data_test = rellenar_fechas_invalidas(df_data_test, columna="FECHA REGISTRO")
+    df_checkin = rellenar_fechas_invalidas(df_checkin, columna="FECHA REGISTRO")
+
+    df_data_test.reset_index(drop=True, inplace=True)
+    df_checkin.reset_index(drop=True, inplace=True)
+
     #st.text("Datos de los tests")
-    #st.dataframe(columnas_filtradas)
+    #st.dataframe(df_checkin)
     return df_datos, df_data_test, df_checkin
 
 def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
@@ -1055,6 +1091,32 @@ def quitar_acentos(texto):
         if unicodedata.category(c) != 'Mn' or c == '̃' and texto_normalizado[texto_normalizado.index(c)-1].lower() == 'n'
     )
     return texto_sin_tildes
+
+def limpiar_nacionalidades(df):
+    reemplazos = {
+        "ESPANA": "ESPAÑA",
+        "FEDERACIÓN RUSSA": "RUSIA",
+        "FEDERACION RUSSA": "RUSIA",
+        "R. DOMINICANA": "REPUBLICA DOMINICANA",
+        "KENYA": "KENIA",
+        "MOROCCO": "MARRUECOS"
+    }
+
+    # Normalizar texto y aplicar reemplazos
+    df["NACIONALIDAD"] = (
+        df["NACIONALIDAD"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .replace(reemplazos)
+    )
+
+    df["NACIONALIDAD"] = df["NACIONALIDAD"].astype(str).str.replace(",", ".", regex=False).str.strip()
+    df['NACIONALIDAD'] = df['NACIONALIDAD'].apply(quitar_acentos)
+
+
+    return df
+
 
 def obtener_bandera(pais):
     # Diccionario de códigos de país ISO 3166-1 alfa-2

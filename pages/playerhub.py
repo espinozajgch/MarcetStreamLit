@@ -4,7 +4,7 @@ import streamlit as st
 from utils import util
 from utils import player
 from utils import reporte as report
-from graphics import graphics
+from graphics import height_weight_fat
 from graphics import cmj as cmjg
 from graphics import sprint as sprintg
 from graphics import yoyo as yoyog
@@ -60,23 +60,35 @@ df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos,
 df_datos_filtrado = pd.DataFrame()
 # Filtros
 ###################################################
-genero = ["Masculino", "Femenino"]
+genero = ["Todos", "Masculino", "Femenino"]
 gender_type = st.radio("Genero", genero, horizontal=True)
 
 if gender_type == "Masculino":
     gender_type = "H"
-else:
+elif gender_type == "Femenino":
     gender_type = "M"
+else:
+    gender_type = "NA"
 
-df_datos_final = df_datos_final[df_datos_final["GENERO"] == gender_type]
+if gender_type != "NA":
+    df_datos_final = df_datos_final[df_datos_final["GENERO"] == gender_type]
 
-on = st.toggle("Solo Jugadores con Test Realizados")
+on = st.toggle("Mostrar solo jugadores con registros")
 if on:
     df_sesiones = util.sesiones_por_test(df_data_test_final, test_cat)
-    df_filtrado = df_datos_final[df_datos_final[jugadorl].isin(df_sesiones[jugadorl])]
-    df_datos_filtrado = util.get_filters(df_filtrado)
-else:
-    df_datos_filtrado = util.get_filters(df_datos_final)
+    df_datos_final = df_datos_final[df_datos_final[jugadorl].isin(df_sesiones[jugadorl])]
+    #df_datos_filtrado = util.get_filters(df_filtrado)
+#else:
+
+#st.dataframe(df_datos_final)
+df_datos_filtrado = util.get_filters(df_datos_final)
+#st.dataframe(df_datos_final)
+
+# @st.fragment
+# def filtros_fragment(df):
+#     return util.get_filters(df)
+#df_datos_filtrado = filtros_fragment(df_datos_final)
+
 
 with st.expander("Configuración Avanzada"):
 
@@ -170,7 +182,6 @@ else:
 
         with antropometria:
             if len(df_joined_filtrado) > 0:
-
                 ######################################################################################################
                 ## ANTROPOMETRIA
                 columns = list(test_cat.get(lista_columnas[0], []))
@@ -185,6 +196,8 @@ else:
                     
                     st.markdown("📆 **Ultímas Mediciones**")
 
+                    zona_optima_min = 8
+                    zona_optima_max = 16
                     if categoria == "Juvenil":
                         if gender == "H":
                             zona_optima_min = 8
@@ -199,6 +212,8 @@ else:
                         elif gender == "M":
                             zona_optima_min = 8
                             zona_optima_max = 14  
+                    
+                        
 
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:

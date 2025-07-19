@@ -55,7 +55,7 @@ def guardar_datos():
             status.update(label="✅ Datos actualizados correctamente.", state="complete", expanded=False)
             st.rerun()
 
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError) as e:  # Catch specific exceptions
             status.update(label="❌ Error al guardar los datos.", state="error", expanded=True)
             st.exception(e)
 

@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from utils import util
 
 # Validación simple de usuario y clave con un archivo csv
@@ -127,31 +126,3 @@ def cerrarSesion():
     st.query_params.clear()  # 🔹 Limpia la URL
     st.session_state.clear()
     st.rerun()
-
-
-# # def generarLogin():
-#     """Genera la ventana de login o muestra el menú si el login es valido
-#     """    
-#     # Validamos si el usuario ya fue ingresado    
-#     if 'usuario' in st.session_state:
-#         generarMenu(st.session_state['usuario']) # Si ya hay usuario cargamos el menu        
-#     else: 
-#         col1, col2, col3 = st.columns([2, 1.5, 2])
-#         with col2:
-#             st.image("assets/images/marcet.png")
-        
-#         col1, col2, col3 = st.columns([2, 1.5, 2])
-#         with col2:
-#             # Cargamos el formulario de login       
-#             with st.form('frmLogin'):
-#                 parUsuario = st.text_input('Usuario')
-#                 parPassword = st.text_input('Password',type='password')
-#                 btnLogin=st.form_submit_button('Ingresar',type='primary')
-#                 if btnLogin:
-#                     if validarUsuario(parUsuario,parPassword):
-#                         st.session_state['usuario'] =parUsuario
-#                         # Si el usuario es correcto reiniciamos la app para que se cargue el menú
-#                         st.rerun()
-#                     else:
-#                         # Si el usuario es invalido, mostramos el mensaje de error
-#                         st.error("Usuario o clave inválidos",icon=":material/gpp_maybe:")          

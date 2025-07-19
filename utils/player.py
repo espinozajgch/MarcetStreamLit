@@ -26,14 +26,11 @@ def convert_drive_url(original_url):
 
 
 def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idioma="es"):
-    #st.dataframe(df_final)
+
     # Obtener ID del jugador seleccionado (único y limpio)
     ids_disponibles = df_datos_filtrado["ID"].dropna().astype(str).str.strip().unique().tolist()
-    #st.dataframe(df_datos_filtrado)
-    
+
     if not ids_disponibles or any(isinstance(id, str) and id.strip().lower() == 'nan' for id in ids_disponibles):
-        # Mostrar mensaje si no hay datos válidos
-        #st.text("No hay IDs disponibles o todos son 'nan'.")
 
         # Crear combinación única de jugador + categoría
         df_datos_filtrado["JUGADOR_CATEGORIA"] = (
@@ -71,8 +68,6 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
     # Validar que exista al menos un registro para el jugador seleccionado
     if ids_disponibles or names_disponibles:
         
-        #jugador = df_jugador.iloc[0]
-        
         nombre = df_jugador['JUGADOR'].iloc[0]
         nacionalidad = df_jugador['NACIONALIDAD'].iloc[0]
         categoria = df_jugador['CATEGORIA'].iloc[0]
@@ -82,9 +77,13 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         demarcacion = df_jugador['DEMARCACION'].iloc[0]
         genero =  df_jugador['GENERO'].iloc[0]
         color = "violet" if genero == "M" else "blue"
-        #blue, green, orange, red, violet, gray/grey, rainbow, or primary
         
-        genero_icono = ":material/girl:" if genero == "M" else ":material/boy:"
+        if genero == "M":
+            genero_icono = ":material/girl:"
+        elif genero == "H":
+            genero_icono = ":material/boy:"
+        else:
+            genero_icono = "" 
 
         if nacionalidad == unavailable:
             bandera = ""
@@ -92,32 +91,26 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
             nb = "ESPANA" if nacionalidad.upper() == "ESPAÑA" else nacionalidad.upper()
             bandera = util.obtener_bandera(str(nb).replace(",", "."))
 
-        #referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
-        #referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
-            
-        # Mostrar DataFrame principal
-        #st.dataframe(df_joined)
-        #st.badge("New")
-        #st.badge("Success", icon=":material/check:", color="green")
-
         st.markdown(f"## {nombre} {genero_icono}")
-        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{traslator.traducir_pais(nacionalidad.upper(),idioma).upper()}_ {bandera} ")
+        st.markdown(f"##### **_:blue[ID:]_** _{id.upper()}_ | **_:blue[NACIONALIDAD:]_** _{traslator.traducir_pais(nacionalidad.upper(),idioma).upper()}_ {bandera} ")
 
         col1, col2, col3 = st.columns([1, 2, 2])
 
         with col1:
-            #st.dataframe(df_jugador)
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
-            profile_image = "female" if genero == "M" else "male"
-            #url_directa = convert_drive_url(url_drive)
-            
+
+            if genero == "M":
+                profile_image = "female" 
+            elif genero == "H":
+                profile_image = "male" 
+            else:
+                profile_image = "profile" 
+
             if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":
-                #st.text(url_drive)
                 response = util.get_photo(url_drive)
 
-                if response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
+                if response and response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
                     st.image(response.content, width=150)
-                    #st.image(response.content, width=150)
                 else:
                     #"https://cdn-icons-png.flaticon.com/512/5281/5281619.png"
                     st.image(f"assets/images/{profile_image}.png", width=180)
@@ -149,8 +142,6 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
             
             st.metric(label=f":{color}[Posición]", value=f"{traslator.traducir(demarcacion.upper(), idioma).capitalize()}", border=True)
             st.metric(label=f":{color}[Edad]", value=edad, border=True)
-
-        #st.markdown(":green-badge[:material/check: Antropometria] :red-badge[:material/dangerous: CMJ] :gray-badge[Deprecated]")
 
     else:
         st.warning("⚠️ No se encontró ningún ID válido en los datos filtrados.")
