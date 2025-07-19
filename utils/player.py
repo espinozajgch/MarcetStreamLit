@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 from utils import util
 import re
-
-import re
+from utils import traslator
 
 def convert_drive_url(original_url):
     """
@@ -30,20 +29,38 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
     #st.dataframe(df_final)
     # Obtener ID del jugador seleccionado (único y limpio)
     ids_disponibles = df_datos_filtrado["ID"].dropna().astype(str).str.strip().unique().tolist()
-    #st.dataframe(ids_disponibles)
+    #st.dataframe(df_datos_filtrado)
+    
     if not ids_disponibles or any(isinstance(id, str) and id.strip().lower() == 'nan' for id in ids_disponibles):
-        names_disponibles = df_datos_filtrado["JUGADOR"].dropna().astype(str).str.strip().unique().tolist()
-        jugador_id = names_disponibles[0]
-        
-        # Filtrar los DataFrames por el ID seleccionado
-        df_jugador = df_datos[df_datos["JUGADOR"].astype(str).str.strip() == jugador_id]
-        df_joined_filtrado = df_final[df_final["JUGADOR"].astype(str).str.strip() == jugador_id]
-        id = unavailable
+        # Mostrar mensaje si no hay datos válidos
+        #st.text("No hay IDs disponibles o todos son 'nan'.")
 
-        df_jugador = df_jugador.applymap(
-            lambda x: unavailable if pd.isna(x) or str(x).strip().lower() in ["nan", "none", ""] else x
-        )
-        #df_jugador = df_jugador.fillna(unavailable)
+        # Crear combinación única de jugador + categoría
+        df_datos_filtrado["JUGADOR_CATEGORIA"] = (
+            df_datos_filtrado["JUGADOR"].astype(str).str.strip() + " - " +
+            df_datos_filtrado["CATEGORIA"].astype(str).str.strip())
+
+        # Lista de combinaciones únicas disponibles
+        names_disponibles = df_datos_filtrado["JUGADOR_CATEGORIA"].dropna().unique().tolist()
+        jugador_cat = names_disponibles[0]  # selección por defecto
+
+        # Separar nombre y categoría desde la selección
+        nombre_jugador, categoria_jugador = [x.strip() for x in jugador_cat.split(" - ")]
+
+        # Filtrar DataFrames por nombre y categoría
+        df_jugador = df_datos[
+            (df_datos["JUGADOR"].astype(str).str.strip() == nombre_jugador) &
+            (df_datos["CATEGORIA"].astype(str).str.strip() == categoria_jugador)
+        ]
+        df_joined_filtrado = df_final[
+            (df_final["JUGADOR"].astype(str).str.strip() == nombre_jugador) &
+            (df_final["CATEGORIA"].astype(str).str.strip() == categoria_jugador)
+        ]
+
+        # Manejo de valores nulos/vacíos
+        id = unavailable
+        df_jugador = df_jugador.applymap(lambda x: unavailable if pd.isna(x) or str(x).strip().lower() in ["nan", "none", ""] else x)
+
     else:
         jugador_id = ids_disponibles[0]
         # Filtrar los DataFrames por el ID seleccionado
@@ -72,7 +89,8 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         if nacionalidad == unavailable:
             bandera = ""
         else:
-            bandera = util.obtener_bandera(str(nacionalidad).replace(",", "."))
+            nb = "ESPANA" if nacionalidad.upper() == "ESPAÑA" else nacionalidad.upper()
+            bandera = util.obtener_bandera(str(nb).replace(",", "."))
 
         #referencia = df_datos[df_datos["EDAD"] == jugador["EDAD"]]
         #referencia_test = df_data_test[df_data_test["ID"].isin(referencia["ID"])]
@@ -83,16 +101,17 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
         #st.badge("Success", icon=":material/check:", color="green")
 
         st.markdown(f"## {nombre} {genero_icono}")
-        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{nacionalidad}_ {bandera} ")
+        st.markdown(f"##### **_:blue[ID:]_** _{id}_ | **_:blue[NACIONALIDAD:]_** _{traslator.traducir_pais(nacionalidad.upper(),idioma).upper()}_ {bandera} ")
 
         col1, col2, col3 = st.columns([1, 2, 2])
 
         with col1:
+            #st.dataframe(df_jugador)
             url_drive = df_jugador['FOTO PERFIL'].iloc[0]
             profile_image = "female" if genero == "M" else "male"
             #url_directa = convert_drive_url(url_drive)
             
-            if url_drive is not None and url_drive != "No Disponible":
+            if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":
                 #st.text(url_drive)
                 response = util.get_photo(url_drive)
 
@@ -109,7 +128,7 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
 
             if(categoria.upper() == "CHECK-IN") or (categoria.upper() == "CHECKIN") or (categoria.upper() == "CHECK IN"):
 
-                st.metric(label=f":{color}[Categoría]", value=f" {util.traducir(categoria.upper(), idioma).capitalize()}", border=True)
+                st.metric(label=f":{color}[Categoría]", value=f" {traslator.traducir(categoria.upper(), idioma).capitalize()}", border=True)
                 st.metric(label=f":{color}[F. Nacimiento]", value=f"{fnacimiento}", border=True)
                 
                 if isinstance(edad, (int, float)) and edad >= 16:
@@ -120,15 +139,15 @@ def player_block(df_datos_filtrado, df_datos, df_final, unavailable="N/A", idiom
                 equipo = "A"
 
             else:
-                st.metric(label=f":{color}[Categoria - Equipo]", value=f" {util.traducir(categoria.upper(), idioma).capitalize()} {equipo}", border=True)
+                st.metric(label=f":{color}[Categoria - Equipo]", value=f" {traslator.traducir(categoria.upper(), idioma).capitalize()} {equipo}", border=True)
                 st.metric(label=f":{color}[F. Nacimiento]", value=f"{fnacimiento}", border=True)
 
         with col3:
-            anios = util.traducir("años",idioma)
+            anios = traslator.traducir("años",idioma)
             if edad != unavailable:
                 edad = f"{edad:,.0f} {anios}"
             
-            st.metric(label=f":{color}[Posición]", value=f"{util.traducir(demarcacion.upper(), idioma).capitalize()}", border=True)
+            st.metric(label=f":{color}[Posición]", value=f"{traslator.traducir(demarcacion.upper(), idioma).capitalize()}", border=True)
             st.metric(label=f":{color}[Edad]", value=edad, border=True)
 
         #st.markdown(":green-badge[:material/check: Antropometria] :red-badge[:material/dangerous: CMJ] :gray-badge[Deprecated]")

@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
+from utils import traslator
 
 def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna_fecha_registro, idioma="es", barras=False, cat_label="U19"):
     df = pd.DataFrame(df_rsa)
@@ -16,7 +17,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     df["FECHA TEXTO"] = df[columna_fecha_registro].dt.strftime(fecha_formato)
     columna_x = "FECHA TEXTO"
 
-    title = util.traducir("TIEMPO (SEG)", idioma)
+    title = traslator.traducir("TIEMPO (SEG)", idioma)
 
     promedio_row = df_promedios_rsa[
         (df_promedios_rsa["CATEGORIA"] == categoria) &
@@ -89,7 +90,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             x=x_vals,
             y=y_vals,
             mode="lines",
-            name=util.traducir("TIEMPO (SEG)", idioma),
+            name=traslator.traducir("TIEMPO (SEG)", idioma),
             line=dict(color=color_linea, width=3)
         ))
 
@@ -112,9 +113,9 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
             annotation=dict(font=dict(color="black", size=14))
         )
 
-        promedio = util.traducir("PROMEDIO", idioma)
-        categoria = util.traducir(categoria.upper(), idioma)
-        tl = util.traducir("TIEMPO OPTIMO", idioma)
+        promedio = traslator.traducir("PROMEDIO", idioma)
+        categoria = traslator.traducir(categoria.upper(), idioma)
+        tl = traslator.traducir("TIEMPO OPTIMO", idioma)
 
         fig_tiempo.add_trace(go.Scatter(
             x=[None], y=[None],
@@ -126,7 +127,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     if len(df) > 1 or not barras:
         df_max = df[df[metricas[0]] == min(y_vals)].sort_values(by=columna_fecha_registro, ascending=False)
         if not df_max.empty:
-            maxl = util.traducir("Min", idioma)
+            maxl = traslator.traducir("Min", idioma)
             fila = df_max.iloc[0]
             fig_tiempo.add_annotation(
                 x=fila[columna_x],
@@ -183,7 +184,7 @@ def get_rsa_graph(df_rsa, df_promedios_rsa, categoria, equipo, metricas, columna
     ))
 
     fig_tiempo.update_layout(
-        title=util.traducir("Evolución del Tiempo Total en Repeticiones de Sprint", idioma),
+        title=traslator.traducir("Evolución del Tiempo Total en Repeticiones de Sprint", idioma),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
@@ -213,7 +214,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
     df[fecha_registro] = pd.to_datetime(df[fecha_registro], format="%d/%m/%Y", errors="coerce")
     df = df.sort_values(by=fecha_registro)
 
-    title = util.traducir("VELOCIDAD (M/S)", idioma)
+    title = traslator.traducir("VELOCIDAD (M/S)", idioma)
 
     promedio_row = df_promedios_rsa[
         (df_promedios_rsa["CATEGORIA"] == categoria) &
@@ -302,9 +303,9 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
             annotation_text=f"{prom:.2f} m/s",
             annotation=dict(font=dict(color="black", size=14))
         )
-        promedio = util.traducir("PROMEDIO", idioma)
-        categoria_trad = util.traducir(categoria.upper(), idioma)
-        vl = util.traducir("VELOCIDAD ÓPTIMA", idioma)
+        promedio = traslator.traducir("PROMEDIO", idioma)
+        categoria_trad = traslator.traducir(categoria.upper(), idioma)
+        vl = traslator.traducir("VELOCIDAD ÓPTIMA", idioma)
         
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
@@ -316,7 +317,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
     if len(df) > 1 or not barras:
         max_valor = df[metric].max()
         fila_max = df[df[metric] == max_valor].sort_values(fecha_registro, ascending=False).iloc[0]
-        maxl = util.traducir("Max", idioma)
+        maxl = traslator.traducir("Max", idioma)
         fig.add_annotation(
             x=fila_max["FECHA TEXTO"],
             y=fila_max[metric],
@@ -375,7 +376,7 @@ def get_rsa_velocity_graph(df_rsa, df_promedios_rsa, categoria, equipo, metric, 
 
 
     fig.update_layout(
-        title=util.traducir("Evolución de la Velocidad en Repeticiones de Sprint", idioma),
+        title=traslator.traducir("Evolución de la Velocidad en Repeticiones de Sprint", idioma),
         yaxis=dict(title=title, range=[ymin, ymax]),
         xaxis=dict(
             tickmode="array",

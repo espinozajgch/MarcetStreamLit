@@ -60,5 +60,5 @@ def guardar_datos():
             st.exception(e)
 
 # 🔘 Botón que activa el diálogo
-if st.button("💾 Guardar Cambios"):
-    guardar_datos()
+#if st.button("💾 Guardar Cambios"):
+#    guardar_datos()

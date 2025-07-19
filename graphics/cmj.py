@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from utils import util
+from utils import traslator
 
 CMJ_SEMAFORO = {
     "H": {
@@ -148,7 +149,7 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
             fig.add_trace(go.Bar(
                 x=x_vals,
                 y=y_vals,
-                name=util.traducir(metrica, idioma).replace("-", " "),
+                name=traslator.traducir(metrica, idioma).replace("-", " "),
                 marker_color=colores_puntos,
                 width=ancho_barra,
                 yaxis="y1",
@@ -162,7 +163,7 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
                 x=x_vals,
                 y=y_vals,
                 mode="lines",
-                name=util.traducir(metrica, idioma),
+                name=traslator.traducir(metrica, idioma),
                 line=dict(color=color_linea[metrica], width=3),
                 hoverinfo="skip"
             ))
@@ -179,7 +180,7 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
         if not barras and len(df_filtro) > 1:
             max_val = df_filtro["VALOR"].max()
             fila_max = df_filtro[df_filtro["VALOR"] == max_val].sort_values(by=columna_fecha_registro, ascending=False).iloc[0]
-            maxl = util.traducir("Max", idioma)
+            maxl = traslator.traducir("Max", idioma)
             fig.add_annotation(
                 x=fila_max[columna_x],
                 y=fila_max["VALOR"],
@@ -204,7 +205,7 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
         fig.add_trace(go.Scatter(
             x=[None], y=[None],
             mode="lines",
-            name=f"{util.traducir('ALTURA OPTIMA', idioma)} ({util.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
+            name=f"{traslator.traducir('ALTURA OPTIMA', idioma)} ({traslator.traducir('PROMEDIO', idioma)} {cat_label})".upper(),
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
@@ -238,7 +239,7 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
 
     title_layout = "POTENCIA MUSCULAR DE SALTO (CMJ)" if barras else "Evolución de la Potencia Muscular de Salto (CMJ)"
     fig.update_layout(
-        title=util.traducir(title_layout, idioma).upper(),
+        title=traslator.traducir(title_layout, idioma).upper(),
         xaxis=dict(
             tickmode="array",
             tickvals=tickvals,
@@ -247,7 +248,7 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
             showticklabels=not barras and len(tickvals) > 1
         ),
         yaxis=dict(
-            title=util.traducir("ALTURA DE SALTO (CM)", idioma),
+            title=traslator.traducir("ALTURA DE SALTO (CM)", idioma),
             range=[cmin, cmax]
         ),
         template="plotly_white",

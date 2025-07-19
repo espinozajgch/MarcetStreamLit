@@ -15,6 +15,7 @@ import numpy as np
 import login as login
 from datetime import date
 import base64
+from utils import traslator
 
 st.set_page_config(
     page_title="PlayerHub",
@@ -48,7 +49,7 @@ fecha_actual = date.today()
 ###################################################
 df_datos, df_data_test, df_checkin = util.getData(conn)
 df_joined = util.getJoinedDataFrame(df_datos, df_data_test)
-#st.dataframe(df_data_test)
+#st.dataframe(df_datos )
 
 test, test_cat, lista_columnas = util.get_diccionario_test_categorias(conn)
 
@@ -141,9 +142,13 @@ if df_datos_filtrado.empty or len(df_datos_filtrado) > 1:
 else:
     df_datos_final["FOTO PERFIL"] = df_datos_final["FOTO PERFIL"].apply(player.convert_drive_url)
     
+    #st.dataframe(df_datos_final)
+
     # Sección datos de usuario
     df_joined_filtrado, df_jugador, categoria, equipo, gender = player.player_block(df_datos_filtrado, df_datos_final, test_data_filtered, unavailable, idioma)
     
+   
+
     cat_label = "U19" if categoria.lower() == "juvenil" else "U15"
    
     if not df_datos_filtrado.empty:
@@ -222,7 +227,7 @@ else:
                         st.metric("Último Registro", act)
 
                     observacion = util.get_observacion_grasa(gact, categoria.lower(), gender)
-                    observacion = util.traducir(observacion, idioma)
+                    observacion = traslator.traducir(observacion, idioma)
                     
                     if(gact < 7) or (gact > 15):
                         st.warning(f"{observacion}", icon="⚠️")
@@ -233,9 +238,8 @@ else:
 
                     figalt = graphics.get_height_graph(df_anthropometrics, idioma, tipo_reporte_bool)
 
-                    df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
-                    
-                    figant = graphics.get_anthropometrics_graph(df_anthropometrics_sin_ceros, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
+                    #df_anthropometrics_sin_ceros = df_anthropometrics[~(df_anthropometrics[columns] == 0).any(axis=1)]
+                    figant = graphics.get_anthropometrics_graph(df_anthropometrics, categoria, zona_optima_min, zona_optima_max, idioma, tipo_reporte_bool, gender, cat_label)
                     
                     st.divider()
                     c1, c2 = st.columns([2,1.5])     
@@ -317,7 +321,7 @@ else:
                     cactc = float(cactc)
                     #st.text(cactc)
                     observacion = util.get_observacion_cmj(cactc, categoria, gender)
-                    observacion = util.traducir(observacion, idioma)
+                    observacion = traslator.traducir(observacion, idioma)
                     observaciones_dict["POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)"] = observacion
                     
                     # Mostrar mensaje visual según el rango definido por categoría
@@ -439,7 +443,7 @@ else:
                     
                     
                     observacion = util.get_observacion_sprint(valor_sprint=act040t, categoria=categoria, genero=gender)
-                    observacion = util.traducir(observacion, idioma)
+                    observacion = traslator.traducir(observacion, idioma)
                     observaciones_dict["SPRINT (0-40M)"] = observacion
                     
                     act040t = float(act040t) if pd.notna(act040t) else None
@@ -598,7 +602,7 @@ else:
 
                     if not df_agilty.empty and not df_agilty[columns[0]].dropna().empty:
                         observacion = util.get_observacion_agilidad(valor_asimetria=ultima_diferencia, genero=gender, categoria=categoria)
-                        observacion = util.traducir(observacion, idioma)
+                        observacion = traslator.traducir(observacion, idioma)
                         observaciones_dict["VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)"] = observacion
                         #st.text(diferencia)
                         if ultima_diferencia <= 5:
@@ -662,7 +666,7 @@ else:
 
                     cola, colb = st.columns([2.5,1])
                     with cola:
-                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label), 
+                        figrsat = rsag.get_rsa_graph(df_rsa, df_promedios, categoria, equipo_promedio, columns, fecha_registro, idioma, tipo_reporte_bool, cat_label) 
                     with colb:    
                         st.markdown("📊 **Históricos**")
                         st.dataframe(df_rsa[[fecha_registro] + [columns[0]]]) 

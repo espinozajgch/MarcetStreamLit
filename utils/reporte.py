@@ -5,15 +5,21 @@ import numpy as np
 import requests
 from datetime import datetime
 from utils.pdf import PDF
-from utils import util
+from utils import traslator
 from datetime import date
 
-def add_footer(pdf, invertido=False, idioma="es"):
 
+def add_footer(pdf, invertido=False, idioma="es"):
+    """Simple footer without gradient scale for reports"""
     page_height = pdf.get_height()
-    margen_inferior = 33
+    margen_inferior = 15
     y_final = page_height - margen_inferior
-    pdf.draw_gradient_scale(x=10, y=y_final, invertido=True, idioma=idioma)
+    
+    pdf.set_xy(10, y_final)
+    pdf.set_font("Arial", "I", 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, f"Página {pdf.page_no()}", align="C")
+
 
 def add_footer_con_texto(pdf, texto, idioma="es"):
     page_height = pdf.get_height()
@@ -30,7 +36,7 @@ def add_footer_con_texto(pdf, texto, idioma="es"):
     #pdf.set_font("Arial", "B", 11)
 
     pdf.set_text_color(0, 51, 102)  # Azul oscuro
-    pdf.cell(0, 6, util.traducir("Observaciones", idioma).upper(), ln=True)
+    pdf.cell(0, 6, traslator.traducir("Observaciones", idioma).upper(), ln=True)
 
     if(idioma == "ar"):
         pdf.set_font("Amiri", "", 10)
@@ -39,6 +45,7 @@ def add_footer_con_texto(pdf, texto, idioma="es"):
         
     pdf.set_text_color(0, 0, 0)
     pdf.multi_cell(0, 5, texto)
+
 
 def add_observation(pdf, obs_text, idioma="es"):
     """Add observations between section title and graphic"""
@@ -58,228 +65,333 @@ def add_observation(pdf, obs_text, idioma="es"):
     pdf.multi_cell(190, 3, obs_text)
     pdf.ln(3)  # Space between observation and graphic
 
-def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, 
-                          df_rsa, figs_dict, fecha_actual, idioma="es", observaciones_dict=None):
+
+def create_section_mapping():
+    """Create consistent mapping with proper order and individual chart handling"""
+    return {
+        "COMPOSICIÓN CORPORAL - ALTURA": {
+            "figures": ["Altura"],
+            "observation_key": None,
+            "dataframe_check": "anthropometrics",
+            "order": 1
+        },
+        "COMPOSICIÓN CORPORAL - PESO Y GRASA": {
+            "figures": ["Peso y Grasa"],
+            "observation_key": "Peso y % Grasa",
+            "dataframe_check": "anthropometrics", 
+            "order": 2
+        },
+        "POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)": {
+            "figures": ["CMJ"],
+            "observation_key": "POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)",
+            "dataframe_check": None,  
+            "order": 3
+        },
+        "SPRINT (0-5M)": {
+            "figures": ["SPRINT 0-5"],
+            "observation_key": "SPRINT (0-5M)",
+            "dataframe_check": None,  
+            "order": 4
+        },
+        "SPRINT (0-40M)": {
+            "figures": ["SPRINT 0-40"],
+            "observation_key": "SPRINT (0-40M)",
+            "dataframe_check": None,  
+            "order": 4
+        },
+        "VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)": {
+            "figures": ["AGILIDAD"],
+            "observation_key": "VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)",
+            "dataframe_check": None,  
+            "order": 5
+        },
+        "RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)": {
+            "figures": ["YO-YO"],
+            "observation_key": None,
+            "dataframe_check": "yoyo",
+            "order": 6
+        },
+        "CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)": {
+            "figures": ["RSA Tiempo", "RSA Velocidad"],
+            "observation_key": None,
+            "dataframe_check": "rsa",
+            "order": 7
+        }
+    }
+
+
+def create_pdf_optimized_figures(figs_dict, fig_params_dict, idioma="es"):
+    """
+    DEBUG VERSION: Log what happens specifically with Peso y Grasa
+    """
+    import graphics.graphics as graphics
+    import graphics.sprint as sprintg
+    import graphics.agilidad as agilidadg
+    import graphics.cmj as cmjg
+    import graphics.yoyo as yoyog
+    import graphics.rsa as rsag
+    import copy
+    
+    pdf_figs = {}
+    
+    function_map = {
+        'height': graphics.get_height_graph,
+        'anthropometrics': graphics.get_anthropometrics_graph,
+        'cmj': cmjg.get_cmj_graph,
+        'sprint': sprintg.get_sprint_graph,
+        'yoyo': yoyog.get_yoyo_graph,
+        'agility': agilidadg.get_agility_graph_combined_simple,
+        'rsa': rsag.get_rsa_graph,
+        'rsa_velocity': rsag.get_rsa_velocity_graph
+    }
+    
+    for fig_name, original_fig in figs_dict.items():
+        if original_fig is None:
+            pdf_figs[fig_name] = None
+            print(f"SKIPPED - No original figure for {fig_name}")
+            continue
+            
+        # SPECIAL DEBUG for Peso y Grasa
+        if fig_name == "Peso y Grasa":
+            # FORCE post-processing only for this figure
+            pdf_figs[fig_name] = create_pdf_version_of_figure(copy.deepcopy(original_fig))
+            print(f"DEBUG - Peso y Grasa: Created PDF VERSION figure without params")
+            continue
+            
+        # Normal processing for others...
+        if fig_name in fig_params_dict:
+            try:
+                params = copy.deepcopy(fig_params_dict[fig_name]['params'])
+                function_type = fig_params_dict[fig_name]['function_type']
+                
+                params['pdf_mode'] = True
+                params['idioma'] = idioma
+                
+                if function_type in function_map:
+                    pdf_fig = function_map[function_type](**params)
+                    pdf_figs[fig_name] = pdf_fig
+                    print(f"EXISTS - Created PDF figure for {fig_name} with params.")
+                else:
+                    pdf_figs[fig_name] = create_pdf_version_of_figure(copy.deepcopy(original_fig))
+                    print(f"FALLBACK - Created PDF VERSION figure for {fig_name} with params.")
+                    
+            except Exception as e:
+                pdf_figs[fig_name] = create_pdf_version_of_figure(copy.deepcopy(original_fig))
+                print(f"EXCEPTION - Created PDF VERSION figure for {fig_name} with params")
+        else:
+            pdf_figs[fig_name] = create_pdf_version_of_figure(copy.deepcopy(original_fig))
+            print(f"NO PARAMS - Created PDF VERSION figure for {fig_name} without params")
+    
+    return pdf_figs
+
+def create_pdf_version_of_figure(fig):
+    """
+    IMPROVED: Better post-processing fallback with proper text scaling
+    """
+    import plotly.graph_objects as go
+    
+    if fig is None:
+        return None
+    
+    # Deep copy
+    pdf_fig = go.Figure(fig)
+    
+    # ENHANCED: More aggressive text scaling for PDF readability
+    pdf_fig.update_layout(
+        title=dict(font=dict(size=48)),          # INCREASED from 36
+        xaxis=dict(
+            title=dict(font=dict(size=40)),       # INCREASED from 28
+            tickfont=dict(size=36)                # INCREASED from 22
+        ),
+        yaxis=dict(
+            title=dict(font=dict(size=40)),       # INCREASED from 28
+            tickfont=dict(size=36)                # INCREASED from 22
+        ),
+        yaxis2=dict(
+            title=dict(font=dict(size=40)),       # INCREASED from 28
+            tickfont=dict(size=36)                # INCREASED from 22
+        ),
+        legend=dict(
+            font=dict(size=32),                   # INCREASED from 20
+            y=-0.18                               # MOVED LOWER from -0.03
+        ),
+        margin=dict(l=180, r=320, t=160, b=200)  # INCREASED margins
+    )
+    
+    # ENHANCED: Preserve original text colors and angles for bar charts
+    for trace in pdf_fig.data:
+        if trace.type == 'bar' and hasattr(trace, 'textfont'):
+            current_color = getattr(trace.textfont, 'color', 'white')
+            current_size = getattr(trace.textfont, 'size', 12)
+            current_angle = getattr(trace, 'textangle', 0)
+            
+            # FIXED: Preserve original color and angle, significantly increase size
+            trace.update(textfont=dict(
+                size=max(30, int(current_size * 2.0)),   # INCREASED multiplier
+                color=current_color,  # PRESERVE original contrast color
+                family='Arial'
+            ))
+            
+            # PRESERVE text angle
+            if hasattr(trace, 'textangle'):
+                trace.update(textangle=current_angle)
+    
+    # ENHANCED: Much larger annotation text for PDF  
+    if pdf_fig.layout.annotations:
+        updated_annotations = []
+        for ann in pdf_fig.layout.annotations:
+            ann_dict = ann.to_plotly_json()
+            if 'font' in ann_dict and ann_dict['font']:
+                if 'size' in ann_dict['font']:
+                    ann_dict['font']['size'] = max(24, int(ann_dict['font']['size'] * 2.0))  # INCREASED
+            updated_annotations.append(ann_dict)
+        
+        pdf_fig.update_layout(annotations=updated_annotations)
+    
+    return pdf_fig
+
+
+def generate_pdf_unified(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, 
+                         df_yoyo, df_rsa, figs_dict, fecha_actual, idioma="es", 
+                         observaciones_dict=None, report_type="simple", 
+                         fig_params_dict=None, verbose=False):
+    """
+    FIXED: Proper height calculation and observation handling
+    """
     pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
     pdf.add_page()
     pdf.header()
     
-    # Bloque de datos personales
+    # Player information block
     pdf.add_player_block(df_jugador, idioma=idioma)
-
-    seccion_ya_impresa = set()
-
-    # Preparar secciones
-    secciones = [
-        ("COMPOSICIÓN CORPORAL", df_anthropometrics, [
-            ("Altura", figs_dict.get("Altura")),
-            ("Peso y Grasa", figs_dict.get("Peso y Grasa"))
-        ]),
-        ("POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)", df_cmj, [
-            ("CMJ", figs_dict.get("CMJ"))
-        ]),
-        ("EVOLUCIÓN DEL SPRINT (0-5M)", df_sprint, [
-            ("SPRINT 0-5", figs_dict.get("SPRINT 0-5"))
-        ]),
-        ("EVOLUCIÓN DEL SPRINT (0-40M)", df_sprint, [
-            ("SPRINT 0-40", figs_dict.get("SPRINT 0-40"))
-        ]),
-        ("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)", df_agilty, [
-            ("AGILIDAD", figs_dict.get("AGILIDAD"))
-        ]),
-        ("RESISTENCIA INTERMITENTE DE ALTA INTENSIDAD (YO-YO TEST)", df_yoyo, [
-            ("YO-YO", figs_dict.get("YO-YO"))
-        ]),
-        ("CAPACIDAD DE REALIZAR SPRINT'S REPETIDOS (RSA)", df_rsa, [
-            ("RSA Tiempo", figs_dict.get("RSA Tiempo")),
-            ("RSA Velocidad", figs_dict.get("RSA Velocidad"))
-        ])
-    ]
 
     if observaciones_dict is None:
         observaciones_dict = {}
+    
+    if fig_params_dict is None:
+        fig_params_dict = {}
 
-    # Comprobar si "COMPOSICIÓN CORPORAL" está en los gráficos seleccionados
-    tiene_composicion = any(
-        nombre_seccion == "COMPOSICIÓN CORPORAL" and any(fig for _, fig in figuras)
-        for nombre_seccion, _, figuras in secciones
+    # Skip measurements block entirely
+    pdf_figs_dict = create_pdf_optimized_figures(figs_dict, fig_params_dict, idioma)
+
+    section_mapping = create_section_mapping()
+    charts_to_add = []
+    sorted_sections = sorted(section_mapping.items(), key=lambda x: x[1]["order"])
+    
+    for section_name, mapping in sorted_sections:
+        for fig_name in mapping["figures"]:
+            if fig_name in pdf_figs_dict and pdf_figs_dict[fig_name] is not None:
+                fig = pdf_figs_dict[fig_name]
+                obs_key = mapping.get("observation_key")
+                obs_text = observaciones_dict.get(obs_key, "") if obs_key else ""
+                charts_to_add.append((fig, section_name, obs_text))
+
+    total_charts = len(charts_to_add)
+    
+    # EXACT COORDINATE MEASUREMENTS
+    first_page_start_y = pdf.get_y()
+    footer_start_y = pdf.h - 20  # Increased footer margin for safety
+    
+    # FIRST PAGE: Available space after player block
+    first_page_space = footer_start_y - first_page_start_y
+    # Account for section titles and spacing (estimated ~15mm per chart)
+    first_page_chart_height = (first_page_space - 30) / 2  # Subtract space for titles
+    
+    # SUBSEQUENT PAGES: Measure header space
+    current_page = pdf.page
+    pdf.add_page()
+    subsequent_page_start_y = pdf.get_y()
+    subsequent_page_space = footer_start_y - subsequent_page_start_y
+    # Account for section titles and spacing (estimated ~15mm per chart)
+    subsequent_page_chart_height = (subsequent_page_space - 45) / 3  # Subtract space for titles
+    
+    # Return to original page
+    pdf.page = current_page
+    pdf.set_y(first_page_start_y)
+    
+    if verbose:
+        print(f"EXACT MEASUREMENTS:")
+        print(f"First page Y start: {first_page_start_y}")
+        print(f"Footer Y start: {footer_start_y}")
+        print(f"First page space: {first_page_space}")
+        print(f"First page chart height: {first_page_chart_height}")
+        print(f"Subsequent page start Y: {subsequent_page_start_y}")
+        print(f"Subsequent page space: {subsequent_page_space}")
+        print(f"Subsequent page chart height: {subsequent_page_chart_height}")
+    
+    for i, (fig, section_name, obs_text) in enumerate(charts_to_add):
+        
+        # PAGE BREAK LOGIC
+        if i <= 1:
+            # FIRST PAGE: Charts 0 and 1
+            chart_height = first_page_chart_height
+            if verbose:
+                print(f"Chart {i}: {section_name}, Height: {chart_height} (FIRST PAGE)")
+            
+        else:
+            # SUBSEQUENT PAGES: Charts 2, 3, 4 then 5, 6, 7 etc.
+            page_position = (i - 2) % 3  # 0, 1, 2 for charts 2,3,4 then 5,6,7 etc.
+            
+            if page_position == 0:
+                # Start new page for charts 2, 5, 8, etc.
+                pdf.add_page()
+                if verbose:
+                    print(f"NEW PAGE for chart {i}")
+                
+            chart_height = subsequent_page_chart_height
+            if verbose:
+                print(f"Chart {i}: {section_name}, Height: {chart_height} (SUBSEQUENT PAGE, position: {page_position})")
+
+        # FIXED: Don't override calculated height - only ensure minimum
+        chart_height = max(35, chart_height)  # Only minimum bound, no maximum
+        
+        # Layout ratios
+        if obs_text.strip():
+            chart_width_ratio = 0.68
+            obs_width_ratio = 0.30
+        else:
+            chart_width_ratio = 0.93
+            obs_width_ratio = 0.0
+        
+        if verbose:
+            print(f"BEFORE add_individual_chart: Page {pdf.page}, Y: {pdf.get_y()}")
+        
+        # CALL THE FUNCTION WITH DISABLED PAGE BREAKS
+        pdf.add_individual_chart(fig, section_name, obs_text, idioma, 
+                               chart_width_ratio, obs_width_ratio, chart_height,
+                               disable_page_breaks=True)
+        
+        if verbose:
+            print(f"AFTER add_individual_chart: Page {pdf.page}, Y: {pdf.get_y()}")
+
+    return pdf.output(dest='S')
+
+
+def generate_pdf_simple(df_jugador, df_anthropometrics, 
+                        figs_dict, fecha_actual, 
+                        idioma="es", observaciones_dict=None, 
+                        fig_params_dict=None):
+    """Simple report - Fixed to include all required charts"""
+    simple_figs = {}
+    # Add all available figures that should be in simple report
+    required_charts = ["Peso y Grasa", "CMJ", "SPRINT 0-40", "AGILIDAD"]
+    
+    for chart_name in required_charts:
+        if chart_name in figs_dict and figs_dict[chart_name] is not None:
+            simple_figs[chart_name] = figs_dict[chart_name]
+    
+    return generate_pdf_unified(
+        df_jugador, df_anthropometrics, None, None, None, None, None,
+        simple_figs, fecha_actual, idioma, observaciones_dict, "simple",
+        fig_params_dict=fig_params_dict
     )
 
-    # Agregar medidas si se seleccionó "COMPOSICIÓN CORPORAL"
-    if tiene_composicion and df_anthropometrics is not None and not df_anthropometrics.empty:
-        altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
-        peso = df_anthropometrics['PESO (KG)'].iloc[0]
-        grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-        pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
-        pdf.add_last_measurements(altura, peso, grasa, idioma=idioma)
-        pdf.ln(2)
-    
-    # Inicializar contador de gráficos y sección actual
-    contador_graficos = 0
-    primer_grafico_insertado = False
-
-    # Insertar gráficos de forma ordenada
-    for nombre_seccion, df_seccion, figuras in secciones:
-        if df_seccion is not None and not df_seccion.empty:
-            for nombre_fig, fig in figuras:
-                if fig is not None:
-                    if not primer_grafico_insertado:
-                        if not tiene_composicion and nombre_seccion not in seccion_ya_impresa:
-                            pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
-                            seccion_ya_impresa.add(nombre_seccion)
-
-                        # Add the graphic with smaller height to leave space for observations
-                        pdf.add_plotly_figure(fig, "", w=190, h=85, idioma=idioma)
-                        
-                        # Add observations immediately after the graphic
-                        obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
-                        if obs_text:
-                            add_observation(pdf, obs_text, idioma=idioma)
-                        
-                        # Add footer at the bottom
-                        add_footer(pdf, idioma=idioma)
-                        primer_grafico_insertado = True
-                        continue
-
-                    if contador_graficos % 2 == 0:
-                        pdf.add_page()
-                        pdf.ln(20)
-
-                    if nombre_seccion not in seccion_ya_impresa:
-                        pdf.section_title(util.traducir(nombre_seccion, idioma), idioma)
-                        seccion_ya_impresa.add(nombre_seccion)
-
-                    # Add the graphic with smaller height to leave space for observations
-                    pdf.add_plotly_figure(fig, "", w=190, h=85, idioma=idioma)
-                    
-                    # Add observations immediately after the graphic
-                    obs_text = observaciones_dict.get(nombre_seccion, "").strip().replace("\n"," ")
-                    if obs_text:
-                        add_observation(pdf, obs_text, idioma=idioma)
-                    
-                    contador_graficos += 1
-
-                    if contador_graficos % 2 == 0:
-                        # Add footer for completed page
-                        add_footer(pdf, idioma=idioma)
-
-    # Handle last page
-    if contador_graficos % 2 == 1:
-        # Add footer for last page
-        add_footer(pdf, idioma=idioma)
-
-    return pdf.output(dest='S')
-
-
-def generate_pdf_simple(
-    df_jugador,
-    df_anthropometrics,
-    figs_dict,
-    fecha_actual,
-    idioma="es",
-    observaciones_dict=None
-):
-    pdf = PDF(fecha_actual=fecha_actual, idioma=idioma)
-    pdf.add_page()
-    pdf.header()
-    pdf.add_player_block(df_jugador, idioma=idioma)
-
-    if df_anthropometrics is not None and not df_anthropometrics.empty:
-        altura = df_anthropometrics['ALTURA (CM)'].iloc[0]
-        peso = df_anthropometrics['PESO (KG)'].iloc[0]
-        grasa = df_anthropometrics['GRASA (%)'].iloc[0]
-        pdf.section_title(util.traducir("COMPOSICIÓN CORPORAL", idioma), idioma)
-        pdf.add_last_measurements(altura, peso, grasa, idioma=idioma, simple=True)
-
-    graficos = []
-    if figs_dict.get("Peso y Grasa"):
-        graficos.append(("Peso y % Grasa", figs_dict["Peso y Grasa"]))
-    if figs_dict.get("CMJ"):
-        graficos.append(("POTENCIA MUSCULAR (SALTO CON CONTRAMOVIMIENTO)", figs_dict["CMJ"]))
-    if figs_dict.get("SPRINT 0-40"):
-        graficos.append(("SPRINT (0-40M)", figs_dict["SPRINT 0-40"]))
-    if figs_dict.get("AGILIDAD"):
-        graficos.append(("VELOCIDAD EN EL CAMBIO DE DIRECCIÓN (AGILIDAD 505)", figs_dict["AGILIDAD"]))
-
-    if observaciones_dict is None:
-        observaciones_dict = {}
-
-    i = 0
-    while i < len(graficos):
-        if i % 2 == 0:
-            pdf.ln(3)
-
-        y_titulo = pdf.get_y()
-
-        # Títulos
-        for col in range(2):
-            if i + col >= len(graficos):
-                break
-            titulo, _ = graficos[i + col]
-            x = 10 if col == 0 else 105
-            pdf.set_xy(x, y_titulo)
-            pdf.section_title(util.traducir(titulo.upper(), idioma), idioma, simple=True)
-
-        # Gráficos
-        y_grafico = pdf.get_y()
-        for col in range(2):
-            if i + col >= len(graficos):
-                break
-            _, fig = graficos[i + col]
-            x = 10 if col == 0 else 105
-            pdf.add_plotly_figure(fig, "", x=x-3, y=y_grafico-3, w=99, h=55, idioma=idioma)
-
-        # Observaciones inmediatamente debajo
-        y_obs = pdf.get_y() + 51
-        obs_width = 92
-        obs_height_max = 13
-        obs_line_height = 3
-
-        for col in range(2):
-            if i + col >= len(graficos):
-                break
-
-            titulo, _ = graficos[i + col]
-            x = 9 if col == 0 else 103
-            obs_text = observaciones_dict.get(titulo, "").strip().replace("\n"," ")
-
-            # Título observaciones
-            pdf.set_xy(x, y_obs)
-            #pdf.set_font("Arial", "B", 5)
-            if(idioma == "ar"):
-                pdf.set_font("Amiri", "B", 5)
-            else:
-                pdf.set_font("Arial", "B", 5)
-            #pdf.cell(obs_width, 3, "OBSERVACIONES:", ln=False)
-
-            # Texto observaciones
-            #pdf.set_font("Arial", "I", 6.6)
-            if(idioma == "ar"):
-                pdf.set_font("Amiri", "I", 6.6)
-            else:
-                pdf.set_font("Arial", "I", 6.6)
-
-            pdf.set_x(x)
-            y_current = pdf.get_y()
-
-            if obs_text:
-                pdf.multi_cell(obs_width, obs_line_height, obs_text)
-                altura_utilizada = pdf.get_y() - y_current
-            else:
-                altura_utilizada = 0
-
-            # Rellenar espacio si sobra
-            espacio_restante = obs_height_max - altura_utilizada
-            if espacio_restante > 0:
-                pdf.set_xy(x, y_current + altura_utilizada)
-                lineas_extra = int(espacio_restante / obs_line_height)
-                for _ in range(lineas_extra):
-                    pdf.cell(obs_width, obs_line_height, "", ln=True)
-
-        # Avanzar después de observaciones
-        pdf.set_y(y_obs + obs_height_max)
-        i += 2
-
-    return pdf.output(dest='S')
-
-
+def generate_pdf_avanzado(df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, 
+                          df_rsa, figs_dict, fecha_actual, idioma="es", observaciones_dict=None, 
+                          fig_params_dict=None):
+    """Advanced report - matches original logic"""
+    return generate_pdf_unified(
+        df_jugador, df_anthropometrics, df_agilty, df_sprint, df_cmj, df_yoyo, df_rsa,
+        figs_dict, fecha_actual, idioma, observaciones_dict, "advanced",
+        fig_params_dict=fig_params_dict
+    )
