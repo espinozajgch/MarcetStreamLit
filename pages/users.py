@@ -1,6 +1,6 @@
 import streamlit as st
 from utils import login
-from utils import data_util
+from utils.data_util import get_usuarios
 from utils import connector_gs
 from utils import connector_sgs
 from utils import constants
@@ -25,13 +25,13 @@ if "usuario" not in st.session_state:
 st.header(":blue[Usuarios] :material/groups:", divider=True)
 
 # 📥 Cargar datos y eliminar columna innecesaria
-df_usuarios = data_util.get_usuarios(conn, connector_sgs.get_data)
-
+df_usuarios = get_usuarios(conn, connector_sgs.get_data)
+df_usuarios = df_usuarios.reset_index(drop=True)
 # ✏️ Editor de datos filtrados
-df_editado = st.data_editor(df_usuarios.reset_index(drop=True), num_rows="dynamic", hide_index=True)
+df_editado = st.data_editor(df_usuarios, num_rows="fixed", hide_index=True, use_container_width=True)
 
-##st.dataframe(df_editado)
-##connector_gs.set_spreadsheet(ws, constants.USUARIOS_WS, df_editado)
+#connector_gs.set_spreadsheet(ws, constants.USUARIOS_WS, df_editado)
+#get_usuarios.clear()
 
 # 💾 Diálogo para guardar cambios
 @st.dialog("💾 Guardando datos en Google Sheets...", width="small")

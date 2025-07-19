@@ -1,5 +1,3 @@
-#from streamlit_gsheets import GSheetsConnection
-
 import streamlit as st
 import pandas as pd
 import warnings

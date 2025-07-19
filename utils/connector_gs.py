@@ -11,7 +11,7 @@ def get_spreadsheet():
     ]
     creds = Credentials.from_service_account_info(st.secrets["connections"]["gsheets"], scopes=scopes)
     client = gspread.authorize(creds)
-    return client.open("backup_marcet_database")
+    return client.open("marcet_database")
 
 def set_spreadsheet(ws, sheet, df):
     worksheet = ws.worksheet(sheet)
