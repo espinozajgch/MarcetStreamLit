@@ -81,15 +81,6 @@ def get_color_scale(genero, categoria, cmin, cmax):
         escala.append([1, semaforo[-1][1]])
     return escala
 
-
-# def obtener_colorscale_cmj(genero, categoria, cmin, cmax):
-#     escala = get_cmj_color_scale(genero, categoria)
-#     if not escala:
-#         return []
-#     def norm(v):
-#         return max(0, min(1, round((v - cmin) / (cmax - cmin), 4)))
-#     return [[norm(umbral), color] for umbral, color in escala]
-
 def calcular_rango_cmj(valores, escala, genero):
     if not escala:
         return min(valores), max(valores)
@@ -209,33 +200,34 @@ def get_cmj_graph(df_cmj, promedios, categoria, equipo, metricas, columna_fecha_
             line=dict(color=color_promedio.get(metrica, "gray"), dash="dash")
         ))
 
-    # --- Colorbar lateral según categoría ---
-    colorscale = get_color_scale(gender, categoria, cmin, cmax)
+    if gender != "No Disponible":
+        # --- Colorbar lateral según categoría ---
+        colorscale = get_color_scale(gender, categoria, cmin, cmax)
 
-    fig.add_trace(go.Scatter(
-        x=[None], y=[None],
-        mode="markers",
-        marker=dict(
-            size=0,
-            color=[(cmin + cmax) / 2],
-            colorscale=colorscale,
-            cmin=cmin,
-            cmax=cmax,
-            colorbar=dict(
-                ticks="",
-                tickfont=dict(color="white"),
-                thickness=20,
-                len=1,
-                lenmode="fraction",
-                y=0,
-                yanchor="bottom",
-                x=1.05
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None],
+            mode="markers",
+            marker=dict(
+                size=0,
+                color=[(cmin + cmax) / 2],
+                colorscale=colorscale,
+                cmin=cmin,
+                cmax=cmax,
+                colorbar=dict(
+                    ticks="",
+                    tickfont=dict(color="white"),
+                    thickness=20,
+                    len=1,
+                    lenmode="fraction",
+                    y=0,
+                    yanchor="bottom",
+                    x=1.05
+                ),
+                showscale=True
             ),
-            showscale=True
-        ),
-        showlegend=False,
-        hoverinfo="skip"
-    ))
+            showlegend=False,
+            hoverinfo="skip"
+        ))
 
     title_layout = "POTENCIA MUSCULAR DE SALTO (CMJ)" if barras else "Evolución de la Potencia Muscular de Salto (CMJ)"
     fig.update_layout(
