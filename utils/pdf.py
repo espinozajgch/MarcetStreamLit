@@ -21,61 +21,58 @@ class PDF(FPDF):
             self.set_font("Amiri", "", 12)
        
     def footer(self):
-        # Posición a 15 mm del final de la página
-        self.set_y(-15)
-        self.set_font("Arial", "I", 8)
-        self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f"Página {self.page_no()}", align="C")
+        """FIXED: Consistent footer with reduced height"""
+        self.set_y(-15)  # REDUCED footer height
+        self.set_font('Arial', 'I', 9)  # Slightly larger font
+        self.set_text_color(128, 128, 128)
+        
+        # Only page number
+        self.cell(0, 6, f'Página {self.page_no()}', 0, 0, 'C')
 
     def header(self):
+        """FIXED: Consistent header across all pages with reduced height"""
+        # Draw bottom border line (lighter)
+        self.set_draw_color(0, 0, 0)
+        self.set_line_width(0.3)  # Lighter line
         
-        # Dibujar solo el borde inferior del header
-        self.set_draw_color(0, 0, 0)     # Color del borde: negro
-        self.set_line_width(0.5)         # Grosor de la línea
-
-        x = 5                            # Coordenada X inicial
-        y = 5                            # Coordenada Y del rectángulo superior
-        w = 200                          # Ancho del rectángulo
-        h = 30                           # Alto del rectángulo
-
-        # Línea inferior → de (x, y+h) a (x+w, y+h)
+        x = 5
+        y = 5
+        w = 200
+        h = 30
+        
+        # Bottom line only
         self.line(x, y + h, x + w, y + h)
-
-        # Color de fondo azul oscuro
-        #self.set_fill_color(13, 27, 62)  # #0d1b3e
-        #self.rect(0, 0, 210, 40, 'F')  # Rectángulo superior
-
-        # Logo (izquierda)
-        self.image("assets/images/marcet.png", 10, 8, 33)
-
-        # Texto cabecera derecha
+        
+        # FIXED: Logo with correct aspect ratio (not stretched)
+        self.image("assets/images/marcet.png", 10, 8, 33)  # Original dimensions
+        
+        # IMPROVED: Right side text with better positioning
         self.set_text_color(0, 0, 0)
-        if(self.idioma == "ar"):
+        if self.idioma == "ar":
             self.set_font("Amiri", "I", 8)
         else:
             self.set_font("Arial", "I", 8)
         
-        self.set_xy(120, 8)
-        self.cell(80, 5, traslator.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
-
-        # Título central
-        if(self.idioma == "ar"):
+        self.set_xy(110, 8)  # ADJUSTED position for better spacing
+        self.cell(90, 5, traslator.traducir("DEPARTAMENTO DE OPTIMIZACIÓN DEL RENDIMIENTO DEPORTIVO", self.idioma), align="R")
+        
+        # FIXED: Central title with proper color and positioning
+        if self.idioma == "ar":
             self.set_font("Amiri", "B", 14)
         else:
             self.set_font("Arial", "B", 14)
         
-        self.set_text_color(249, 178, 51)  # amarillo
+        self.set_text_color(249, 178, 51)  # Yellow as original
         self.set_xy(0, 14)
         self.cell(210, 10, traslator.traducir("INFORME INDIVIDUAL - INFORME FÍSICO", self.idioma), align="C")
         
+        # FIXED: Date with proper positioning
         self.set_text_color(0, 0, 0)
         self.set_xy(0, 24)
-        self.cell(210, 10, traslator.traducir("FECHA", self.idioma) + ":" + self.fecha_actual, align="C")
+        self.cell(210, 10, traslator.traducir("FECHA", self.idioma) + ": " + self.fecha_actual, align="C")
         
-        #self.set_xy(0, 25)
-        #self.cell(210, 10, self.idioma, align="C")
-
-        #self.ln(5)
+        # Set content start position
+        self.set_y(40)
 
     def add_player_block(self, df, idioma="es"):
 
@@ -230,9 +227,6 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "", 10)
         self.cell(50, 6, traslator.traducir(data["EQUIPO"], idioma).upper(), ln=True)
-
-        # Imagen del campo (derecha)
-        #self.image("assets/images/test/505.jpg", 130, 50, 70)
 
         demarcacion_larga = data.get("DEMARCACION", "").upper()
         MAPA_DEMARCACIONES = util.get_demarcaciones()
@@ -477,7 +471,7 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "B", 10)
         self.set_text_color(0, 51, 102)
-        self.cell(0, 6, util.traducir("Escala de valoración", idioma), ln=True)
+        self.cell(0, 6, traslator.traducir("Escala de valoración", idioma), ln=True)
         self.set_text_color(0, 0, 0)
         self.ln(1)
 
@@ -489,9 +483,9 @@ class PDF(FPDF):
         else:
             self.set_font("Arial", "", 8)
 
-        optimo = util.traducir("Óptimo", idioma)
-        promedio = util.traducir("Promedio", idioma)
-        critico = util.traducir("Crítico", idioma)
+        optimo = traslator.traducir("Óptimo", idioma)
+        promedio = traslator.traducir("Promedio", idioma)
+        critico = traslator.traducir("Crítico", idioma)
 
         if invertido:
             self.cell(30, 5, optimo, 0, 0, 'L')
@@ -512,108 +506,263 @@ class PDF(FPDF):
     def get_altura(self):
         return self.get_y()
     
-    # def add_plotly_figure(self, fig, title=None, w=190, idioma="es"):
-    #     if title:
-    #         if(idioma == "ar"):
-    #             self.set_font("Amiri", "", 10)
-    #         else:
-    #             self.set_font("Arial", "B", 12)
+    def add_chart_with_observation(self, fig, title, observation_text="", idioma="es", 
+                                   obs_width_ratio=0.35, chart_height=85):
+        """
+        Add a chart with optional observation in flexible layout
+        Args:
+            obs_width_ratio: Ratio of page width for observations (0.35 = 35%)
+            chart_height: Height of chart in mm
+        """
+        if not fig:
+            return
+        
+        page_width = 200  # Usable page width
+        margin = 5
+        
+        if observation_text.strip():
+            # Two-column layout
+            obs_width = int(page_width * obs_width_ratio)
+            chart_width = page_width - obs_width - margin
+        else:
+            # Full-width chart
+            chart_width = page_width
+            obs_width = 0
+        
+        start_x = 10
+        start_y = self.get_y()
+        row_height = chart_height + 10
+        
+        # Check if we need a new page
+        if start_y + row_height > self.h - 40:
+            self.add_page()
+            start_y = self.get_y() + 20
+        
+        # Add section title
+        if title:
+            self.set_xy(start_x, start_y)
+            self.section_title(traslator.traducir(title, idioma), idioma)
+            start_y = self.get_y()
+        
+        # Add chart
+        if observation_text.strip():
+            # Chart on left
+            chart_x = start_x
+        else:
+            # Chart centered
+            chart_x = start_x + (page_width - chart_width) / 2
+        
+        chart_y = start_y
+        self.add_plotly_figure(fig, "", x=chart_x, y=chart_y, 
+                              w=chart_width, h=chart_height, idioma=idioma)
+        
+        # Add observation (right column) if exists
+        if observation_text.strip():
+            text_x = start_x + chart_width + margin
+            text_y = start_y + 5
             
-    #         self.cell(0, 10, title, ln=True)
+            self.add_observation_text(observation_text, text_x, text_y, obs_width, idioma)
+        
+        # Move to next row
+        self.set_y(start_y + row_height)
 
-    #     # Convertir la figura a imagen en memoria
-    #     image_bytes = pio.to_image(fig, format="png", width=900, height=450, scale=2)
-
-    #     # Crear archivo temporal
-    #     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-    #         tmpfile.write(image_bytes)
-    #         tmpfile.flush()
-    #         tmpfile_path = tmpfile.name
-
-    #     # Insertar en PDF
-    #     self.image(tmpfile_path, x=None, y=None, w=w)
-
-    #     # Eliminar el archivo temporal manualmente
-    #     import os
-    #     os.remove(tmpfile_path)
-
-    def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es", simple=False):
-        if(idioma == "ar"):
-            self.set_font("Amiri", "", 10)
+    def add_observation_text(self, text, x, y, width, idioma="es"):
+        """Add formatted observation text"""
+        self.set_xy(x, y)
+        
+        # Observation title
+        if idioma == "ar":
+            self.set_font("Amiri", "B", 9)
         else:
-            self.set_font("Helvetica", "B", 14)
-
-        if icon_path:
-            self.image(icon_path, x=self.get_x(), y=self.get_y(), w=6)
-            self.cell(8)
-
-        #self.cell(0, 10, "Últimas Mediciones", ln=1)
-
-        self.ln(1.5)
-
-        if(idioma == "ar"):
-            self.set_font("Amiri", "", 10)
+            self.set_font("Arial", "B", 9)
+        
+        self.set_text_color(0, 51, 102)
+        self.cell(width, 5, traslator.traducir("OBSERVACIONES", idioma), ln=True)
+        
+        # Observation text
+        self.set_xy(x, y + 7)
+        if idioma == "ar":
+            self.set_font("Amiri", "", 8)
         else:
-            self.set_font("Helvetica", "", 10)
+            self.set_font("Arial", "", 8)
+        
+        self.set_text_color(0, 0, 0)
+        self.multi_cell(width, 3.5, text.strip())
 
-        # Posiciones base
-        x_start = self.get_x()
-        y_start = self.get_y() - 3
-
-        col_width = 60  # ajustable
-
-        def add_metric(label, value, x, idioma="es"):
-            self.set_xy(x, y_start)
-            if(idioma == "ar"):
-                self.set_font("Amiri", "", 10)
+    def add_observation_text_constrained(self, text, x, y, width, max_height, idioma="es"):
+        """IMPROVED: Better observation text with proper positioning"""
+        
+        # Ensure we don't go off-page
+        if x + width > 200:  # Page width limit
+            width = 200 - x - 5  # Adjust width with margin
+        
+        # Observation title
+        self.set_xy(x, y)
+        if idioma == "ar":
+            self.set_font("Amiri", "B", 10)  # INCREASED for readability
+        else:
+            self.set_font("Arial", "B", 10)
+        
+        self.set_text_color(0, 51, 102)
+        self.cell(width, 6, traslator.traducir("OBSERVACIONES", idioma), ln=False)
+        
+        # Better text positioning
+        text_start_y = y + 8  # INCREASED spacing
+        available_height = max_height - 8
+        
+        self.set_xy(x, text_start_y)
+        if idioma == "ar":
+            self.set_font("Amiri", "", 9)  # INCREASED for readability
+        else:
+            self.set_font("Arial", "", 9)
+        
+        self.set_text_color(0, 0, 0)
+        
+        # IMPROVED: Better word wrapping with proper line breaks
+        words = text.strip().split()
+        lines = []
+        current_line = ""
+        char_width = 1.4  # Better character width estimation for Arial 9pt
+        
+        for word in words:
+            test_line = f"{current_line} {word}".strip()
+            if len(test_line) * char_width <= width:
+                current_line = test_line
             else:
-                self.set_font("Helvetica", "", 10)
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+        
+        if current_line:
+            lines.append(current_line)
+        
+        # Better line spacing and height utilization
+        line_height = 4  # INCREASED for readability
+        max_lines = int(available_height / line_height)
+        
+        for i, line in enumerate(lines[:max_lines]):
+            if i * line_height < available_height:
+                self.set_xy(x, text_start_y + (i * line_height))
+                self.cell(width, line_height, line)
+            else:
+                break
+
+    def add_individual_chart(self, fig, section_title, observation_text="", idioma="es", 
+                       chart_width_ratio=0.70, obs_width_ratio=0.30, chart_height=75,
+                       disable_page_breaks=False):
+        """
+        FIXED: Add flag to disable internal page breaks
+        """
+        if not fig:
+            return
+        
+        page_width = 200
+        start_x = 10
+        start_y = self.get_y()
+        
+        # REDUCED vertical spacing
+        title_height = 6 if section_title else 0
+        bottom_spacing = 4
+        section_height = title_height + chart_height + bottom_spacing
+        
+        # CONDITIONAL: Only check page breaks if flag is False
+        if not disable_page_breaks:
+            available_space = (self.h - 40) - start_y
+            if section_height > available_space:
+                self.add_page()
+                start_y = self.get_y() + 3
+        
+        # Section title
+        if section_title:
+            self.set_xy(start_x, start_y)
+            self.set_fill_color(0, 51, 102)
+            self.set_text_color(255, 255, 255)
             
+            if idioma == "ar":
+                self.set_font("Amiri", "B", 9)
+            else:
+                self.set_font("Arial", "B", 9)
+            
+            self.cell(0, 5, traslator.traducir(section_title, idioma), ln=True, fill=True)
             self.set_text_color(0, 0, 0)
-            self.cell(col_width, 6, label, align="C")
-            self.set_xy(x, y_start + (3 if simple else 6))
-
-            if(idioma == "ar"):
-                self.set_font("Amiri", "B", 15 if simple else 18)
-            else:
-                self.set_font("Helvetica", "B", 15 if simple else 18)
-
-            self.set_text_color(0, 51, 102) # Azul oscuro
-            self.cell(col_width, 10, f"{value:.2f}", align="C")
+            start_y = self.get_y() + 1
+        
+        if observation_text.strip():
+            # CHART WITH OBSERVATIONS - left aligned with observation space
+            chart_width = int(page_width * 0.68)
+            obs_width = int(page_width * 0.30)
             
+            # Chart positioning - LEFT ALIGNED
+            chart_x = start_x
+            chart_y = start_y
+            self.add_plotly_figure_high_res(fig, "", x=chart_x, y=chart_y, 
+                                        w=chart_width, h=chart_height, idioma=idioma)
+            
+            # Observation positioning
+            obs_x = start_x + chart_width + 3
+            obs_y = start_y + 2
+            
+            max_obs_width = page_width - (obs_x - start_x)
+            actual_obs_width = min(obs_width, max_obs_width)
+            
+            # FORCE observations to stay on current page
+            current_page = self.page
+            self.add_observation_text_constrained(observation_text, obs_x, obs_y, 
+                                                actual_obs_width, chart_height - 4, idioma)
+            
+            # ENSURE we're still on the same page after observations
+            if self.page != current_page:
+                self.page = current_page
+            
+        else:
+            # CHART WITHOUT OBSERVATIONS - FULL WIDTH with small right margin
+            chart_width = int(page_width * 0.95)  
+            chart_x = start_x  # LEFT ALIGNED
+            chart_y = start_y
+            
+            self.add_plotly_figure_high_res(fig, "", x=chart_x, y=chart_y, 
+                                            w=chart_width, h=chart_height, idioma=idioma)
+        
+        # Move to next position
+        self.set_y(start_y + chart_height + bottom_spacing)
 
-        x1 = x_start
-        x2 = x1 + col_width + 0
-        x3 = x2 + col_width + 0
-
-        add_metric(traslator.traducir("ALTURA (CM)",idioma), altura, x1, idioma)
-        add_metric(traslator.traducir("PESO (KG)",idioma), peso, x2, idioma)
-        add_metric(traslator.traducir("GRASA (%)",idioma), grasa, x3, idioma)
-
-        self.ln(7)  # salto tras bloque
-
-    def add_plotly_figure(self, fig, title=None, x=None, y=None, w=190, h=100, idioma="es"):
-        #import plotly.io as pio
-        #import tempfile
+    def add_plotly_figure_high_res(self, fig, title=None, x=None, y=None, w=190, h=75, 
+                                 idioma="es", dpi=600):  # INCREASED DPI
+        """ULTRA-CRISP: Maximum quality rendering"""
         import os
-
+        import tempfile
+        import plotly.io as pio
+        
         if title:
             if idioma == "ar":
-                self.set_font("Amiri", "", 10)
+                self.set_font("Amiri", "B", 12)
             else:
                 self.set_font("Arial", "B", 12)
-            self.cell(0, 10, title, ln=True)
+            self.cell(0, 8, title, ln=True)
 
-        # Convertir la figura a imagen PNG
-        image_bytes = pio.to_image(fig, format="png", width=900, height=450, scale=2)
+        # ULTRA-HIGH quality settings for crisp rendering
+        mm_to_inch = 0.0393701
+        width_inch = w * mm_to_inch
+        height_inch = h * mm_to_inch
+        
+        width_px = int(width_inch * dpi)
+        height_px = int(height_inch * dpi)
+        
+        # ULTRA-CRISP settings
+        image_bytes = pio.to_image(
+            fig, 
+            format="png", 
+            width=width_px, 
+            height=height_px, 
+            scale=2.0,  # INCREASED scale for ultra-crisp text
+            engine="kaleido"
+        )
 
-        # Crear archivo temporal
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
             tmpfile.write(image_bytes)
             tmpfile.flush()
             tmpfile_path = tmpfile.name
 
-        # Insertar en PDF con posición personalizada si se proporciona
         if x is not None and y is not None:
             self.image(tmpfile_path, x=x, y=y, w=w, h=h)
         elif x is not None:
@@ -621,7 +770,87 @@ class PDF(FPDF):
         else:
             self.image(tmpfile_path, w=w, h=h)
 
-        # Eliminar archivo temporal
+        os.remove(tmpfile_path)
+
+    def add_last_measurements(self, altura, peso, grasa, icon_path=None, idioma="es", compact=True):
+        """ULTRA-COMPACT measurements display"""
+        font_size = 8   # REDUCED
+        value_size = 11  # REDUCED
+        spacing = 66     # OPTIMIZED
+
+        x_start = 12  # Better positioning
+        y_start = self.get_y()
+
+        def add_metric(label, value, x, unit=""):
+            self.set_xy(x, y_start)
+            if idioma == "ar":
+                self.set_font("Amiri", "", font_size)
+            else:
+                self.set_font("Helvetica", "", font_size)
+            
+            self.set_text_color(100, 100, 100)
+            self.cell(spacing, 3, label, align="C")  # REDUCED height
+            
+            self.set_xy(x, y_start + 4)  # REDUCED spacing
+            if idioma == "ar":
+                self.set_font("Amiri", "B", value_size)
+            else:
+                self.set_font("Helvetica", "B", value_size)
+            
+            self.set_text_color(0, 51, 102)
+            self.cell(spacing, 5, f"{value:.1f}{unit}", align="C")
+
+        add_metric(traslator.traducir("ALTURA", idioma), altura, x_start, " cm")
+        add_metric(traslator.traducir("PESO", idioma), peso, x_start + spacing, " kg")
+        add_metric(traslator.traducir("GRASA", idioma), grasa, x_start + spacing * 2, " %")
+
+        self.ln(14)
+
+    def add_plotly_figure(self, fig, title=None, x=None, y=None, w=190, h=100, 
+                         idioma="es", high_quality=True, dpi=300):
+        """Enhanced figure rendering with configurable quality"""
+        import os
+        
+        if title:
+            if idioma == "ar":
+                self.set_font("Amiri", "B", 10)
+            else:
+                self.set_font("Arial", "B", 12)
+            self.cell(0, 8, title, ln=True)
+
+        # Calculate optimal pixel dimensions for PDF
+        mm_to_inch = 0.0393701
+        width_inch = w * mm_to_inch
+        height_inch = h * mm_to_inch
+        
+        width_px = int(width_inch * dpi)
+        height_px = int(height_inch * dpi)
+        
+        # Convert figure to high-quality PNG
+        image_bytes = pio.to_image(
+            fig, 
+            format="png", 
+            width=width_px, 
+            height=height_px, 
+            scale=1,  # Use DPI instead of scale
+            engine="kaleido"
+        )
+
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+            tmpfile.write(image_bytes)
+            tmpfile.flush()
+            tmpfile_path = tmpfile.name
+
+        # Insert with specified dimensions
+        if x is not None and y is not None:
+            self.image(tmpfile_path, x=x, y=y, w=w, h=h)
+        elif x is not None:
+            self.image(tmpfile_path, x=x, w=w, h=h)
+        else:
+            self.image(tmpfile_path, w=w, h=h)
+
+        # Clean up
         os.remove(tmpfile_path)
 
     def add_observation_block(self, title="OBSERVACIONES:", text="", x=None, y=None, font_size=8, style="I", w=90):

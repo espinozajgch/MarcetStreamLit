@@ -48,10 +48,8 @@ df_joined = df_joined[np.logical_not(mask)]
 
 total_jugadores = len(df_datos)
 df_sesiones = util.resumen_sesiones(df_joined, total_jugadores)
-#st.dataframe(df_joined)
-#########################################################
 
-##st.header("Bienvenido")
+#########################################################
 
 col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -92,40 +90,7 @@ with col5:
         st.metric("Última Sesión", "####")
 
 st.divider()
-#st.dataframe(util.contar_jugadores_por_categoria(df_datos))
-#st.dataframe(df_sesiones)
+
 if not df_joined.empty: 
     st.markdown("📆 **Cantidad de Sesiones por jugador**")
     st.dataframe(util.sesiones_por_test(df_joined, test_cat))
-
-
-#st.bar_chart(np.random.randn(50,3))
-
-########################################
-
-# import plotly.graph_objects as go
-
-# velocidad_max = 30.6
-
-# fig = go.Figure(go.Indicator(
-#     mode="gauge+number",
-#     value=velocidad_max,
-#     title={'text': "Velocidad Máxima (km/h)"},
-#     gauge={
-#         'axis': {'range': [0, 40]},
-#         'bar': {'color': "black"},
-#         'steps': [
-#             {'range': [0, 20], 'color': 'lightgray'},
-#             {'range': [20, 30], 'color': 'green'},
-#             {'range': [30, 40], 'color': '#ddd'}
-#         ],
-#         'threshold': {
-#             'line': {'color': "red", 'width': 4},
-#             'thickness': 0.75,
-#             'value': velocidad_max
-#         }
-#     }
-# ))
-
-# #fig.show()
-# st.plotly_chart(fig, use_container_width=True)
