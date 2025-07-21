@@ -37,16 +37,17 @@ def get_player_data(_conn, _get_data):
     """
     hoy = datetime.today()
     df = _get_data(_conn, "DATOS")
-
+    
     # Limpieza general de strings
     str_cols = df.select_dtypes(include=["object", "string"]).columns
     df[str_cols] = df[str_cols].apply(lambda col: col.str.strip())
 
     # Eliminar columna innecesaria si existe
     df.drop(columns="Cantidad", errors="ignore", inplace=True)
-
+    #st.dataframe(df)
+   
     # Eliminar duplicados por ID
-    df.drop_duplicates(subset=[constants.ID_LABEL], keep="first", inplace=True)
+    #df.drop_duplicates(subset=[constants.ID_LABEL], keep="first", inplace=True)
 
     # === Limpieza y cálculo de fechas ===
     df[constants.FECHA_NACIMIENTO_LABEL] = df[constants.FECHA_NACIMIENTO_LABEL].apply(util.convertir_fecha_segura)
@@ -117,7 +118,7 @@ def load_player_and_physical_data(_conn, _get_data):
         tuple: (df_datos, df_data_test, df_checkin)
     """
     df_datos = get_player_data(_conn, _get_data)
-
+   
     # Cargar todos los tests por hoja
     _, _, hojas_test = get_diccionario_test_categorias(_conn, _get_data)
     df_tests = [get_test_data(_conn, hoja, _get_data) for hoja in hojas_test]

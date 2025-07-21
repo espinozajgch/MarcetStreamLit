@@ -31,28 +31,29 @@ st.set_page_config(
 
 fecha_actual = date.today()
 
-@st.fragment
-def bloque_conexion():
-    conn = connector_sgs.get_connector()  # Esto se ejecuta cada vez que el fragmento se monta
-    
-    # Conexion, lectura y limpieza lectura de datos
-    ###################################################
-    _, test_cat, lista_columnas = data_util.get_diccionario_test_categorias(conn, connector_sgs.get_data)
+#@st.fragment
+#def bloque_conexion():
+conn = connector_sgs.get_connector()  # Esto se ejecuta cada vez que el fragmento se monta
 
-    df_datos, df_data_test, df_checkin = data_util.load_player_and_physical_data(conn, connector_sgs.get_data)
-    df_joined = util.join_player_and_physical_data(df_datos, df_data_test)
-    
-    datatest_columns = util.get_dataframe_columns(df_data_test)
-    columnas_a_verificar = [col for col in datatest_columns if col not in constants.COLUMNAS_EXCLUIDAS_PROMEDIO]
-    
-    df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
-    
-    return conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas
+# Conexion, lectura y limpieza lectura de datos
+###################################################
+_, test_cat, lista_columnas = data_util.get_diccionario_test_categorias(conn, connector_sgs.get_data)
+
+df_datos, df_data_test, df_checkin = data_util.load_player_and_physical_data(conn, connector_sgs.get_data)
+#st.dataframe(df_datos)
+df_joined = util.join_player_and_physical_data(df_datos, df_data_test)
+
+datatest_columns = util.get_dataframe_columns(df_data_test)
+columnas_a_verificar = [col for col in datatest_columns if col not in constants.COLUMNAS_EXCLUIDAS_PROMEDIO]
+
+df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
+
+#return conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas
     ###################################################
 
 # 📡 Conexión con Google Sheets
 #conn = st.connection("gsheets", type=GSheetsConnection)
-conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas = bloque_conexion()
+#conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas = bloque_conexion()
 
 # 🔐 Verificación de sesión
 login.generarLogin(conn)
