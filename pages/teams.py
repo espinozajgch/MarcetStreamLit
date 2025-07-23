@@ -4,7 +4,7 @@ import streamlit as st
 from utils import util
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
-from utils import login
+from utils import login_util
 from datetime import date
 
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ import numpy as np
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # 🔐 Verificación de sesión
-login.generarLogin(conn)
+login_util.generarLogin(conn)
 if "usuario" not in st.session_state:
     st.stop()
 

@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import login
+from utils import login_util
 from utils.data_util import get_usuarios
 from utils import connector_gs
 from utils import connector_sgs
@@ -18,7 +18,7 @@ conn = connector_sgs.get_connector()
 #ws = connector_gs.get_spreadsheet()
 
 # 🔐 Verificación de sesión
-login.generarLogin(conn)
+login_util.generarLogin(conn)
 if "usuario" not in st.session_state:
     st.stop()
 

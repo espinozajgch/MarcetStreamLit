@@ -15,7 +15,7 @@ from utils import util
 from utils import player
 from utils import reporte as report
 from utils import traslator
-from utils import login
+from utils import login_util
 from utils import connector_sgs
 from utils import data_util
 from utils import constants
@@ -29,9 +29,8 @@ st.set_page_config(
 
 fecha_actual = date.today()
 
-#@st.fragment
-#def bloque_conexion():
-conn = connector_sgs.get_connector()  # Esto se ejecuta cada vez que el fragmento se monta
+# Esto se ejecuta cada vez que el fragmento se monta
+conn = connector_sgs.get_connector()  
 
 # Conexion, lectura y limpieza lectura de datos
 ###################################################
@@ -46,15 +45,8 @@ columnas_a_verificar = [col for col in datatest_columns if col not in constants.
 
 df_data_test_final, df_datos_final = util.actualizar_datos_con_checkin(df_datos, df_checkin, df_joined)
 
-#return conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas
-    ###################################################
-
-# 📡 Conexión con Google Sheets
-#conn = st.connection("gsheets", type=GSheetsConnection)
-#conn, df_datos_final, df_data_test_final, test_cat, columnas_a_verificar, lista_columnas = bloque_conexion()
-
 # 🔐 Verificación de sesión
-login.generarLogin(conn)
+login_util.generarLogin(conn)
 if "usuario" not in st.session_state:
     st.stop()
 

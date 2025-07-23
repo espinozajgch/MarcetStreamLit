@@ -1,7 +1,7 @@
 import streamlit as st
 from utils import util
 import pandas as pd
-from utils import login
+from utils import login_util
 from utils import data_util
 from utils import connector_sgs
 from utils import constants
@@ -18,7 +18,7 @@ st.set_page_config(
 conn = connector_sgs.get_connector()
 
 # 🔐 Verificación de sesión
-login.generarLogin(conn)
+login_util.generarLogin(conn)
 
 if "usuario" not in st.session_state:
     st.stop()

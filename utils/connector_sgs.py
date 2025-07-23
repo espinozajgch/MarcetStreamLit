@@ -6,11 +6,10 @@ def get_connector():
     return st.connection("gsheets", type=GSheetsConnection)
 
 def get_ttl():
+    default_reload_time = "360m"  # Usar caché normalmente
     if st.session_state.get("reload_data", False):
         default_reload_time = "0m"  # Forzar recarga
         st.session_state["reload_data"] = False  # Resetear flag después de la recarga
-    else:
-        default_reload_time = "360m"  # Usar caché normalmente
 
     return default_reload_time
 

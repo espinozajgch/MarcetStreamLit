@@ -50,17 +50,18 @@ def generarMenu(usuario, conn):
         st.page_link("pages/players.py", label="Jugadores", icon=":material/account_circle:")  
         st.page_link("pages/tests.py", label="Test Fisicos", icon=":material/directions_run:")
         st.page_link("pages/users.py", label="Usuarios", icon=":material/groups:")
+        
+        st.page_link("pages/logout.py", label="Salir", icon=":material/logout:")
         st.divider()
-        #st.subheader("Ajustes")
         btnReload=st.button("Recargar Datos", type="tertiary", icon=":material/update:")
         if btnReload:
             st.session_state["reload_data"] = True  # Activar recarga manual
             st.rerun()
 
         # Botón para cerrar la sesión
-        btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
-        if btnSalir:
-            cerrarSesion()
+        #btnSalir=st.button("Salir", type="tertiary", icon=":material/logout:")
+        #if btnSalir:
+        #    cerrarSesion()
 
         st.sidebar.image("assets/images/logo.png", width=128, use_container_width=True)
         
