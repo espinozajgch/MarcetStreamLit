@@ -34,6 +34,7 @@ def generarMenu(usuario, conn):
         st.logo("assets/images/marcet.png", size="large")
         # Cargamos la tabla de usuarios
         dfusuarios = get_usuarios(conn, connector_sgs.get_data)
+
         # Filtramos la tabla de usuarios
         dfUsuario =dfusuarios[(dfusuarios['USUARIO']==usuario)]
         # Cargamos el nombre del usuario
@@ -61,6 +62,8 @@ def generarMenu(usuario, conn):
         if btnSalir:
             cerrarSesion()
 
+        st.sidebar.image("assets/images/logo.png", width=128, use_container_width=True)
+        
 def generarLogin(conn):
     """
     Muestra el formulario de login si no hay sesión activa.
@@ -90,9 +93,6 @@ def generarLogin(conn):
         col1, col2, col3 = st.columns([2, 1.5, 2])
         with col2:
             st.image("assets/images/marcet.png")
-        
-        col1, col2, col3 = st.columns([2, 1.5, 2])
-        with col2:
             st.markdown("""
                 <style>
                     [data-testid="stSidebar"] {
@@ -118,6 +118,7 @@ def generarLogin(conn):
                         st.rerun()
                     else:
                         st.error("Usuario o clave inválidos", icon=":material/gpp_maybe:")
+            st.image("assets/images/logo.png")
 
 # 🔹 Función para cerrar sesión y limpiar query_params
 def cerrarSesion():

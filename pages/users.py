@@ -15,7 +15,7 @@ st.set_page_config(
 
 # 📡 Conexión con Google Sheets
 conn = connector_sgs.get_connector()
-ws = connector_gs.get_spreadsheet()
+#ws = connector_gs.get_spreadsheet()
 
 # 🔐 Verificación de sesión
 login.generarLogin(conn)
@@ -28,8 +28,10 @@ st.header(":blue[Usuarios] :material/groups:", divider=True)
 df_usuarios = get_usuarios(conn, connector_sgs.get_data)
 df_usuarios = df_usuarios.reset_index(drop=True)
 # ✏️ Editor de datos filtrados
-df_editado = st.data_editor(df_usuarios, num_rows="fixed", hide_index=True, use_container_width=True)
+df_editado = st.data_editor(df_usuarios, num_rows="dynamic", hide_index=True, use_container_width=True)
 
+
+#connector_sgs.set_data(conn, constants.USUARIOS_WS, df_editado)
 #connector_gs.set_spreadsheet(ws, constants.USUARIOS_WS, df_editado)
 #get_usuarios.clear()
 
@@ -38,8 +40,8 @@ df_editado = st.data_editor(df_usuarios, num_rows="fixed", hide_index=True, use_
 def guardar_datos():
     with st.status("⌛ Procesando y actualizando hoja...", state="running", expanded=True) as status:
         try:
-            connector_gs.set_spreadsheet(ws, constants.USUARIOS_WS, df_editado)
-            #conn.update(worksheet="USUARIOS", data=df_editado)
+            connector_sgs.set_data(conn, constants.USUARIOS_WS, df_editado)
+            
             st.session_state["reload_data"] = True  # Activar recarga manual
             status.update(label="✅ Datos actualizados correctamente.", state="complete", expanded=False)
             st.rerun()
@@ -49,5 +51,5 @@ def guardar_datos():
             st.exception(e)
 
 # 🔘 Botón que activa el diálogo
-#if st.button("💾 Guardar Cambios"):
-#    guardar_datos()
+if st.button("💾 Guardar Cambios"):
+    guardar_datos()

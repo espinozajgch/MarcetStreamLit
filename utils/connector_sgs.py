@@ -17,3 +17,7 @@ def get_ttl():
 def get_data(_conn, sheet):
     df = _conn.read(worksheet=sheet, ttl=get_ttl())
     return df
+
+def set_data(_conn, sheet, df):
+    _conn.update(worksheet=sheet, data=df)
+            

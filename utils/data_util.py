@@ -5,7 +5,7 @@ from utils import util
 from utils import constants
 from datetime import datetime
 
-@st.cache_data(ttl=600)
+#@st.cache_data(ttl=600)
 def get_usuarios(_conn, _get_data):
     return _get_data(_conn, "USUARIOS")
 
