@@ -30,7 +30,6 @@ df_usuarios = df_usuarios.reset_index(drop=True)
 # ✏️ Editor de datos filtrados
 df_editado = st.data_editor(df_usuarios, num_rows="dynamic", hide_index=True, use_container_width=True)
 
-
 #connector_sgs.set_data(conn, constants.USUARIOS_WS, df_editado)
 #connector_gs.set_spreadsheet(ws, constants.USUARIOS_WS, df_editado)
 #get_usuarios.clear()

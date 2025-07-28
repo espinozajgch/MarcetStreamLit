@@ -5,6 +5,7 @@ import requests
 from datetime import datetime
 from scipy.stats import percentileofscore
 from functools import reduce
+from utils import constants
 import unicodedata
 
 #from gspread_dataframe import get_as_dataframe, set_with_dataframe
@@ -77,6 +78,8 @@ def unir_dataframes(dfs, columnas_comunes, metodo='outer'):
             continue
         # Limpiar duplicados por columnas comunes
         df = df.drop_duplicates(subset=columnas_comunes)
+        df.drop(constants.JUGADOR_LABEL, axis=1, inplace=True, errors='ignore')
+
         dfs_validos.append(df)
 
     if not dfs_validos:

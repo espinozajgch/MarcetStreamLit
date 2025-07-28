@@ -118,12 +118,12 @@ def load_player_and_physical_data(_conn, _get_data):
         tuple: (df_datos, df_data_test, df_checkin)
     """
     df_datos = get_player_data(_conn, _get_data)
-   
     # Cargar todos los tests por hoja
     _, _, hojas_test = get_diccionario_test_categorias(_conn, _get_data)
     df_tests = [get_test_data(_conn, hoja, _get_data) for hoja in hojas_test]
     df_checkin = get_test_data(_conn, constants.CHECKIN_LABEL, _get_data)
 
+    #st.dataframe(df_tests)
     df_data_test = util.unir_dataframes(df_tests, constants.COLUMNAS_COMUNES)
 
     # Limpieza básica

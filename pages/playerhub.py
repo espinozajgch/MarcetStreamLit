@@ -37,7 +37,9 @@ conn = connector_sgs.get_connector()
 _, test_cat, lista_columnas = data_util.get_diccionario_test_categorias(conn, connector_sgs.get_data)
 
 df_datos, df_data_test, df_checkin = data_util.load_player_and_physical_data(conn, connector_sgs.get_data)
-#st.dataframe(df_datos)
+
+#st.dataframe(df_data_test)
+
 df_joined = util.join_player_and_physical_data(df_datos, df_data_test)
 
 datatest_columns = util.get_dataframe_columns(df_data_test)
@@ -127,6 +129,7 @@ with st.expander("Configuración Avanzada"):
 
 # Promedios
 ###################################################
+#st.dataframe(df_data_test_final)
 df_promedios =  util.calcular_promedios_filtrados(df_data_test_final, columnas_a_verificar, 
                                                   constants.CATEGORIA_LABEL, constants.EQUIPO_LABEL, 
                                                   constants.EQUIPO_PROMEDIO)
